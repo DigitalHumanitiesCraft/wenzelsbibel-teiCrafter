@@ -55,6 +55,10 @@ export function renderFlow() {
   closeGroup();
 }
 
+// Features that mark words in the flow (markup.js) push (tok, node, k) => void here;
+// they run on every render, so a mark follows undo and redo.
+export const wordDecorators = [];
+
 export function wordNode(tok, k) {
   const classes = ["w"];
   for (const r of tok.rend || []) classes.push(`rend-${r}`);
@@ -62,7 +66,9 @@ export function wordNode(tok, k) {
   if (tok.unclear) classes.push("is-unclear");
   if (tok.damage) classes.push("is-damage");
   if (state.appsByWord.has(tok)) classes.push("in-app");
-  return el("span", { class: classes.join(" "), "data-k": String(k), "data-id": tok.id || "", text: tok.text || tok.orig || "" });
+  const node = el("span", { class: classes.join(" "), "data-k": String(k), "data-id": tok.id || "", text: tok.text || tok.orig || "" });
+  for (const decorate of wordDecorators) decorate(tok, node, k);
+  return node;
 }
 
 export function setColumn(i) {
@@ -220,7 +226,8 @@ function onBeforeInput(e) {
   const next = text.slice(0, s) + insert + text.slice(t);
   if (!next) return; // deleting a whole word is a structural edit
   const tok = state.words[Number(a.w.dataset.k)].tok;
-  commit("Diplomatisch", () => { tok.text = next; });
+  // F29: the diplomatic reading is the text and @orig together; a word without @orig keeps none.
+  commit("Diplomatisch", () => { tok.text = next; if (tok.orig != null) tok.orig = next; });
   node.data = next;
   sel.setBaseAndExtent(node, s + insert.length, node, s + insert.length);
   if (state.diplo && state.sel && state.sel.from === state.sel.to && state.words[state.sel.from].node === a.w) {

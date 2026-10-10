@@ -8,6 +8,9 @@ import { flowEvents, selectedWords, setWordRange } from "./flow.js";
 // Each is (words) => Node | null; features push theirs when their module loads.
 export const sections = [];
 
+// Builder of the Diplomatisch field, set by markup.js; without it the field is a plain input.
+export const wordFields = { diplomatic: null };
+
 // What the inspector shows: null for a word state, otherwise the open panel, whose
 // reopen function rebuilds it from state.data after undo or redo (null closes it).
 let panel = null;
@@ -35,7 +38,7 @@ export function openInspector() {
     const tok = words[0].tok;
     const mixed = (tok.rend || []).includes("ligature") || /\n/.test(tok.text || "");
     const fields = el("div", { class: "fields" }, [
-      field("Diplomatisch", tok.orig ?? tok.text ?? "", mixed ? "Enthält Binnen-Markup, Bearbeitung in der XML-Ansicht" : ""),
+      wordFields.diplomatic ? wordFields.diplomatic(tok) : field("Diplomatisch", tok.orig ?? tok.text ?? "", mixed ? "Enthält Binnen-Markup, Bearbeitung in der XML-Ansicht" : ""),
       normField(tok),
     ]);
     state.diplo = fields.querySelector("input");
@@ -99,11 +102,11 @@ export function field(label, value, note) {
   return f;
 }
 
-// Normalisiert is applied explicitly; Diplomatisch mirrors the flow live instead.
+// Normalisiert is applied explicitly, like Diplomatisch (markup.js).
 // After a commit the field's defaultValue follows, so Ctrl+Z in an unchanged field
 // reaches the document history rather than the field's own text undo (menu.js).
 export function normField(tok) {
-  const f = field("Normalisiert", tok.norm ?? "", tok.norm === undefined ? "Kein @norm im Bestand" : "");
+  const f = field("Normalisiert", tok.norm ?? "", tok.norm == null ? "Kein @norm im Bestand" : "");
   const input = f.querySelector("input");
   const apply = () => {
     const value = input.value.trim();

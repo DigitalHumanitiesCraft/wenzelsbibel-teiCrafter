@@ -36,7 +36,9 @@ export const columns = () => state.data.columns.filter((c) => c.lines.length);
 
 export const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export const refKey = (tok) => (tok && tok.ref ? `${tok.ref.type}|${tok.ref.target}` : null);
+// A link written in this session carries a run id (register.js), so two adjacent links to
+// the same entry stay two runs with two chips, as two rs elements would; chipFor ignores it.
+export const refKey = (tok) => (tok && tok.ref ? `${tok.ref.type}|${tok.ref.target}${tok.ref.run ? `|${tok.ref.run}` : ""}` : null);
 
 export function chipFor(key) {
   const [type, target] = key.split("|");

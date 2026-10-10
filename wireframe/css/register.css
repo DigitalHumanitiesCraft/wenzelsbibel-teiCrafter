@@ -1,21 +1,40 @@
-/* Register linking and autocomplete, owned by the register feature. */
+/* Register linking, entry creation and the references panels, owned by the register feature. */
 @layer components {
-  .register { position: relative; }
-  .register .combo { display: flex; gap: var(--space-sm); align-items: center; }
-  .register .combo select { max-inline-size: 7rem; }
-  .register .combo input {
+  .register { position: relative; display: grid; gap: var(--space-xs); }
+  .register-body { display: grid; gap: var(--space-xs); }
+  .combo { display: flex; gap: var(--space-sm); align-items: center; }
+  .combo select { max-inline-size: 7rem; min-block-size: 32px; }
+  .combo input {
     flex: 1; min-inline-size: 0; font-size: 1rem; min-block-size: 32px; padding: var(--space-xs) var(--space-sm);
     border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-panel);
   }
   /* Fixed to the viewport and placed by placeList(), so no scroll container clips it. */
   .ac-list {
-    position: fixed; z-index: 30; margin: 0;
+    position: fixed; z-index: 30; margin: 0; padding: 0; list-style: none;
     background: var(--color-panel); border: 1px solid var(--color-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-pop);
     max-block-size: 14rem; overflow: auto;
   }
-  .ac-item { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-xs) var(--space-md); cursor: pointer; }
+  .ac-item { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-xs) var(--space-md); min-block-size: 24px; cursor: pointer; }
   .ac-item:hover, .ac-item.is-active { background: var(--color-secondary); }
-  .ac-item .type { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+  .ac-item.is-active { outline: 2px solid var(--color-link); outline-offset: -2px; }
+  .ac-item .type, .reg-list .type, .reg-refs .type { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .ac-item.is-new { color: var(--color-link); border-block-start: 1px solid var(--color-border); }
   .linked { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
+  .ref-form { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+  .reg-note { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+  .reg-note summary { cursor: pointer; min-block-size: 24px; }
+  .reg-note p { margin: var(--space-xs) 0 0; max-inline-size: 70ch; }
+  .reg-form { display: grid; gap: var(--space-sm); max-inline-size: 32rem; }
+  .reg-form select, .reg-form input { font-size: 1rem; }
+  .field-error { font-size: var(--font-size-sm); color: var(--color-problem); }
+  .reg-meta { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin: 0; }
+  .reg-refs, .reg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
+  .reg-list { max-block-size: 18rem; overflow: auto; }
+  .reg-list li { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: baseline; }
+  .reg-jump {
+    display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: baseline; inline-size: 100%; text-align: start;
+    min-block-size: 24px; padding: var(--space-xs) var(--space-sm); cursor: pointer;
+    background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text);
+  }
+  .reg-jump:hover { background: var(--color-secondary); }
 }

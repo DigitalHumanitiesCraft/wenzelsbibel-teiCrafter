@@ -11,3 +11,25 @@
   .act .menu-list { min-inline-size: 12rem; }
   .menu-caption { padding: var(--space-xs) var(--space-md) 0; font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 }
+/* Element marks in the flow: dotted underline and a short label, not colour alone. */
+@layer components {
+  .w.has-markup { border-block-end: 2px dotted var(--color-text-secondary); }
+  .w[data-mk]::before {
+    content: attr(data-mk); font-family: var(--font-mono); font-size: var(--font-size-xs);
+    color: var(--color-text-secondary); vertical-align: super; margin-inline-end: 2px;
+  }
+  .w.rend-gold { text-decoration: underline double var(--color-text-secondary); text-underline-offset: 4px; }
+  .w.rend-border_decoration { outline: 1px dashed var(--color-border); outline-offset: 1px; }
+  .element-choice { display: grid; gap: var(--space-xs); }
+  .element-note { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+  .element-list { display: grid; gap: 2px; }
+  .element-item {
+    display: flex; gap: var(--space-md); align-items: baseline; inline-size: 100%; min-block-size: 32px;
+    background: var(--color-panel); border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm); text-align: start; cursor: pointer;
+  }
+  .element-item code { min-inline-size: 6rem; }
+}
+@layer components {
+  .markup-present { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: var(--space-sm); font-size: var(--font-size-sm); }
+}

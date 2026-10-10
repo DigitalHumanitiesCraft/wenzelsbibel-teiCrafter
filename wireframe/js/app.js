@@ -13,7 +13,7 @@ import { actions, buildMenus } from "./menu.js";
 import "./markup.js";
 import "./register.js";
 import { indexApparatus } from "./apparatus.js";
-import { switchDocument } from "./miniature.js";
+import { initMiniatures, switchDocument } from "./miniature.js";
 import "./checks.js";
 
 const DATA_URL = "../data/wireframe/fol-1r.json";
@@ -32,6 +32,7 @@ async function main() {
   wireFlow();
   wireControls();
   onChange(rerender);
+  initMiniatures();
 }
 
 function wireControls() {

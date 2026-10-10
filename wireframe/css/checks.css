@@ -1,6 +1,22 @@
-/* Findings list, owned by the checks feature. */
+/* Findings list and check states in the notice bar, owned by the checks feature. */
 @layer components {
+  .findings-stale {
+    padding: var(--space-xs) var(--space-sm); background: var(--color-review-tint);
+    border-inline-start: 3px solid var(--color-review); font-weight: 600;
+  }
+  .findings-group { display: grid; gap: var(--space-xs); margin-block-end: var(--space-md); }
+  .findings-check { font-size: var(--font-size-sm); margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: baseline; }
+  .findings-check .context { font-weight: 400; color: var(--color-text-secondary); }
+  .findings-scope { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .findings { display: grid; gap: var(--space-xs); }
-  .findings .findings-sample { font-size: var(--font-size-sm); color: var(--color-text-secondary); font-style: italic; }
-  .findings li { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: baseline; }
+  .finding {
+    display: flex; flex-wrap: wrap; gap: 0 var(--space-md); align-items: baseline;
+    padding-inline-start: var(--space-sm); border-inline-start: 3px solid var(--color-border);
+  }
+  .finding.is-error { border-inline-start-color: var(--color-problem); }
+  .finding-role { font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); }
+  .finding-msg { flex: 1 1 24rem; min-inline-size: 0; overflow-wrap: anywhere; }
+  .finding-meta { flex-basis: 100%; font-size: var(--font-size-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+  .notice-bar .is-stale { color: var(--color-text); }
+  .notice-bar a.act-btn { text-decoration: none; color: inherit; }
 }
