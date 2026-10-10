@@ -26,3 +26,6 @@ docs/data/editor/*/*
 
 # szd: CC BY object (see its NOTICE.md), fully tracked.
 !docs/data/editor/szd/*
+
+# Edition data and images stay local; see knowledge/project.md (rights boundary).
+data/

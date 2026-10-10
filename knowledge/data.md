@@ -1,227 +1,209 @@
 ---
-title: teiCrafter Data and Test Material
+title: Data
 project:
-  name: teiCrafter
-  repository: https://github.com/DigitalHumanitiesCraft/teiCrafter
+  name: wenzelsbibel-teiCrafter
+  repository: https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter
 method:
   name: Promptotyping
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
 template:
   name: Vorlage Datengrundlage
-  version: 0.1
+  version: 0.3
   url: https://dhcraft.org/Promptotyping/promptotyping-document/data
-status: complete
-created: 2026-05-27
-updated: 2026-09-11
+  alias: https://dhcraft.org/Promptotyping/#promptotyping-document-data
+status: draft
+created: 2026-10-10
+updated: 2026-10-10
 language: en
-topics: ["[[TEI XML]]", "[[Data Modelling]]"]
+topics: ["[[TEI XML]]", "[[Data Modelling]]", "[[Controlled Vocabularies]]", "[[IIIF]]"]
 knowledge-sources:
+  institutions:
+    Paris Lodron University Salzburg: https://www.plus.ac.at/
+    Austrian National Library: https://www.onb.ac.at/
   standards:
-    - label: TEI P5 Guidelines
-      uri: https://tei-c.org/guidelines/p5/
-    - label: TEI All RelaxNG
-      uri: https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng
-    - label: IIIF Presentation API
-      uri: https://iiif.io/api/presentation/3.0/
-related: [project, specification, architecture, testing]
+    TEI P5 Guidelines: https://tei-c.org/guidelines/p5/
+    TEI All RelaxNG: https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng
+    IIIF Image API: https://iiif.io/api/image/
+  vocabularies:
+    ICONCLASS: https://iconclass.org/
+related: [editorial-guidelines, project, specification, architecture, testing, integration, plan]
 ---
 
-# teiCrafter Data and Test Material
+# Data
 
-## Canonical XML contract
+The tool processes three linked TEI files of the Wenzelsbibel edition: the codex transcription, the image annotations and a shared register file, together with page images from the Austrian National Library (ONB) IIIF service. This document describes their formats, identifiers and cross-file references, the project manifest and schema set that bind them in the tool, the fixtures, and where the real data lives. The encoding rules for the content are in [editorial guidelines](editorial-guidelines.md).
 
-The complete XML source string is canonical. Untouched UTF-8 source retains whitespace, prefixes, quoting, entity spelling and byte-order-mark state. A semantic no-op returns the original source. Unsupported or conflicting encodings are rejected before editing.
+## Subject
 
-TEI identity is the namespace URI `http://www.tei-c.org/ns/1.0`; a default namespace and an arbitrary bound prefix are equivalent for interpretation. Foreign elements with matching local names remain preserved source data and do not enter TEI operations. [Architecture](architecture.md) describes the offset parser, projections and mutation boundary.
+Codex 2759 of the Austrian National Library is the Wenzelsbibel, a German Bible translation with miniatures. The digital edition, published by the Paris Lodron University Salzburg (PLUS) and the ONB, transcribes it word by word with diplomatic and normalised readings, a bilingual commentary apparatus and an iconographic description of its miniatures and decorations.
 
-## Inputs and outputs
+## Sources
 
-| Form | Data contract |
-| --- | --- |
-| TEI XML | UTF-8 with optional BOM; Save and Download encode the exact schema-authorized target projection |
-| Plaintext or Markdown | Deterministic draft with blank lines as paragraphs and `\|N\|` as a page milestone; selected starter templates supply their declared encoding |
-| Project folder | TEI or text sources beside a declarative manifest, mapping text, schema resources and optional images |
-| PAGE XML and optional METS | Deterministic separate TEI draft with explicit page ordering and retained import diagnostics; details in [Wenzelsbibel](wenzelsbibel.md) |
-| Working copy | Portable JSON for canonical and unfinished editing state, including companions and images, without an output-validation requirement |
-| Project package | One validated ZIP containing the XML collection, eligible images and restoration metadata |
-| Model-generated TEI | Self-contained, well-formed TEI P5 with required header and text body, document responsibility and separate human-review evidence |
-| Model proposals | Bounded JSON proposals mapped to exact source operations, with persistent origin and independently recorded acceptance |
+| Material | Producer and provenance | Form | Rights |
+|---|---|---|---|
+| `codex-2759.xml`, PID `o:wen.codex-2759` | Edition team at PLUS; first transcription in Transkribus by the HTR model WB-DEA, then annotation with Transkribus tags, exported to TEI; the header lists the Transkribus batch IDs as `sourceDesc/bibl/idno[@type='Transkribus']` | One TEI file with `teiHeader`, `standOff`, `facsimile` and `text` | Header declares CC BY 4.0 |
+| `Bildannotationen.xml`, PID `o:wen.bildannotationen--codex-2759` | Edition team at PLUS; art-historical annotation of miniatures, marginal decorations and pages | One TEI file, annotation lists in `body`, bibliography in `back` | Header declares CC BY 4.0 |
+| `registers.xml` | Created in teiCrafter; the edition data contain no register file and no `listPerson`, `listPlace` or `listOrg` in the codex | TEI file with lists in `standOff` | Project file, rights follow the edition |
+| Page images | ONB digitisation, served through the IIIF Image API | JPEG 2000 behind `https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2/info.json` | Technical access implies no permission to store, redistribute or publish |
+| Transkribus exports (PAGE XML, METS) | Edition team | Per-page PAGE files | Same as the edition data |
 
-Plaintext conventions transport explicit structure. They do not interpret ad hoc pseudo-syntax as scholarly assertions. Deterministic imports and model-generated drafts retain distinct provenance.
+The public TEI of both edition files is served by edition.onb.ac.at under the PIDs above. The DHCraft project storage records the licence for its own copies as unresolved; the tool therefore treats all edition data as local, unversioned material.
 
-## Project manifest
+## Model
 
-`teicrafter.project.json` declares project policy. Its canonical schema declaration is an ordered `schema.schemas` array; repeated schema types are permitted.
+### Topology and cross-file references
 
-```json
-{
-  "teicrafter": 1,
-  "name": "Editorial project",
-  "schema": {
-    "schemas": [
-      { "type": "relaxng", "path": "project.rng", "name": "Structure" },
-      { "type": "schematron", "path": "editorial.sch", "name": "Editorial rules" }
-    ]
-  },
-  "uiProfile": {
-    "primaryNavigation": "entries",
-    "disableCapabilities": ["pages"]
-  },
-  "documentTypes": [
-    {
-      "key": "correspondence",
-      "label": "Correspondence",
-      "uiProfile": { "primaryNavigation": "sections" }
-    }
-  ],
-  "files": { "letter.xml": "correspondence" }
-}
-```
+The relation between the files is directed. The image annotations and the register links point into the codex; the codex carries no pointer back to the image annotations.
 
-Each schema entry has `type`, `path` and optional `name`. Manifest types are `relaxng`, `xsd` and `schematron`. Legacy singular declarations normalize to this runtime form on ingest.
+| From | To | Mechanism | ID form and example |
+|---|---|---|---|
+| Image item | Codex image zone | `item/@corresp` | `#Image_1676476154286_76` → `zone[@xml:id='Image_1676476154286_76'][@type='ImageRegion'][@subtype='img_miniature']` |
+| Image item | Codex word range | `note[@type='text-relation'][@subtype='statistic']/@corresp` | `#range(region_1639399488602_10l3_0, region_1639577288773_22l29_4)` |
+| Image item | Artist sigla in its own header | `listPerson[@type='artists']/person/@corresp` | `#BA` → `persName[@xml:id='BA']` |
+| Image item | Register entry | `listPerson[@type='related']/person/@corresp`, `listPlace[@type='related']/place/@corresp` | `#Gott`, `#Kanaan` |
+| Image item | Bibliography in its own `back` | `@resp` | `#JT`, `#KS` → `listBibl/bibl[@xml:id]` |
+| Codex word | Register entry (handbook form, present in the data) | `ref[@type][@target]` around the words | `<ref target="Martin" type="person">` |
+| Codex word range | Register entry (teiCrafter form) | `standOff/spanGrp[@type='register-links']/span` with `@from`, `@to`, `@ana` | `registers.xml#entry-id` |
+| Codex apparatus | Codex text | `app/@from`, `app/@to` | `#start_42597` → `anchor[@xml:id='start_42597']` |
+| Codex text | Facsimile | `pb/@facs`, `lb/@facs`, `seg/@facs`, `fw/@facs`, `milestone/@facs` | `#page_32494516`, `#region_1639399488602_10l1`, `#line_1639401326021_84` |
+| Codex header | Codex divisions | `msItem/locus/@target` | `#Transition0`, `#GenLat` |
 
-Project `uiProfile` supplies defaults. A matching document type overrides the primary-navigation field and adds disabled capabilities. Requested channels require source anchors; unsatisfied policy produces an issue and a source-backed fallback. The derived inventory, Source Profile and Navigation Model are revision-specific projections described in [architecture](architecture.md#source-discovery-and-navigation).
+Pointer syntax is not uniform: the codex writes register targets as bare tokens, the image file as `#`-fragments, and teiCrafter as a file-relative fragment. Which form the register links take is part of the open register decision in [editorial guidelines](editorial-guidelines.md#open-ratification-points).
 
-Other fields declare markup, TEI authoring scope, indices, reconciliation, image resolution, views, interchange, model mapping and responsibility. `workspace: "wenzelsbibel"` selects the specialized interface. The manifest contains data and cannot register executable provider adapters. [Integration](integration.md#project-folder-and-schema-handoff) defines project loading and dependency resolution.
+### Transkribus zone IDs as the bridge
 
-## Schema set and validation result
+Transkribus generated the identifiers that connect text, layout and image. They are opaque strings and stay unchanged when the text is edited.
 
-Effective schemas follow this precedence for each document.
+| ID family | Example | Carried by |
+|---|---|---|
+| Page | `page_32494516` | `surface/@xml:id` |
+| Text region | `region_1639399488602_10`, `TextRegion_1662382236174_172` | `zone/@xml:id` |
+| Line | `region_1639399488602_10l1`, `line_1639401326021_84` | `zone/@xml:id` |
+| Image region | `Image_1676476154286_76` | `zone/@xml:id` |
+| Word | `region_1639399488602_10l1_0`, `line_1639401326021_84_0` | `w/@xml:id` |
+| Line break | `lb_42528` | `lb/@xml:id` |
+| Apparatus anchor | `start_42597`, `end_42599` | `anchor/@xml:id` |
 
-1. A document's uploaded schema override replaces its project set until reset.
-2. Its configured ordered project set applies when no override is active.
-3. Vendored TEI P5 TEI All RelaxNG applies when no project schema is configured.
+A word ID is formed from a line ID plus a token index, which is an inference from the pattern. The line part of a word ID does not reliably match the line on which the word now stands: on fol. 1r the word "Hie" has the ID `region_1639399488602_10l3_0` but follows `<lb facs="#region_1639399488602_10l1"/>`. The position of a word is therefore taken from the preceding `lb/@facs`, never parsed from its ID.
 
-Recovery and the project collection preserve each document's own schema settings. Opening another companion or creating a new document does not transfer the outgoing override. A schema result records identity, type, validity, availability and diagnostics. Output authorization additionally binds the result to the session, revision, document object, exact projected source and ordered schema key. Every result in a nonempty set must be valid.
+### Facsimile and IIIF resolution
 
-RelaxNG `include` and `externalRef`, and XSD `include`, `import` and `redefine`, resolve through served URLs or within a granted project folder. Nested folder resources remain inside the granted root. Unavailable resources block output. A standalone upload has no implicit local dependency bundle, and XML catalogs are outside the supported contract.
+Each page is a `surface` whose extent equals the pixel size of its master image, for example `<surface lrx="9243" lry="13067" ulx="0" uly="0" xml:id="page_32494516">` with `<graphic url="00000010.jpg" width="9243px" height="13067px"/>`. Zones carry `@points` polygons in the same pixel space, typed as `TextRegion` (`paragraph`, `header`), `Line` or `ImageRegion` (`img_miniature`, `img_marginalia`).
 
-Raw ISO Schematron supports XPath 1.0 bindings, namespaces, default phases, scalar lets, assertions, reports, diagnostics and common child or attribute contexts. Includes, abstract patterns, advanced match patterns, node-set lets and later XPath versions require precompiled XSLT. Compiled Schematron must yield a valid SVRL `schematron-output` through the browser's XSLT processor. Unsupported constructs or runtimes produce unavailable results.
+The manifest's resolver of type `iiif-image-template` takes the file stem of `graphic/@url` (`00000010`) and fills the template `https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2/info.json`. Zone coordinates map onto the IIIF full-resolution image without conversion; this is an inference from the equal extents and holds as long as the ONB images keep the size recorded in the TEI.
 
-## Header fields
+### Codex text and standOff apparatus
 
-The header inventory covers every TEI descendant and ordinary attribute under the legitimate `teiHeader`, in source order. Common fields receive familiar labels; other fields retain generated paths and exact XML access.
+The body is divided into `div` elements for the prologue, paratexts and the books Genesis to Josua, with chapters and verses as `div[@xml:id='Genesis.1']` and `l[@xml:id='Genesis.1.1']`. Within paragraphs, `pb`, `cb` and `lb` are empty markers, and every word is a `w` with `@xml:id`, `@orig` and `@norm`. Inline phenomena (highlighting, corrections, regions, register references) wrap the words as described in [editorial guidelines](editorial-guidelines.md).
 
-| Shape | Editable representation |
-| --- | --- |
-| Text-only or empty paired element | Scalar content value |
-| Ordinary attribute | Scalar value preserving original quoting and surrounding whitespace |
-| Mixed or structured content | Exact XML |
-| Self-closing element or header container | Exact XML |
-| Namespace declaration | Exact XML |
+The apparatus is a single `standOff/listApp`. Each `app` carries `@type`, `@from` and `@to` and holds two notes, `note[@xml:lang='de']` and `note[@xml:lang='en']`, whose text ends with the author sigle in parentheses. The anchors are empty elements placed in the text flow, between words or inside a `w`. Apparatus entries never point at `w/@xml:id`.
 
-Unchanged field values preserve their lexical form. In the generic metadata interface, structural creation, deletion and rearrangement use the complete header XML surface. Specialized witness operations can also change their supported header structures. A project-specific header declaration remains visible even when no dedicated form exists.
+### Image annotations
 
-## Local recovery and portable working copies
+`text/body/div[@type='codex-2759']` holds three lists: `list[@type='image-annotations'][@subtype='miniatures']` with items `miniatures_NN`, `list[@type='image-annotations'][@subtype='margins']` with items `margins_NN` for marginal decoration, and `list[@type='page-annotations']` with items `page_NN` describing a whole folio. An item may stand empty with `@sameAs` pointing to an equivalent item. The header's `editionStmt/respStmt` declares the artist siglas as `persName[@xml:id]`; `back/listBibl` holds the bibliography that `@resp` cites. The item fields are listed in [editorial guidelines](editorial-guidelines.md#image-annotations).
 
-IndexedDB database `teicrafter.recovery`, store `sessions`, holds version 1 checkpoints keyed by independent session UUIDs. A checkpoint contains canonical `raw`, filename, source metadata, UTF-8/BOM state, dirty baseline, manifest text, schema resources and settings, capture time, staged input, image blobs and optional project documents. The [restoration boundary](architecture.md#staged-input-and-restoration) installs the full record before its first automatic checkpoint.
+### Registers file
 
-| Staged mode | Retained unfinished state |
-| --- | --- |
-| `page`, `metadata` | Source text and applicable navigation context |
-| `metadata-form` | Field IDs and values |
-| `inline` | Cell identity, core text and normalized input |
-| `wenzels` | Section, selected record and form fields |
-| `witness` | Selected record, creation state and description, XML or attribution fields |
-| `entries` | Section, selected entry, encoding kind, fields and explicit batch targets |
+The current teiCrafter form keeps three lists in the top-level `standOff` of `registers.xml`:
 
-A restored entry batch requires a new preview. Saved fields never carry continuing mutation authorization.
+| Register | Container and entry | Name | Authority links |
+|---|---|---|---|
+| Persons | `listPerson/person[@xml:id]` | `persName` | `idno[@type]` |
+| Places | `listPlace/place[@xml:id]` | `placeName` | `idno[@type]` |
+| Peoples | `listOrg[@type='peoples']/org[@type='people'][@xml:id]` | `orgName` | `idno[@type]` |
 
-Portable files use `.teicrafter.json` and `{ format: "teicrafter-working-copy", version: 2, record: ... }`. Import also accepts version 1. Images use `{ name, type, base64 }` in place of Blob values. Native handles, object URLs and memory-only provider keys are excluded. Import creates a fresh recovery identity and recreates image URLs. Restoring an existing recovery entry retains that entry's identity. Legacy single-draft localStorage data is removed only after its IndexedDB migration commits.
+The handbook-conforming target form keeps the register as a separate file but links from the codex through `ref[@type='person'|'folk'|'place']` on the words, as the data already does, so that the register entry IDs equal the `ref/@target` values (`Martin`, `Ägypten`, `Israeliten`) and the image-file fragments (`#Gott`, `#Kanaan`). The existing values in both files are the seed vocabulary for a first register. Which list element holds peoples and which pointer syntax applies are open; the decision is pending with the operator and then with the edition team ([editorial guidelines](editorial-guidelines.md#open-ratification-points)).
 
-`projectDocuments` has `{ version: 1, activeId, documents }`. Each member retains a stable internal `id`, safe relative XML filename, source, encoding, dirty state, project/schema settings, reading-witness preference and loaded images. Assigned Wenzelsbibel roles `codex`, `images` and `registers` are unique; additional documents can remain unassigned. The collection retains previously edited documents when another role becomes active.
+### Project manifest
 
-The portable representation stores active raw XML and images once on the surrounding record, then reconstructs that active member on import. Inconsistent active identities, conflicting source values and ambiguous filenames are rejected. Captured companions are retained copies; later filesystem edits do not update them automatically.
+`docs/data/editor/wb-codex/teicrafter.project.json` declares today:
 
-## Validated project package
+| Field | Value |
+|---|---|
+| `workspace` | `wenzelsbibel`, which selects the specialised interface |
+| `imageResolver` | `iiif-image-template` with the ONB template above |
+| `markup` | the elements `hi`, `foreign`, `title`, `num`, `supplied`, `surplus`, `corr`, `sic`, `del`, `add`, `unclear`, `damage`, each without a value list |
+| `indices` | `persons` (`listPerson`), `places` (`listPlace`), `peoples` (no list type), with authority registers GND, GeoNames, Wikidata |
+| `views` | `diplomatic`, `bible-verse`, `image-annotation` |
+| `schema` | absent; the default schema set comes from code in `wenzels-profile.js` |
 
-`teicrafter-project.zip` contains separately encoded XML files, eligible loaded images and `teicrafter-bundle.json`. The manifest has `{ format: "teicrafter-project-bundle", version: 1, projectDocuments }`; XML content and image bytes reside at the referenced archive paths. Metadata retains the active document identity and per-document encoding, project settings, schemas, dirty state and reading preference.
+The planned manifest declares the schema set through `schema.schemas` (TEI All RelaxNG plus `wenzelsbibel.sch`), which removes the code default, and gains value lists for the markup actions from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies). The manifest change is part of the base refactor described in [plan](plan.md) and [architecture](architecture.md).
 
-The codec accepts its own uncompressed, UTF-8, single-volume ZIP32 layout. The complete archive may contain at most 2,147,483,647 bytes and 65,534 file entries, including the manifest and images. These limits apply to both encoding and decoding. It checks path safety, case-insensitive normalized filename conflicts, checksums, lengths, offsets and complete archive coverage. Unsupported compressed or foreign ZIP layouts are rejected. XML-like image attachments cannot bypass schema validation through the image channel; Working copy can retain such unfinished attachments.
+### Schema set
 
-Creation requires a current authorization for every XML member's exact target projection and effective schemas. Cancellation, invalid or unavailable validation, new staged input or a changed collection prevents delivery. Opening a package restores editing data and grants no continuing output authorization. Native Save retains its separate document-local contract in [integration](integration.md#browser-files-and-deployment).
+| Schema | Location | Scope |
+|---|---|---|
+| TEI All RelaxNG, TEI P5 4.11.0 | `docs/schemas/tei-p5-4.11.0/tei_all.rng`, vendored | All three files |
+| `wenzelsbibel-editorial.sch` | `docs/schemas/`, inherited from upstream | ISO Schematron with `queryBinding="xslt1"` (XPath 1.0), phases `editing` (default, requires a TEI root) and `review` (image records, artist references, ICONCLASS labels, text ranges); covers image annotations only |
+| `wenzelsbibel.sch` | planned under `editorial/` | Same phase model, extended to the codex and register vocabularies of the editorial guidelines |
 
-## Entry and witness encodings
+The legacy app runs RelaxNG in a browser worker and raw ISO Schematron with XPath 1.0 in the page ([upstream data](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/knowledge/data.md)); keeping the project Schematron at XPath 1.0 lets the same file run in Oxygen ([integration](integration.md)). Cross-file targets (zones, ranges, register entries) are resolved by the tool's companion checks, because the Schematron sees one document at a time.
 
-Dictionary forms map the lemma through `entry/form[@type='lemma']/orth`, accepting an untyped form when no lemma form exists. A single `sense/def` supplies the definition. Articles use `div[@type='entry' or @type='article']/head` and a single direct `p`. Multiple candidates or mixed content require XML editing. Local `xml:lang` and `n` remain separate scalar fields. Missing fields can be created in unambiguous containers; an empty body requires an explicit dictionary/article choice.
+## Fixtures
 
-Duplication assigns unused IDs throughout the copied subtree and rewrites supported internal URI-fragment pointers, including encoded fragments. Unchanged attributes and external targets retain their bytes. Duplicate IDs or attributes, compound internal pointers, unknown reference semantics and external XML base context prevent assumptions about safe rewriting. Deletion checks references to every descendant ID within the active document. Batch plans bind an explicit target list, `xml:lang` or `n`, and before/after values to the current document. Cross-file relinking is outside those operations.
+| Fixture | Location | Nature |
+|---|---|---|
+| `wb-synthetic-folio.xml`, `wb-dual-reading.xml`, `synthetic-codex.xml` | `test/fixtures-synthetic/` | Hand-authored structural twins, CC0, no ONB data |
+| Tier files `tier1-1folio.xml`, `tier2-5folio.xml`, `tier3-20folio.xml` | `test/fixtures-synthetic/tiers/` | Synthetic content with a CC0 statement; their manifests name `codex-2759.xml` as `derivedFrom`, which does not match the file content |
+| `Bilderfassung-synthetic.sch`, `tiers/Bilderfassung.sch` | `test/fixtures-synthetic/` | Small synthetic Schematron stand-ins, not the missing original |
+| `wenzelsbibel-synthetic-codex.xml` | `docs/data/editor/` | Synthetic sample for the start page |
+| fol. 1r extraction (`fol-1r.json`) | Local working material, not in the repository | Generated by a script from the public ONB TEI: columns, lines and tokens with their markup, apparatus entries anchored on the page, register IDs from the image file, miniature `miniatures_01`, zones and the IIIF base URL; input for the wireframe |
 
-Witness definitions use `listWit/witness`; referenced `bibl`, `biblStruct` and `msDesc` descriptions remain inspectable as exact XML. Alternatives use `app/lem`, `app/rdg` and nested `rdgGrp`. Attestation comes from each reading's own `@wit` pointers to unique local witnesses or groups. Grouping does not supply inherited `@wit`.
+The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies; tests of those need either new synthetic twins built from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies) or opt-in runs against the local real files ([testing](testing.md)).
 
-Reading projection preserves every alternative and identifies absent or ambiguous attribution, explicit omissions and fragment-boundary markers. The selected witness is a retained view preference and does not change XML. Unsupported apparatus-location or external-definition semantics remain visible editorial limits.
+## Limits
 
-## Review Record
+- The edition data cover the prologue, paratexts and the books Genesis to Josua. Further books are not part of the TEI files; how they will be added is undecided.
+- No register file exists in the edition data. Register identity rests on the ID strings in `ref/@target` and `@corresp`; no authority identifiers are attached.
+- The original project Schematron `Bilderfassung.sch` is missing. According to the DHCraft specification the project's copy of `Bildannotationen.xml` references it together with TEI All; the copy served by the ONB carries no `xml-model` processing instruction.
+- The data contain inconsistencies a review phase will report: the artist pointer `#STW` resolves to no sigla; `#ICONCLASS` resolves to no element; some statistical ranges are empty (`#range(,)`) or truncated; some `ref` elements lack `@target`; one `ref` has `type="Person"`; the `msItem/locus` targets `#Prologue`, `#Gen` and `#Transition2` match no `div/@xml:id` (the divisions are `Prologus`, `Genesis`, `Transition2.1`).
+- `w/@norm` is present throughout, but its production rules are not documented.
+- Image access through IIIF is technical only. Storing or redistributing images or edition data needs the rights holders' permission.
 
-A review resides in the relevant document or corpus-member header. This historical record lacks a scope fingerprint and therefore cannot establish current review on its own.
+## Storage and rights
 
-```xml
-<revisionDesc>
-  <change type="review"
-          subtype="verified"
-          target="#unit-id"
-          who="urn:teicrafter:local-reviewer"
-          when="2026-08-24T12:00:00Z">Editorially reviewed in teiCrafter.</change>
-</revisionDesc>
-```
+Real edition data stay outside every repository. In a working copy they belong in a local `data/` folder, which the planned `.gitignore` excludes; the current `.gitignore` of the fork does not yet list `data/`. The inherited rule that ignores `docs/data/editor/*/*` except manifest, README and NOTICE keeps the manifest tracked and any local payload out. The public header licence CC BY 4.0 is not treated as clearance, because the licence for a project copy is recorded as unresolved; the tool and its fixtures therefore ship only synthetic data, and the fol. 1r extraction stays local.
 
-`target` points to a unique `xml:id` on the primary navigation unit. New records add a `corresp` token beginning `urn:teicrafter:review-scope:v1:sha256:` followed by the 64 lowercase hexadecimal digest characters. The digest covers exact UTF-8 source. A page extends from its `pb` to the next `pb` in its text owner; a container covers its outer XML. Contained `revisionDesc` ranges are excluded. Whitespace changes inside that scope invalidate the fingerprint; changes outside it do not.
+## Examples
 
-Current review requires the latest applicable record to be verified with a matching fingerprint. Reopening appends `subtype="reopened"`; existing revision history remains preserved. Duplicate identifiers, missing headers or incompatible revision structures block review storage. Legacy `@ana="#teicrafter-reviewed"` is historical evidence and can be removed without removing unrelated tokens.
-
-## Cross-structure and discontinuous annotations
-
-Generic stand-off annotations retain selected text and insert boundary anchors at exact raw positions.
+A register reference on fol. 1r, wrapping three words with rubrication and a line break inside a word:
 
 ```xml
-<standOff>
-  <spanGrp xml:id="mention-1" type="entity">
-    <span from="#mention-1-1-from" to="#mention-1-1-to" ana="#person-1"/>
-    <span from="#mention-1-2-from" to="#mention-1-2-to" ana="#person-1"/>
-  </spanGrp>
-</standOff>
+<ref target="Martin" type="person">
+  <w norm="Rotlebin" orig="Rotlebín" xml:id="region_1639399535558_19l6_1"><hi rend="rubrication">Rotlebín</hi></w>
+  <w norm="herren" orig="herren" xml:id="region_1639399535558_19l6_2">herren</w>
+  <w norm="mertein" orig="merteín" xml:id="region_1639399535558_19l6_3"><hi rend="rubrication">mer<lb facs="#region_1639399535558_19l7" xml:id="lb_43234"/>teín</hi></w>
+</ref>
 ```
 
-A continuous cross-structure selection uses one span. A discontinuous selection uses ordered, non-overlapping spans in one group. Each may carry `ana` and `resp`. Group identity connects highlighting, relinking and removal across segments. Cleanup removes boundary anchors only when no remaining reference needs them.
-
-The generic collector operates within one TEI document. [Wenzelsbibel](wenzelsbibel.md) owns apparatus comments, Bible-verse spans, shared-register links and image `corresp` or `#range(...)` forms against attached companions. Their domain-specific interpretation is separate from the generic span encoding.
-
-## Machine provenance
-
-Whole-document generated TEI carries a configured responsibility pointer on the root and declares it in a matching `respStmt`.
+An apparatus entry and its anchors inside a word on fol. 1r (note text shortened):
 
 ```xml
-<TEI xmlns="http://www.tei-c.org/ns/1.0" resp="#ai">
-  <teiHeader>
-    <fileDesc>
-      <titleStmt>
-        <title>Generated draft</title>
-        <respStmt xml:id="ai"><resp>Generated draft</resp><name>AI</name></respStmt>
-      </titleStmt>
-      <publicationStmt><p>Unpublished draft.</p></publicationStmt>
-      <sourceDesc><p>Generated from supplied source text.</p></sourceDesc>
-    </fileDesc>
-  </teiHeader>
-  <text><body><p>Draft text.</p></body></text>
-</TEI>
+<!-- standOff/listApp -->
+<app from="#start_42597" to="#end_42599" type="comment_edition">
+  <note xml:lang="de">Die doppelte Apostrophe "O Got got" wird wohl als Ausdruck der Emphase aufzufassen sein … (MK)</note>
+  <note xml:lang="en">The double apostrophe "O Got got" is probably to be understood as an expression of emphasis … (MK)</note>
+</app>
+<!-- text -->
+<w norm="got" orig="got" xml:id="region_1639399497290_13l1_0"><anchor xml:id="start_42597"/>got<anchor xml:id="end_42599"/></w>
 ```
 
-Reload detection requires both pointer and declaration. Per-construct proposals also use `@resp`; project policy can replace the default local pointer.
+The miniature on fol. 1r, abbreviated to its reference fields:
 
-Acceptance preserves the complete `resp` token list and adds `urn:teicrafter:proposal:accepted:` plus the URI-encoded responsibility token to `ana`. Accepting `#ai` therefore adds `urn:teicrafter:proposal:accepted:%23ai` while retaining existing analysis tokens. Origin and pending status remain independent. An accepted gap retains this evidence when its reversible choice is collapsed. Provider transport and key handling belong to [integration](integration.md#model-and-authority-services).
-
-<a id="licence-boundary"></a>
-
-## Source material and rights
-
-| Material | Storage and relevant properties |
-| --- | --- |
-| UFBAS Urfehde | Local real whole-book TEI for navigation, header, review and accessibility workflows |
-| Wenzelsbibel Codex 2759, image annotations and PAGE sources | Local real project material for word readings, surfaces, zones, apparatus and cross-document references |
-| Jeanne Hersch | Local real TEI and a committed structural twin for inline-GND interchange and facsimile workflows |
-| Stefan Zweig Digital | Upstream catalogue and Page-JSON material with generated TEI fixtures |
-| Type-diverse synthetic fixtures | Redistributable source structures for repeatable projection, mutation, schema and browser checks |
-
-Availability and run outcomes belong to [dated reports](../reports/README.md). [Testing](testing.md#real-material-and-reproducibility) distinguishes synthetic coverage from opt-in real-source evidence.
-
-The committed [hsa-7711 transcription](../docs/data/editor/hsa-7711/README.md) and [SZD conversion](../docs/data/editor/szd/NOTICE.md) carry separate source and licence declarations. Notices for vendored [TEI schemas](../docs/schemas/tei-p5-4.11.0/NOTICE.md) and [guidelines](../docs/data/tei/NOTICE.md) govern reference material. Third-party originals whose rights do not permit redistribution remain outside the public repository. Structural twins retain only encoding properties needed for reproducible checks.
+```xml
+<item corresp="#Image_1676476154286_76" xml:id="miniatures_01">
+  <title resp="#JT #KS">Anfangs-Initiale (O) zum Prolog: Gott auf dem Thron</title>
+  <dimensions><height unit="line">14</height></dimensions>
+  <ref n="4-17" target="1ra" type="folio"/>
+  <listPerson resp="#JT #KS" type="artists"><head>Künstlerzuweisung</head><person corresp="#BA"/></listPerson>
+  <listPerson type="related"><head>Relevante Personen</head><person corresp="#Gott"/><person corresp="#Engel"/></listPerson>
+  <listRef>
+    <ref corresp="https://iconclass.org/11C21(+0)" resp="#ICONCLASS" type="iconclass-label">
+      <desc xml:lang="de">Gottvater als junger oder erwachsener Mann</desc>
+      <desc xml:lang="en">God the Father as young or adult man</desc>
+    </ref>
+  </listRef>
+  <objectType rend="initial_historisiert">Historisierte Initiale (O)</objectType>
+  <note corresp="#range(region_1639399488602_10l3_0, region_1639577288773_22l29_4)" resp="editor" subtype="statistic" type="text-relation">gesamter Prolog bis fol. 2r WB: f.1r Z.1-1 bis f.2r Z.6-6</note>
+</item>
+```

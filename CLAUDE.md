@@ -1,61 +1,51 @@
-# teiCrafter: Project Instructions
+<!-- template: Vorlage Action-Layer v0.5, https://dhcraft.org/Promptotyping/promptotyping-document/action-layer -->
 
-## Language and Style
-- No emojis. Never in outputs, files, or commit messages.
-- No em dashes or en dashes as punctuation; use commas, colons, or parentheses.
-- All code, UI text, and documentation in English.
-- Commit messages in English as well; this repository overrides the global default of German commit messages.
-- Code comments: compact, descriptive, plain English, only where the code cannot speak for itself. State the constraint or intent, not implementation history; no dates, decision references, or restoration instructions (that context belongs in knowledge/journal.md).
-- UI and public-facing text (landing, About, README, tooltips, status lines): descriptive and factual, written for researchers. Full sentences that state what the tool does and what a property concretely means; no slogans, no marketing claims, no metaphors, no undefined shorthand ("by construction", "proof harness"). A property that cannot be explained where it is claimed, or linked to its explanation, is left out. Do not present a current configuration as identity (e.g. "no LLM" while LLM features are planned).
-- Knowledge documents follow the Promptotyping Documents convention: standard Markdown with YAML frontmatter (title, project, method, template, status, created, updated; plus topics, language, related; version follows Knowledge Maintenance below). This replaces the former "no frontmatter" rule.
-- Knowledge documents describe patterns, decisions, constraints and mechanisms, not incidental surface details the artifact shows on sight (a count of cards, an enumeration of visible sections): those go stale on trivial change and carry no decision. Test and proof counts in particular do not belong in any knowledge document (not even testing.md, whose proof table states what each proof asserts and shows a qualitative result, not an N/N integer); the test run is their only source of record. Concreteness stays where it is the document's function (formats in data.md, the module map in architecture.md, the registers). A figure that is genuinely load-bearing lives in exactly one owning document; every other mention cross-links rather than restates it.
-- Knowledge documents describe the current state only: no narrative of what a document previously carried, what moved where, or what no longer exists. History belongs in journal.md and in git. Dated decision provenance is kept only where it is the document's function: journal.md and the Key Decisions in specification.md.
+# wenzelsbibel-teiCrafter: Project Instructions
 
-## Project
-- Direction since 2026-10-04: teiCrafter is being rebuilt as a source-first TEI XML editor. The XML source in a code editor (CodeMirror 6) is the primary surface, for three use cases: create TEI from plain text, edit an existing TEI XML, read a TEI XML, with continuous well-formedness, schema validation on demand and optional model proposals. New code goes into `src/` (layers core, editor, validate, io, llm, ui; see knowledge/architecture.md "Source-first core under `src/`"), never into `docs/js/`. Runtime assets live in `public/`. Viewer prototypes in `prototypes/` run with `npm run dev:prototypes`. Tests: `node --test "test/core/*.test.mjs" "test/validate/*.test.mjs"` (Node 22 needs the glob form) and `npx tsc --noEmit -p tsconfig.json`. The open rebuild steps are in knowledge/handoff.md. The points below describe the legacy editor in `docs/`, which stays published until the Pages source changes.
-- A browser-based editor that preserves UTF-8 TEI outside deliberate edits. Unsupported encodings are rejected before editing. Open an existing source, navigate by the structures it actually encodes (for example pages, entries, speech turns, corpus members, surfaces, source documents or sections), correct encoded `<w>`/`<pc>` tokens and exact text runs according to each local cell, then save the canonical XML byte-faithfully outside the deliberate edits. The core is a generic, offset-true reader (raw string canonical, edits are offset splices, `serialize()` byte-identical).
-- Projects are folders with a declarative `teicrafter.project.json`. One project holds several document types, and the allowed markup binds to the type (`documentTypes` + the `files` map; project-level `markup` is the default, PID detection the fallback for bare files). "Open project folder" uses a once-granted File System Access directory handle (decision: not OPFS), Chromium-only; its `.xml`/`.txt`/`.md` files appear in the Project panel. Plaintext (`.txt`/`.md`) opens as a deterministic line-level draft (transport, never AI-marked; a `|N|` token becomes a page break), from the project panel or directly via picker/drop; in a project the first save creates the `.xml` next to the source, session checkpoints preserve drafts and existing documents, including staged inline/XML/metadata edits and loaded image bytes. First Save allocates an unused XML filename. Separate from the LLM on-ramp.
-- An optional LLM on-ramp ("New from text (LLM)") drafts an initial TEI from plaintext into the same editor, marked machine-generated and unreviewed (violet). The model assists; the human decides. Behind `FEATURES.llmOnRamp` (a build default plus a per-user toggle); AI off is a fully deterministic editor and the code stays in place.
-- Real cases: Wenzelsbibel (word-level), Jeanne Hersch / zbz-ocr-tei (line-level), Stefan Zweig / szd-htr (catalog TEI + Page-JSON, needs conversion first).
-- Client-only: source lives in `docs/`, Vite builds to `dist/`, and the checks workflow uploads `dist/` as a Pages artifact. The current GitHub Pages configuration automatically publishes `main:/docs` as unbundled source modules; the uploaded build artifact is independently verified and is not the configured publication source. The browser runtime has no backend dependency. The built-in examples (landing cards, Load... entries, `#example` deep link) show only on local development hosts (`FEATURES.examples`); the public deployment hides them.
-- An independent tool, not a module of EditionCrafter.
-- Deterministic starters, file input and model-assisted drafts land in one editor. Read-only mode blocks mutation paths. Accepted AI proposals retain their origin and receive a separate acceptance marker.
-- The target release is 0.2.0, while package.json remains 0.1.0 until release acceptance. Read [reports/README.md](reports/README.md) for current verification and remaining scope. Starter templates do not imply complete genre-specific workspaces.
+wenzelsbibel-teiCrafter is the editing environment for the Wenzelsbibel edition (Codex 2759), derived from teiCrafter. The documents in `knowledge/` hold the rules, the specification and the architecture from which the tool is implemented. The edition team at the Paris Lodron University Salzburg is the critical expert and decides data model, rights and acceptance; the operator of this repository decides scope and design; the agent implements and reports.
 
-## Knowledge Base (`knowledge/`)
-Function-separated per the Promptotyping convention. After this action layer, read `knowledge/INDEX.md`, `knowledge/handoff.md` and the latest journal decision. Verify the current Git state before relying on a dated observation.
+## Knowledge base
 
-| Document | Read first when |
-|----------|-----------------|
-| project.md | positioning or identity is unclear |
-| data.md | formats or the plaintext ingest conventions or test material are in question |
-| specification.md | a requirement, a decision, or an acceptance scenario is at stake |
-| architecture.md | components, data flow, the engine reading contract, the module map, or implementation status |
-| design.md | UI, visual, or interaction work (the aesthetic value source) |
-| testing.md | the test approach, the acceptance method, engine proofs, or the harness is in question |
-| journal.md | how a decision came about |
-| handoff.md | received deltas still require verification or integration |
-| integration.md | working across the sibling projects: cross-project data flow or the tool boundary |
-| converter-reference.md | building or verifying the SZD Page-JSON to TEI converter |
-| worked-examples.md | the SZD or ZBZ object taken end-to-end in the editor is in question |
-| wenzelsbibel.md | Wenzelsbibel authoring, image annotations, shared registers, Bible references or PAGE XML import |
+After this file read `knowledge/INDEX.md`, then `knowledge/handoff.md`, then the document the task needs. Read `knowledge/journal.md` for the reason behind a decision.
 
-## Design as Value Source
-Before generating or changing UI, read `knowledge/design.md`. Its principles are binding: the AI assists and the human decides (expert-in-the-loop); categorical confidence, not numeric; AI-generated content is always marked in the violet token family (`--color-ai`); design tokens are the single source of truth (live prefix is `--color-*`/`--space-*`/`--font-*`/`--radius-*`, no raw hex in components); label consistency is a rule, not a freedom.
+| Read first when | Document |
+|---|---|
+| an encoding, a vocabulary or a divergence from the handbook is at stake | `knowledge/editorial-guidelines.md` |
+| a file, the manifest or the schema set is in question | `knowledge/data.md` |
+| a requirement, a decision or an acceptance scenario is at stake | `knowledge/specification.md` |
+| interface or interaction work | `knowledge/design.md` |
+| modules, the merge path from the base or deployment | `knowledge/architecture.md` |
+| what is checked and what is not claimed | `knowledge/testing.md` |
+| the boundary to the base, the edition team or Oxygen | `knowledge/integration.md` |
+| what comes next | `knowledge/plan.md` |
 
-## Knowledge Maintenance
-At the end of a session with code changes, update the affected knowledge documents:
-1. `architecture.md` for component, data-flow, or implementation-status changes.
-2. `journal.md` for a session entry and any new decisions. Journal style: an entry records the trigger, the decision and the reason, in a few sentences; no proof numbers or test counts (dated run reports carry them), no implementation detail (architecture.md carries it), no file-by-file lists. Lessons worth keeping are part of the reason.
-3. `specification.md` for new decisions, resolved open questions, or requirement changes.
-4. `design.md` only if the visual or interaction layer changed.
+## Working rules
 
-The documentation version policy is owned by [INDEX.md](knowledge/INDEX.md#documentation-maintenance). Follow it when changing knowledge documents. Distill: one function per document, cross-link via `related:` rather than repeat.
+- Handoff. Verify source and current target of an item before using it, integrate durable content into the owning document, write the journal entry, remove the item. The empty state of the inbox is `Keine offenen Handoff-Punkte.`.
+- Journal. One entry per coherent transition, typed integrated, rejected or corrected, with source, target and result. No status, no open tasks, no proof counts.
+- Truth hierarchy. The handbook of the edition outranks the DHCraft specification and the base's conventions for what an encoding means; the real XML outranks every description of it; the base's specification outranks this repository for the invariants it inherits (canonical raw XML, offset splices, byte-identical no-op roundtrip, schema-gated save). Report a contradiction, never diverge silently.
+- Base and derivation. Generic mechanisms are built in the base teiCrafter and merged in; this repository changes only its own zones, see `knowledge/architecture.md`. Before touching a file outside those zones, check whether the change belongs upstream.
+- Verification. Browser tests and proofs establish technical behaviour; no run, report or document claims scholarly correctness or acceptance. A run with real files names the files it used.
+- Quantities. No volatile counts in this file or in knowledge documents; name the living source.
 
-## Handoff and re-entry
-`knowledge/handoff.md` is the permanent process inbox for received deltas awaiting integration. Keep it active even when empty; the canonical empty text is `Keine offenen Handoff-Punkte.`. Each open item carries `Received`, `Source`, `Target` and `Context`. Verify the source and destination, integrate durable content into its owning document, record the outcome in `knowledge/journal.md`, then remove the processed item. Release requirements remain in the release scope catalogue.
+## Design principles
 
-Use Git, the owning knowledge documents and dated verification reports for normal session re-entry. Create a dated exceptional handoff under `handoffs/` only when necessary context cannot be recovered from those sources. Historical snapshots in `reports/` retain their original evidence boundary. Do not create a session dump to repeat the maintained knowledge base.
+Read `knowledge/design.md` before generating or changing interface or interface text. Derived from it:
 
-## Working model (lane protocol)
-teiCrafter is edited directly. Sibling-repo work (szd-htr, zbz-ocr-tei) goes out as orders and is never edited from here. Securing is decoupled from approval: commits to this lane's own paths push to main autonomously, tags and releases stay operator-gated. Research steering (the milestone register, the backlog, the paper material) lives in the operator's private vault, not in this repository.
+- The human decides. Offer no model proposals in this project; the toggle stays off.
+- Use the base's design tokens only; introduce no raw colour.
+- Label controls in German by their function, consistently across views.
+- Show the manuscript line as the reading unit; keep the selection across the Text and XML switch.
+- Render no control that cannot work in the detected browser; end a failed capability check in a working alternative.
+- State the reason of a failed check at the status line and in the findings list; keep the unsaved marker until saved.
+
+## Scope
+
+Decided in `knowledge/specification.md`: the prototype for the first meeting shows five workflows and nothing else. Out of scope are an ODD, the project package, the Bible-verse form, a findings list beyond the status line, a keyboard shortcut scheme, the PAGE import, witness management and the entry workspace. Edition data and images are never committed and never redistributed.
+
+## Tools
+
+- Commands: `npm install`, `npm run dev` (serves `docs/`), `npm run test:e2e` (Playwright against the served legacy app), `node test/verify.mjs` (proofs and contract checks), `npm run check:biome`. See `knowledge/testing.md` for which run is required before a commit.
+- Conventions: code, identifiers, comments, commit messages and knowledge documents in English; interface labels in German. No emojis. No em or en dashes as punctuation. Commit messages imperative, one line, body only where the diff does not explain itself.
+- Git: `upstream` is DigitalHumanitiesCraft/teiCrafter, `origin` is DigitalHumanitiesCraft/wenzelsbibel-teiCrafter. Merge the base with `git fetch upstream` and `git merge upstream/main`; on a conflict in the base's former `knowledge/` files keep the deletion. Push, tags and releases stay with the operator.
+- Data: `data/` is ignored. Never add edition files or images to the repository.

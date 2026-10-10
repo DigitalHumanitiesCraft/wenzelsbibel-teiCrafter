@@ -1,141 +1,85 @@
 ---
-title: teiCrafter Testing and Evaluation Harness
+title: Testing
 project:
-  name: teiCrafter
-  repository: https://github.com/DigitalHumanitiesCraft/teiCrafter
+  name: wenzelsbibel-teiCrafter
+  repository: https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter
 method:
   name: Promptotyping
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
 template:
   name: Vorlage Testing
-  version: 0.1
+  version: 0.3
   url: https://dhcraft.org/Promptotyping/promptotyping-document/testing
-status: complete
-created: 2026-05-30
-updated: 2026-09-19
+  alias: https://dhcraft.org/Promptotyping/#promptotyping-document-testing
+status: draft
+created: 2026-10-10
+updated: 2026-10-10
 language: en
-topics: ["[[Software Testing]]", "[[Evaluation]]", "[[TEI XML]]"]
-related: [architecture, specification, data]
+topics: ["[[Software Testing]]", "[[TEI XML]]"]
+related: [architecture, specification, editorial-guidelines, data, integration, plan]
 ---
 
-# teiCrafter Testing and Evaluation Harness
+# Testing
 
-## Evidence and acceptance
+This document states what the Wenzelsbibel editor guarantees, what it does not, and how each claim is checked. The fork inherits the base's evidence layers unchanged and adds three of its own: one browser test per meeting workflow, Schematron fixtures per rule, and a recorded run against the real edition files. Technical evidence never stands in for the edition team's scholarly judgment.
 
-Technical claims require evidence at the layer where the behaviour occurs. Pure model proofs establish source transformations; schema execution establishes formal validity; browser scenarios establish interaction and delivery. Scholarly correctness and user acceptance require editorial judgment beyond those checks.
+## Test strategy
 
-[The completion report](../reports/editorial-completion-2026-09-11.md) records the executed product evaluation, source availability, toolchain, results and remaining acceptance scope. [Reports](../reports/README.md) own run counts and timings. This document defines the repeatable method and the limits of each evidence class.
-
-| Evidence | What it establishes | Limit |
+| Layer | Source | Fault class it catches |
 | --- | --- | --- |
-| Node contract proofs | Exact parsing, projection, mutation, state ownership and refusal behaviour against controlled inputs | Browser execution and scholarly interpretation need separate evidence |
-| Independent Python/lxml harness | Reference/candidate text fidelity, structural invariants and formal schema evidence | Its comparative schema mode does not authorize browser output |
-| Static checks and production build | Curated type coverage, coding checks and required deployment assets | A build alone does not establish a working interaction |
-| Chromium and Firefox scenarios | Rendered workflows, downloads, recovery, asynchronous guards and capability fallbacks | Claims apply to exercised states and supplied fixtures |
-| Axe checks | The configured automated accessibility floor in inspected views | Manual keyboard, assistive-technology and WCAG review remain necessary |
-| Expert review | Correct editorial mappings, annotations and interpretation for a source project | Must identify the reviewed material and scope |
+| Engine proofs | Inherited `test/proofs/`, including the `wenzels_*_check.mjs` proofs for text, image, register and project-check models | Lost or altered bytes outside a deliberate edit, wrong splice, unsafe register deletion, broken note projection |
+| Schema and contract checks | Inherited proofs for manifest, schema set, schema files, worker and cache | A manifest or schema set that loads wrongly, stale validation reused as authorisation |
+| Browser checks | Inherited `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites (import, project, references, register protection, schema, workspace) | Interaction, recovery, working copy, package and output gate failures in Chromium and Firefox |
+| Demo workflow tests (fork) | `test/e2e/wb-demo-*.spec.js`, one per workflow | A meeting workflow that no longer runs end to end in the new interface |
+| Schematron fixtures (fork) | `editorial/fixtures/`, one positive and one negative document per rule | A rule that fires on valid encoding or misses the error it names |
+| Real-file run (fork) | `snapshots/`, recorded on the operator's machine | Behaviour on the full codex, the real image annotations and registers |
+| Scholarly acceptance | Edition team at PLUS | Readings, normalisations, register identifications, apparatus content |
 
-## Fidelity and adversarial checks
+The fork-only test files carry the prefix `wb-demo-` so that they never collide with base files during a merge.
 
-The independent harness separates text fidelity (L1), formal schema evidence (L2) and structural invariants (L3). A reference that is already invalid under the comparison schema can be assessed by comparing diagnostics around the intended change. Browser output remains subject to its mandatory current schema gate. The harness's negative self-test deliberately corrupts fixtures so a validator that misses loss cannot silently pass.
+## What is guaranteed
 
-Exact-source checks compare complete expected strings or encoded downloads, preserving everything outside the declared edit. Round trips include no-op load/export, mutation, Undo and reopen. Prefixes, foreign namespace decoys, entity spelling, mixed content, duplicate IDs and attributes, unsupported encodings and stale selections expose unsafe assumptions.
-
-| Contract | Deterministic evidence | Browser evidence |
+| Claim | Evidence | Result |
 | --- | --- | --- |
-| Reading and canonical mutation | Parsing, literal text, dual readings, exact patches and source-preserving interchange | Inline/source edits, Undo and exact target download |
-| Source-derived interface | Inventory and review-cache isolation, first-occurrence value order, compositional capabilities and conservative schema profiles | Type-diverse navigation and asynchronous reprojection without selection loss |
-| Header, review and annotation | Scalar/XML boundaries, fingerprint scopes, namespace-aware review history, span grouping and pointer cleanup | Metadata, reviewer input, Markup/Notes navigation and discontinuous selections |
-| Entries and witnesses | Encoding-specific scalar edits, ID-safe duplication, descendant-reference protection, batch currentness and explicit attestation | Creation, protected deletion, batch preview, witness reading, staged recovery and read-only guards |
-| Persistent project collection | Exact XML/BOM and schema preservation, path/identity checks, ZIP integrity and controller authorization | Companion changes, failed or delayed storage, reload, Working copy and package reopen |
-| Schema and file output | Ordered schema decisions, dependency graphs, projection binding, cancellation and external-version checks | Valid downloads, invalid/unavailable refusal, late completion and native/fallback delivery |
-| Intake and external services | Deterministic PAGE/text conversion, provider mapping and provenance | Import diagnostics, generated drafts and guarded asynchronous suggestions |
+| Opening and saving preserves every byte outside deliberate edits | Inherited engine proofs and browser round trips | Recorded in the base's completion report; not yet run in the fork, rerun after each merge |
+| Save is blocked unless TEI All and the project Schematron pass for the exact bytes | Inherited output-gate proofs and browser tests | Recorded in the base; not yet run in the fork, the fork's schema set is checked in phase 4 |
+| Each meeting workflow runs end to end in the new interface | `wb-demo-*.spec.js` | Open until phase 5 |
+| Each project Schematron rule accepts its positive and rejects its negative fixture | Fixture check | Open until phase 4 |
+| The real codex, image annotations and registers open, edit and save through the gate | Run recorded under `snapshots/` | Open until phase 6 |
 
-The executable contracts live in [proofs](../test/proofs/) and [browser scenarios](../test/e2e/). [Architecture](architecture.md) identifies the implementation boundaries; [data](data.md) specifies the expected serialized forms.
+## Acceptance
 
-## State-transition regressions
+| Question | Method | Level | Evidence |
+| --- | --- | --- | --- |
+| Can a page be opened with facsimile, a line edited diplomatically and normalised? | Demo test 1, real-file run | automatic, contextual | Test result, snapshot |
+| Can an apparatus comment be created on a selection? | Demo test 2 | automatic | Test result |
+| Can a word be linked to a register entry, including a new one? | Demo test 3 | automatic | Test result |
+| Can a miniature's annotation be edited with ICONCLASS and its text relation seen? | Demo test 4 (ICONCLASS response stubbed) | automatic | Test result |
+| Do validation messages read clearly and does Save write a file? | Demo test 5, demo protocol | automatic, visual | Test result, snapshot |
+| Does the encoding match the handbook? | Review by the edition team | professional | Ratification decision, recorded in [editorial-guidelines](editorial-guidelines.md) |
 
-Restoration tests inspect actual IndexedDB `sessions` writes. Every first checkpoint after Working-copy import must use the intended identity and contain images, source metadata, schemas and unfinished input together. Recovery failure must retain the visible document and keep later storage usable. Duplicate recovery entries, a partial initial checkpoint or an imported dirty baseline lost by Undo are failures.
+## What is deliberately not checked
 
-[Project transition scenarios](../test/e2e/project-transition-safety.spec.js) delay recovery while text or attachments change. The attempted switch must refuse the stale transition and preserve the changed collection. Other cases replace a document while custom-schema file reading is pending, ensuring the old choice cannot affect the new session. Newly created registers and imported drafts receive their own schema settings; outgoing companions retain theirs.
+- Scholarly correctness of readings, normalisations, register identifications and apparatus text. Only the edition team can establish it.
+- User acceptance. The meeting demo shows the workflows; acceptance requires the team's decision.
+- Performance on the full codex beyond the limits the base documents in its [editorial completion report](../reports/editorial-completion-2026-09-11.md). The first full validation of a changed codex is expensive, particularly in Firefox.
+- Real-file evidence in CI. Edition files and images are not redistributable, so CI runs synthetic twins only; a real-file claim needs a run that actually supplied the files.
+- Image rendering from the ONB server in CI. Browser tests stub the IIIF responses; the real-file run covers the live service.
 
-[Project package scenarios](../test/e2e/wenzelsbibel-project.spec.js) test the complete collection. A bad companion, cancellation or changed captured state must prevent a download. Successful reopen compares every XML payload and retained per-file metadata. Native Save is tested against its document-local contract; no test implies a filesystem transaction across separate files.
+## Known exceptions and limits
 
-## Schema runtime evidence
+The new interface replaces the shell of `docs/editor.html`. Inherited browser tests that drive the base shell, including the `wenzelsbibel-*.spec.js` suites, then no longer apply to the fork's editor page. They stay valid in the base, where the refactor is accepted against them. In the fork they are excluded through a fork-only Playwright configuration with an ignore list, so that `playwright.config.js` and the test files remain identical to the base and merge without conflicts. Engine proofs remain fully inherited. This exclusion is a planned decision for phase 5 and is open until the new shell exists.
 
-Resource discovery and engine execution are separate assertions. RelaxNG `include` and `externalRef`, and XSD `include`, `import` and `redefine`, exercise served and granted-folder paths, nested dependencies, cycles, encoded filenames and missing resources. Resolved synthetic grammars run through the actual engine. Missing dependencies must produce an unavailable result and block output.
+Raw Schematron runs on browser XPath, so the fixture check runs in a browser test rather than in Node.
 
-Raw Schematron covers the supported XPath 1.0 features alongside explicit refusal of unsupported semantics. Compiled stylesheets must produce SVRL; arbitrary XML output and absent `XSLTProcessor` are unavailable conditions. [Data](data.md#schema-set-and-validation-result) owns the feature boundary.
+## How to run
 
-Authorization cases change the source revision, document object, target projection or schema key after validation and require refusal of the prior result. Inline-GND validates its exact target projection while preserving the working document. Reset and restore abort obsolete work. Manual validation must start again after cancellation or runtime failure.
+Use the Node and npm versions pinned in `package.json`, then `npm ci` and `npx playwright install chromium firefox`. Commands run from the repository root.
 
-[Worker proofs](../test/proofs/schema_worker_check.mjs) exercise request correlation, dependency transport, cancellation, late messages and restart. [Cache proofs](../test/proofs/schema_result_cache_check.mjs) alter XML, main grammar and included grammar independently, mutate caller-owned inputs during asynchronous work and exceed the bounded successful-result cache. No invalid result may become reusable authorization.
-
-[The browser worker probe](../test/e2e/schema-worker.spec.js) measures heartbeats during real schema compilation, emits preparation and validation phases, compares the authorized download and rejects an invalid subsequent revision. Cold validation has an explicit fixture-specific budget; ordinary interaction and reused-result checks retain their own bounds. Timings belong to the measured source, browser and environment. The full original source is validated without vocabulary pruning or schema reduction.
-
-## Browser and deployment scope
-
-The normal [Playwright configuration](../playwright.config.js) builds and serves the production artifact in Chromium and Firefox. The application declares `baseline widely available` through Browserslist. Native file APIs are detected capabilities; their absence exercises the portable fallback and does not justify skipping the editing workflow.
-
-A run against directly served `docs/` establishes that source-delivery path only. The [source-browser diagnostic configuration](../reports/source-browser-check.config.mjs) complements the production gate. GitHub Pages deployment and CI build artifacts follow the distinct [integration contract](integration.md#browser-files-and-deployment).
-
-Public-example scenarios exercise actual missing-source responses and HTML with HTTP 200, ensuring a soft error cannot become an edition. Facsimile checks resolve the actual image URL, decode pixels and await a newly created overlay. An HTTP response or viewer container alone is insufficient evidence of image rendering.
-
-## Real material and reproducibility
-
-Committed fixtures cover compositional source structures such as paginated dictionaries, drama, speech, correspondence, apparatus, facsimile-only TEI, source documents and simultaneous navigation channels. Structural twins provide repeatable interactions without redistributing protected source material. [Data](data.md#source-material-and-rights) records source and licence boundaries.
-
-| Input | Evidence enabled when supplied |
-| --- | --- |
-| `WB_CODEX` | Complete codex engine fidelity, word and normalization behaviour, source profile, image/zone resolution and opt-in browser editing/output |
-| `WB_IMAGES` | Original image-annotation model and browser round trips |
-| `WB_PAGE_ROOT` | Real PAGE/METS import mapping and source-integrity checks |
-| `UFBAS_TEI` | Complete Urfehde navigation, header, review, output and Axe workflow in both browsers |
-| Optional Hersch/SZD sources | Their explicitly declared corpus and interchange proofs |
-
-Real browser cases modify temporary working copies and compare the expected complete output. The codex case validates an explicitly repaired copy, then packages that identical codex with the original image-annotation file and compares decoded payloads. Original sources must remain unchanged. A real-object claim requires that object's presence in the recorded run; synthetic success cannot establish it.
-
-The strict evaluator records available inputs, file or directory hashes, repository content, Git revision, toolchain and browser versions before execution. It rechecks captured source and repository hashes at completion, including failed runs. Changed or unreadable captured inputs fail evaluation. Linux CI provides the clean-checkout check with committed synthetic assets and no local originals.
-
-## Running the gates
-
-Use the pinned Node/npm versions in [package.json](../package.json), Python with the harness dependency and installed Playwright browsers. [The test README](../test/README.md) supplies installation and focused commands.
-
-```powershell
-npm run evaluate:editorial
+```text
+node test/verify.mjs           # engine proofs, Python/lxml harness, typecheck, Biome, Vite build, asset contract
+npm run check:biome            # Biome over docs/js, test/e2e and the configs
+npm run test:e2e               # Playwright, Chromium and Firefox
 ```
 
-This is the strict local and CI completion gate. It runs required Node proofs, the independent harness and negative self-test, curated JavaScript typechecking, Biome, the production build and the complete browser matrix. It uses one browser worker, zero retries and forbids focused-only tests. A retry that later passes cannot hide the first failure.
-
-Only exact source-dependent omissions and the Chromium instance of the Firefox-specific scenario are allowed. Their names and source-presence conditions are encoded in [evaluation-inputs.mjs](../test/evaluation-inputs.mjs) and [evaluation-results.mjs](../test/evaluation-results.mjs). Unexpected skips, missing executions, interruptions, flaky outcomes or infrastructure failures fail the evaluator. Optional full-corpus sweeps remain outside the default gate and run through `npm run verify:full-corpus`.
-
-For the real Wenzelsbibel evaluation, provide all required originals explicitly.
-
-```powershell
-$env:WB_CODEX = 'C:/path/to/codex-2759.xml'
-$env:WB_IMAGES = 'C:/path/to/Bildannotationen.xml'
-$env:WB_PAGE_ROOT = 'C:/path/to/PAGE-export'
-npm run evaluate:editorial -- --real
-```
-
-Missing required real inputs fail immediately. Set `UFBAS_TEI` separately to include the Urfehde case. `--editorial-only` narrows browser selection while retaining offline gates; its report must state that narrower scope. `--repeat=2` repeats each selected case rather than retrying failures.
-
-`evaluation.json`, `playwright.json`, logs and browser reports reside under ignored `node_modules/.tmp/evaluation/`; traces also use `test-results/`. The [checks workflow](../.github/workflows/checks.yml) uploads only these selected report directories, explicitly includes hidden paths and retains synthetic CI evidence for seven days. Local real-source traces remain outside publication artifacts.
-
-The pinned repository compiler is the only typecheck entry. Missing required tools fail verification. Type coverage follows [jsconfig.json](../jsconfig.json); a successful curated check does not claim that every application controller is a checked root.
-
-## Editorial acceptance boundary
-
-Automated evidence establishes the exercised byte, schema, state and interaction contracts. Entity identification, normalization, witness interpretation, review rationale, project-schema adequacy and model proposals require scholarly assessment. A release or project-specific user acceptance must identify that additional evidence and cannot be inferred from a technical run.
-
-## Complete SZD research drafts
-
-`test/e2e/szd-research-refactor.spec.js` accepts the external `SZD_REFACTOR_TEI` directory. The directory must contain the complete ten-object development export and retain the adjacent local image source layout. Each case opens one full document, loads its local facsimile through an intercepted source URL, changes a page number, downloads the edited TEI and compares every byte against that single declared mutation. It also undoes the change, checks the original download, reopens the edited output and downloads it again. Both saved states retain the source payload, text, image references and annotations outside that explicit mutation. The pipeline separately executes its project Schematron, source-fingerprint and assertion-grounding checks. The test does not accept semantic proposals or claim scholarly correctness; source-profile adequacy remains an external project judgment. Missing external data are explicit and must not be reported as executed evidence.
-
-The optional `szd_research_refactor_check.mjs` proof reads the same external exports and verifies that native span resolution recovers every evidence quote and preserves proposal status. A small generated Unicode and cross-line fixture extends those boundaries beyond the natural candidate spans.
-
-## Local SZD mapping checks
-
-`npm run test:szd-mapping` exercises the page draft and working-copy contracts; the regular `npm run verify` gate invokes the same suites. Synthetic cases check exact source preservation, overlapping roles, contradictory absence, Unicode and line-ending boundaries, source-bound restoration, storage failures and stale-tab writes. The serializer is checked against the bundled TEI All schema. When the local dataset is present, every displayed page and both recorded proposal sources are included in the schema and source-preservation checks. A missing local dataset is reported as a skipped real-source test; synthetic coverage remains required.
-
-The [dated closeout report](../reports/szd-mapping-closeout-2026-09-19.md) records the actual browser checks and their scope, including selection, confirmation, Undo, valid and rejected restoration, and handoff to the existing editor. This development view is outside the production browser matrix. The checked draft has page-level anchored roles and an image reference. It does not certify complete correspondence encoding, correct OCR, calibrated model scores or scholarly acceptance.
+`npm run test:e2e` uses the inherited `playwright.config.js`: it runs `npm run build`, serves `dist/` with `vite preview` at `http://127.0.0.1:4173` and opens `index.html`. The published form is `docs/` served directly; `reports/source-browser-check.config.mjs` runs the same tests in Chromium against a server on port 4199 that serves `docs/` and must be started separately. The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.

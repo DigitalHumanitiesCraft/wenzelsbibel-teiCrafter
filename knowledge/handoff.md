@@ -1,8 +1,8 @@
 ---
 title: Handoff
 project:
-  name: teiCrafter
-  repository: https://github.com/DigitalHumanitiesCraft/teiCrafter
+  name: wenzelsbibel-teiCrafter
+  repository: https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter
 method:
   name: Promptotyping
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
@@ -11,29 +11,30 @@ template:
   version: 0.1
   url: https://dhcraft.org/Promptotyping/promptotyping-document/handoff
 status: active
-created: 2026-09-11
-updated: 2026-10-04
+created: 2026-10-10
+updated: 2026-10-10
 language: en
-topics: ["[[Promptotyping]]", "[[Knowledge Base]]"]
-related: [INDEX, journal]
+related: [INDEX, journal, plan]
 ---
 
 # Handoff
 
-This process inbox holds received deltas awaiting integration. Verify each source and current destination, integrate durable content into its owning document, record the source, destination and outcome in [journal.md](journal.md), then remove the processed item. Open items carry `Received`, `Source`, `Target` and `Context`.
+This process inbox holds received deltas awaiting integration. Verify each source and current destination, integrate durable content into its owning document, record source, destination and outcome in [journal.md](journal.md), then remove the processed item. Open items carry `Received`, `Source`, `Target` and `Context`.
 
 ## Open handoff items
 
-### Finish the source-first rebuild
+### Register encoding per handbook
 
-- Received: 2026-10-04
-- Source: session of 2026-10-04 (operator request to refocus and refactor)
-- Target: [architecture.md](architecture.md), [specification.md](specification.md), [design.md](design.md), `src/app/`
-- Findings from building the prototypes, to be weighed in the comparison:
-  - The automatic closing of tags while typing (`autoCloseTags` of the XML language package) contradicts F.5 in A and B and should be switched off in `xml-editor.ts`.
-  - The default highlight style misses contrast on the secondary surface; a token-based highlight style belongs in `src/editor/`.
-  - `createXmlState` needs an explicit line-separator argument for slices without their own line break (B and C work around it).
-  - B loses undo at every focus change, which violates F.7, and slices start without their first-line indentation. Hiding the surrounding document inside one whole-document editor would keep undo.
-  - C reads well at the reading level and its click-to-caret source editing is precise, but word-level TEI becomes a wall of marks, attributes reflow lines, and every Apply re-renders the whole document.
-  - Candidates for `src/`: a well-formedness reason extractor (duplicated in A and C), the outline builder from B, the `name` and `rs` entity resolver from C, an offset-tree element summary.
-- Context: Compare prototypes A, B and C under `prototypes/` in the browser and record which interaction carries into the product. Build the app shell on `src/` with the three use cases. Decide whether schema errors block Save (open decision in the specification). Then switch the GitHub Pages source from `main:/docs` to the build artifact, retire `docs/`, the legacy tests and the cluster-specific knowledge documents, and update [design.md](design.md), [testing.md](testing.md) and [project.md](project.md), which still describe the legacy editor.
+- Received: 2026-10-10
+- Source: transcription handbook of the edition, sections 1.4.19 to 1.4.21, and the real codex (fol. 1r carries `<ref target="Martin" type="person">` around three words).
+- Target: [editorial-guidelines.md](editorial-guidelines.md), [specification.md](specification.md), [data.md](data.md), the register model in the project folder once the base refactor has landed.
+- Context: The handbook links words to register entries with a typed `ref` (person, folk, place). The base implements register links as stand-off spans and peoples as organisations. Recommendation to the operator is to follow the handbook. Until the operator decides, the documents describe both forms and mark the decision as open.
+- Operator point: decide the register encoding.
+
+### Operator actions for the repository
+
+- Received: 2026-10-10
+- Source: session of 2026-10-10; the GitHub CLI on the operator's machine is not authenticated.
+- Target: GitHub organisation DigitalHumanitiesCraft.
+- Context: The repository exists locally with the remotes `upstream` (teiCrafter) and `origin` (wenzelsbibel-teiCrafter). The GitHub repository has to be created and the first push made by the operator. The edition files for test runs with real data lie on the operator's other machine.
+- Operator point: create the GitHub repository, push, and name the machine that holds the edition files.

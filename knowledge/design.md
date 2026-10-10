@@ -1,178 +1,274 @@
 ---
-title: teiCrafter Design System
+title: Design
 project:
-  name: teiCrafter
-  repository: https://github.com/DigitalHumanitiesCraft/teiCrafter
+  name: wenzelsbibel-teiCrafter
+  repository: https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter
 method:
   name: Promptotyping
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
 template:
   name: Vorlage Design
-  version: 0.1
+  version: 0.3
   url: https://dhcraft.org/Promptotyping/promptotyping-document/design
-status: complete
-created: 2026-05-27
-updated: 2026-09-19
+  alias: https://dhcraft.org/Promptotyping/#promptotyping-document-design
+status: draft
+created: 2026-10-10
+updated: 2026-10-10
 language: en
-topics: ["[[Information Visualisation]]", "[[Scholar-Centered Design]]", "[[Human-Computer Interaction]]"]
-related: [project, specification, architecture, data, testing, wenzelsbibel]
+topics: ["[[Scholar-Centered Design]]", "[[Human-Computer Interaction]]", "[[Digital Editions]]"]
+related: [specification, architecture, project, editorial-guidelines, data, testing, integration, plan]
 ---
 
-# teiCrafter Design System
+# Design
+
+wenzelsbibel-teiCrafter is a working instrument for transcribers and editors of one manuscript, so its interface is one surface organised around the manuscript line, with the facsimile beside the text and a single inspector below it. It inherits the design position and tokens of teiCrafter and replaces the base's two-pane editor frame with a menu bar, a document bar, a line-by-line text view, a switchable facsimile pane, a bottom inspector and a status line. The behaviour this interface carries is defined in [Specification](specification.md), the module structure in [Architecture](architecture.md).
 
 ## Design position
 
-teiCrafter makes source-backed editorial actions and their scope visible. The interface adapts to observed TEI structures; project policy can refine that interpretation. A form offers direct editing where it can preserve the source and provides an exact XML route for structured or ambiguous content. Refusals identify the affected operation and leave the editor's input available.
+The base position holds unchanged ([upstream design](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/a5f74d2889f98ebcba51bfbdd9fd8b58d9ba3bf5/knowledge/design.md)):
 
-The human editor decides scholarly content. Deterministic transformations use ordinary interface colours. Model-origin content retains its provenance after acceptance, while a distinct pending treatment identifies proposals awaiting a decision. Review records describe an explicit editorial act. Annotation coverage, schema validity and review status remain separately labelled states.
+- The human editor decides scholarly content, and the interface shows the scope of each editorial action before it is applied.
+- Deterministic edits use ordinary interface colours.
+- Violet is reserved for model-origin content. LLM assistance is off for this project, so no violet surface appears.
+- The design tokens in `docs/css/style.css` are the single source of truth, and component styles introduce no raw colour values.
+- Status is stated in words with a second channel besides colour.
 
-[Specification](specification.md) defines the required behaviour, [Data](data.md) defines its encoded representations, and [Testing](testing.md) defines the evidence needed to assess the interface.
+The fork adds two positions. Interface labels are German, because the edition team and its Transkriptionshandbuch work in German, while code and documentation stay English. The manuscript line is the reading unit, because the team transcribes in Transkribus line by line and checks every line against the facsimile, so selection, facsimile linking and the inspector's line state all start from the `lb`.
 
-## Visual identity and tokens
+## Tokens
 
-The wordmark `<teiCrafter>` combines the TEI blue and yellow brand family. TEI yellow marks primary actions with dark text for contrast. TEI blue marks source and annotation interactions. Violet is reserved for model-origin content.
+The fork reuses the upstream token families by name and defines no new raw colours.
 
-Components consume the shared CSS custom properties. Component styles introduce no raw colour values.
-
-| Family | Tokens | Meaning |
+| Family | Tokens | Use in the fork |
 | --- | --- | --- |
-| Surface | `--color-surface`, `--color-surface-sunken`, `--color-panel`, `--color-secondary` | Document, pane, band and control backgrounds |
-| Brand and action | `--color-header`, `--color-gold`, `--color-gold-hover`, `--color-link` | Site identity, primary actions, focus and links |
-| Text | `--color-text`, `--color-text-body`, `--color-text-secondary`, `--color-text-muted`, `--color-text-inverse` | Reading text and information hierarchy |
-| State | `--color-confident`, `--color-review`, `--color-problem` with tint partners | Categorical success, review, warning and failure |
-| Model provenance | `--color-ai`, `--color-ai-tint` | Generated or proposed content, with pending and accepted treatments |
-| Annotation | Entity-specific foreground and background tokens | Semantic layers |
-| Geometry | `--space-*`, `--radius-*`, `--shadow-*` | Spacing, grouping, focus and elevation |
-| Type | `--font-ui`, `--font-mono`, `--font-serif` | Controls, XML or identifiers, and public narrative text |
+| Surface | `--color-surface`, `--color-surface-sunken`, `--color-panel`, `--color-secondary`, `--color-border` | Text area, inspector, menu and document bar backgrounds |
+| Brand and action | `--color-header`, `--color-gold`, `--color-gold-hover`, `--color-link` | Primary action (Apply in the inspector, Speichern), focus, links |
+| Text | `--color-text`, `--color-text-body`, `--color-text-secondary`, `--color-text-muted`, `--color-text-inverse` | Manuscript text, labels, line positions |
+| Selection | `--color-selection`, `--color-selection-read` | Selected word, sequence or line in text and XML view |
+| State | `--color-confident`, `--color-review`, `--color-problem` and their `-tint` partners | Status line segments and findings |
+| Entity | `--color-persName`, `--color-placeName`, `--color-orgName` and their `-bg` partners | Register chips |
+| Geometry and type | `--space-*`, `--radius-*`, `--shadow-*`, `--font-ui`, `--font-mono`, `--font-serif`, `--font-size-*` | Layout, XML view, manuscript text |
 
-Status uses categories and words. Numeric confidence requires a calibrated producer; the application currently supplies none. Colour has a second channel through text, borders, underlines or patterns.
+The fork adds alias tokens that point to existing tokens, so a later palette change in the base reaches them.
+
+| Alias | Points to | Second channel |
+| --- | --- | --- |
+| `--chip-person`, `--chip-person-bg` | `--color-persName`, `--color-persName-bg` | Type word "Person" and the ID in the chip |
+| `--chip-place`, `--chip-place-bg` | `--color-placeName`, `--color-placeName-bg` | Type word "Ort" and the ID |
+| `--chip-folk`, `--chip-folk-bg` | `--color-orgName`, `--color-orgName-bg` | Type word "Volk" and the ID |
+| `--zone-line` | `--color-blue` | Thin solid outline |
+| `--zone-text-region` | `--color-text-muted` | Dashed outline |
+| `--zone-miniature` | `--color-workName` | Thick solid outline |
+| `--zone-marginalia` | `--color-eventName` | Dotted outline |
+| `--zone-selected` | `--color-selection` | Filled area |
+
+The zone mapping borrows two entity tokens (`workName`, `eventName`) that no chip uses in this project. That choice is provisional and stays revisable when the base introduces dedicated zone tokens.
 
 ## Editor frame
 
-The left pane holds Reading text, XML source and Metadata. The right pane holds context panels, including Facsimile, Index, Source and supported editorial workspaces. A keyboard-operable splitter resizes or collapses the context pane; a narrow layout stacks the panes.
+### Menu bar
 
-Document identity below the toolbar identifies the source, project interpretation and save target. The empty editor provides a direct load prompt, recent handles where supported and independent recovery offers. View tabs stay in their pane headers. Pane-header controls wrap according to the available pane width so that resized panes retain accessible targets.
+The menu bar is the single entry point for commands. Its entries are fixed for the prototype.
 
-The toolbar distinguishes actions by their actual effect.
-
-| Action | Meaning presented to the editor |
+| Menu | Entries |
 | --- | --- |
-| Save | Validate and write the active document through its writable handle, or use the download fallback |
-| Download | Request a schema-authorized copy of the current XML |
-| Working copy | Preserve unfinished XML, staged fields and the attached project collection without a schema gate |
-| Project package | Validate each XML document and request one ZIP containing the project collection |
-| Restore | Reopen a preserved session and its companions |
-| Discard | Explicitly remove the selected preserved work |
-| Read only / Edit document | Disable or restore source-changing actions while retaining inspection |
+| Datei | Öffnen, Projekt öffnen, Speichern, Zuletzt geöffnet |
+| Bearbeiten | Rückgängig, Wiederholen, Suchen, Apparatkommentar zur Auswahl |
+| Ansicht | Text, XML, Faksimile ein/aus, Zonen ein/aus, Inspector ein/aus, Zeilenweise/Fließtext |
+| Register | Personen, Orte, Völker öffnen, Eintrag anlegen, Verweise auf Eintrag anzeigen |
+| Prüfen | Wohlgeformtheit, TEI All, Schematron editing, Schematron review, Befundliste |
+| Hilfe | Transkriptionsrichtlinie, Über |
 
-Save is the primary gold action. Copy and preservation actions use neutral styling. Download feedback reports a requested download and retained recovery. A browser download supplies no evidence that the user has stored the file durably.
+Zuletzt geöffnet is rendered only where the File System Access capability exists. Toggle entries show their state as a check mark. Where Register, Personen, Orte or Völker öffnen render their list is an open point, and the recommendation is the bottom area, in the same way as the findings list.
 
-Reading, XML, Metadata and workspace forms share Apply and Cancel semantics. Unfinished values and caret position survive background refresh. Navigation, history or another mutation cannot silently replace the active input owner. A blocked action directs the editor back to that surface; a failed Apply keeps the entered values. XML source and Metadata retain ownership while open, so a context form presents a return hint instead of mounting another editor.
+### Document bar
 
-Switching attached documents checkpoints the current collection first. A storage error or intervening edit leaves the current document active and explains the failed switch. Each file retains its own source and schema settings. Native Save remains an active-file operation. The [project collection contract](specification.md#project-and-schema-declarations) governs package output and recovery.
+The document bar sits below the menu bar. Its left side holds the document chooser with the two entries Codex and Bildannotationen and the navigation that fits the chosen document, folio and column a or b for the codex, miniature for the image annotations. Its right side holds exactly two switches, Text|XML and Faksimile. The bar carries no register tab and no search field. Suchen (Ctrl+F) opens a field directly above the text area.
 
-New document provides an explicit starter, transcription, optional source facts and images. Nearby help describes the resulting encoding. Correspondence facts appear with that starter; dictionary and encyclopedia choices remain distinct. Existing XML opens through the ordinary loader. Project-folder groups are keyboard-operable and use full relative paths as accessible file names.
+### Text area
 
-## Source Profile disclosure
+The text area renders the chosen column line by line as in the manuscript. Each row begins with the column marker and the line position in `--color-text-muted`, followed by the diplomatic text in the reading font. Header lines carry a "Kopfzeile" marker. Register links appear as chips under the words they span, apparatus ranges as an underline with a small marker at the range end, and renditions such as rubrication or initials in a form that adds a non-colour cue. Fließtext renders the same column as running text with visible line-break marks.
 
-The Source panel explains the detected structures, primary navigation channel, additional channels, authoring scope and resolution issues. Its language identifies the TEI evidence behind the projection. A manifest can request another channel when matching source units exist.
+### Facsimile pane
 
-Pager and review labels follow the primary channel. Page, entry, speech turn, record, row, section, surface, corpus member and source document terms require their corresponding source anchors. Generic unit labels remain available where the evidence does not justify a more specific name.
+The facsimile pane opens to the right of the text area and shows the IIIF image of the current page from the ONB image service with zoom and pan. With Zonen on, it overlays the page's Transkribus zones in the styles of the zone aliases above. Clicking a line zone selects the line in the text, and a text selection outlines and scrolls to its line zone. Clicking a miniature zone opens the miniature in the inspector.
 
-An unsatisfied manifest request or ambiguous interpretation remains visible beside the selected fallback. The editor can then inspect the source or revise project policy without losing access to the document.
+### Inspector
 
-## Reading surface
+The inspector is a bottom bar that opens on a selection and is the same component in the text and XML views. Its height is draggable, and Escape closes it. Its header names the state and the selected object. Apply is the primary action, Abbrechen restores the represented values.
 
-A plain click positions the cursor. Double-click opens exact text or dual-reading editing. Existing annotation layers open their inspector; right-click and text selection expose scholarly actions. Selection stays visibly painted while a popover holds focus. Keyboard arrows traverse cells, and F2 or Enter opens a supported editor. Composition input cannot commit prematurely.
+| State | Opened by | Content |
+| --- | --- | --- |
+| Wort | Click on a word | Diplomatisch, Normalisiert, markup actions (Hervorhebung, Ergänzung, Tilgung, Fremdsprache, Zahl), Register field, Apparat with existing comments and "+ Kommentar zur Auswahl" |
+| Wortfolge | Drag or Shift+click | Markup actions, Register field, Apparat |
+| Zeile | Click on the line position or a line zone | The line's words as rows with Diplomatisch and Normalisiert |
+| Miniatur | Click on a miniature zone or choice in Bildannotationen | The image-annotation form (see [Miniature form](#miniature-form)) |
+| Element | Cursor in the XML view | Element name and attributes, or the matching form for `w`, `ref`, `app` and image-annotation `item` |
 
-Local cells determine the edit controls. Encoded tokens expose their text and reading attributes; other readable content uses exact text runs. Mixed documents retain both forms. The reading preserves source adjacency and selects the appropriate encoded choice branch. The [reading representations](data.md) define the source contract.
+The findings list opens in the same bottom area through a click on the status line.
 
-Base apparatus text displays the lemma, falling back to the first reading when no lemma is encoded. Witness selection uses explicit attestations and discloses missing or ambiguous attribution, omissions and fragment boundaries. Text outside encoded apparatus remains base text. All alternatives remain available in XML and the Witnesses pane.
+### Status line
 
-Entity types use muted categorical colours. Nested and overlapping layers receive stacked underlines and an inspector listing each layer. Missing targets and model provenance appear in text as well as visual treatment.
+The status line at the bottom shows four segments as words: Wohlgeformtheit, TEI All, Schematron with its phase, and the save state. Each segment states its value (gültig, ungültig, veraltet, nicht verfügbar, nicht geprüft) in text with the state token as second channel. The status line carries no per-field check line and no counter outside a finding count that results from a run.
 
-### Cross-structure and discontinuous selection
+### Wireframes
 
-**Add another segment** retains the current range and returns focus to the reading surface. The editor can collect another range in the same or a different navigation unit. The popover shows separated passages before an entity is selected or created.
+Text only, after opening fol. 1r, column a.
 
-Overlapping collected ranges are refused. A range crossing XML structure or existing markup uses the stand-off route. Each visible segment opens the shared annotation; relinking and removal address that group. The [span contract](specification.md#cross-structure-and-discontinuous-spans) defines preservation and boundary cleanup.
+```
++-----------------------------------------------------------------------------+
+| Datei  Bearbeiten  Ansicht  Register  Prüfen  Hilfe                         |
++-----------------------------------------------------------------------------+
+| [Codex v]  Folio [1r v]  Spalte (a) b                   [Text|XML] [Faks.]  |
++-----------------------------------------------------------------------------+
+| a     PROLOGUS                                              Kopfzeile       |
+| a  1  Hie hebt ſich an die voꝛ rede vnd •                                   |
+| a  2  der pꝛologus vber das buch , daz do ...                               |
+| a  3  ...                                                                   |
+|                                                                             |
++-----------------------------------------------------------------------------+
+| Wohlgeformt | TEI All: nicht geprüft | Schematron editing: nicht geprüft | Gespeichert |
++-----------------------------------------------------------------------------+
+```
 
-For inline-GND output, the interface explains which crossing, overlapping or discontinuous selection cannot be represented and blocks the affected annotation action.
+Word selected, facsimile on, inspector open. Column b of 1r, word `Rotlebín`.
 
-## Metadata and exact XML
+```
++-----------------------------------------------------------------------------+
+| Datei  Bearbeiten  Ansicht  Register  Prüfen  Hilfe                         |
++-----------------------------------------------------------------------------+
+| [Codex v]  Folio [1r v]  Spalte a (b)                   [Text|XML] [Faks.]  |
++--------------------------------------+--------------------------------------+
+| b  ..  ... getrewen díener           |  +--------------------------------+  |
+| b  ..  deín , • Dem [Rotlebín] herren|  |  IIIF 00000010                 |  |
+|        mer                           |  |    [==== line zone ====]       |  |
+| b  ..  teín , • Der ín rechter ...   |  |                                |  |
+|        '-- Person Martin: Rotlebín   |  |                                |  |
+|            herren merteín --------'  |  |                                |  |
+|                                      |  +--------------------------------+  |
++--------------------------------------+--------------------------------------+
+| Wort  Rotlebín                                     [Abbrechen] [Anwenden]   |
+| Diplomatisch [Rotlebín] (enthält Auszeichnung, im XML bearbeiten)            |
+| Normalisiert [Rotlebin]                                                      |
+| Auszeichnung  Hervorhebung  Ergänzung  Tilgung  Fremdsprache  Zahl           |
+| Register     [Person Martin x]  [Suchen ...          ]  + neu anlegen       |
+| Apparat      + Kommentar zur Auswahl                                         |
++-----------------------------------------------------------------------------+
+| Wohlgeformt | TEI All: veraltet | Schematron editing: veraltet | Ungespeichert |
++-----------------------------------------------------------------------------+
+```
 
-Metadata presents the complete TEI header inventory. Familiar fields keep their labels and grouping; project-specific fields remain discoverable by generated label and exact path.
+XML view, same selection, inspector in element state.
 
-An editable field means that a lossless inverse is available. Structured, mixed, self-closing or namespace-sensitive content displays **XML-only** with an exact XML route. Inspecting an unchanged field preserves its source spelling. Dedicated witness actions follow their bounded contract even when their records occur inside the header.
+```
++-----------------------------------------------------------------------------+
+| Datei  Bearbeiten  Ansicht  Register  Prüfen  Hilfe                         |
++-----------------------------------------------------------------------------+
+| [Codex v]  Folio [1r v]  Spalte a (b)                   [Text|XML] [Faks.]  |
++-----------------------------------------------------------------------------+
+|  <ref target="Martin" type="person">                                        |
+|    <w norm="Rotlebin" orig="Rotlebín" xml:id="region_..._19l6_1">            |
+|      <hi rend="rubrication">Rotlebín</hi>          <- selection              |
+|    </w>                                                                     |
+|    <w norm="herren" orig="herren" ...>herren</w>                             |
++-----------------------------------------------------------------------------+
+| Element  w  region_1639399535558_19l6_1            [Abbrechen] [Anwenden]   |
+| Diplomatisch [Rotlebín]   Normalisiert [Rotlebin]   Register [Person Martin] |
++-----------------------------------------------------------------------------+
+| Wohlgeformt | TEI All: veraltet | Schematron editing: veraltet | Ungespeichert |
++-----------------------------------------------------------------------------+
+```
 
-XML source exposes the current navigation range where a safe boundary exists, otherwise the complete document. Check and Apply evaluate the complete substituted XML. Find, replace, line navigation, indentation assistance, context completion and keyboard Apply support source work. Automatic reformatting would rewrite unrelated source and is outside this surface's interaction contract.
+Labels beyond the agreed menu entries, such as Diplomatisch, Normalisiert, Anwenden and the status values, are working labels until the meeting confirms them.
 
-## Review and progress
+## Content and interaction hierarchy
 
-The Markup navigator offers All and Notes filters with an explicit pressed state. Notes limits the unit list to detected notes while the main total continues to describe all annotations. A result opens its source unit and focuses an available marker. Empty results are explained, and document replacement resets the filter.
+Each view below is specified by the six points of the interface yardstick (user task, primary objects, first-decision information, optional depth, navigation targets and addressable states, wide and narrow rendering).
 
-Markup coverage describes the presence of semantic markup. Review describes an editor's recorded examination of the current primary unit. Marking or reopening review retains history. Source changes produce **changed since review**; historical evidence remains inspectable. [Review Records](specification.md#review-records) govern the relationship between the visible status and the encoded evidence.
+### Text view
 
-The review dialog requests reviewer identity and rationale, identifies its default as an unnamed local editor, shows a prior record when present and explains the covered source range. An external register entry or another unit requires its own review. A structurally unsafe record mutation leaves the source unchanged with a specific explanation.
+1. The user reads a column of the codex line by line and selects the word, sequence or line to work on.
+2. Lines (`lb` position, zone), words (diplomatic text, `@orig`, `@norm`, `@xml:id`), register links (type, ID) and apparatus ranges.
+3. The diplomatic text in manuscript line order, the column and line position, register chips and apparatus marks, the current selection.
+4. Normalised readings, comment text and register details appear in the inspector on selection, and Fließtext is an alternative rendering.
+5. Document, folio and column are part of the page address, and the selection maps to the XML view and the facsimile.
+6. Wide screens show text and facsimile side by side with the line length of the text capped. Narrow screens show the text alone at full width, lines wrap inside their row and keep their position marker.
 
-## Output schema gate
+### XML view
 
-The validation details identify the effective repository, project or session schema set. Results retain configured order and show schema names, categorical validity, diagnostics and applicable runtime limits. Unsupported rules or unresolved dependencies appear as **unavailable**, with a concrete recovery route such as supplying the dependency or compiled XSLT.
+1. The user inspects or edits the exact source around the current selection.
+2. Elements with their names, attributes and positions in the raw string.
+3. The source scrolled to the selected element with the selection marked, and well-formedness at the status line.
+4. Folding, search in the source, Ctrl+E for allowed elements, the element state of the inspector.
+5. The same page address as the text view plus the view switch, and the cursor maps back to a text selection.
+6. Wide and narrow screens show the same source column. Long lines wrap visually without horizontal page scrolling, and the facsimile stays available on wide screens.
 
-Save and Download may initiate validation. Progress distinguishes schema preparation, XML parsing, validation and reuse of an identical successful result. The main interface remains usable during worker execution. Changed state invalidates output authorization; an earlier success cannot be shown as permission for different bytes.
+### Facsimile pane
 
-**Cancel validation** ends pending work without authorizing output. The editor can request validation again. Project package has its own cancellation control and reports success only after every XML file is authorized. Errors identify the affected document or schema. The [output gate requirements](specification.md#fail-closed-multi-schema-output-gate) define these decisions; [Architecture](architecture.md) describes worker and cache ownership.
+1. The user compares the selected line or region with the manuscript image.
+2. The page image (IIIF stem, size) and zones (ID, type, subtype, points).
+3. The image of the current page, the outline of the selected line, the zone overlay when switched on.
+4. Zoom, pan, the miniature and marginal regions, which open their record on click.
+5. Zone click selects the line or opens the miniature. The pane state (on or off, zones on or off) is a view setting.
+6. Wide screens show the pane to the right of the text with a draggable split. Narrow screens stack it above the text at reduced height or hide it, according to the Faksimile switch.
 
-## Entry and witness interaction
+### Inspector
 
-The Entries pane combines a searchable collection with source-bound details. Sorting changes display order, and completeness identifies missing identity, heading or text. Selecting an entry or following a local reference opens its source unit. Bounded table regions support keyboard scrolling. An empty body requires an explicit encoding choice before its first entry is created.
+1. The user edits the selected object and applies or cancels the change.
+2. The selected word, sequence, line, miniature or element with the fields its state defines.
+3. The state name and object identity, the editable fields with their current values, and the reason when a field routes to the XML view.
+4. Markup action values, register autocomplete, the comment form and the list of existing comments.
+5. Apply and Abbrechen, the jump from a comment or register reference to its target. The inspector state follows the selection and needs no address of its own.
+6. Wide screens show it as a bottom bar of draggable height. Narrow screens show it as a full-height sheet over the text, closed by Escape or a close control that returns to the text.
 
-Direct fields identify their target and expose structured or ambiguous values through XML. Duplication retains the original and selects the copy. **Preview deletion** names the whole subtree and displays blocking references; confirmation is available only for a safe current preview. These actions operate on the active XML file.
+### Miniature form
 
-Batch editing starts with checkboxes or **Select all matching**, then **Batch edit selected**. The editor chooses local language or number and inspects concrete before/after values. A field change invalidates the preview. Apply creates one Undo step. Recovery retains unfinished targets and values while requiring another preview. The [entry requirements](specification.md#entry-management) define duplication, reference protection and batch scope.
+1. The user describes a miniature and relates it to the codex text.
+2. The image-annotation `item` with zone, title, short and long description, object type, height in lines, folio and lines, artists, related persons and places, ICONCLASS entries, content relation and statistical range.
+3. Title, the miniature zone outlined in the facsimile, object type, artist sigle with name (BA, Balaam-Meister), and the text range in folio and line terms.
+4. Long description, ICONCLASS search with German and English labels, the responsibility values, the jump to the text range in the codex.
+5. The miniature (for example `miniatures_01`) is part of the page address when Bildannotationen is chosen. The text range opens the codex at its first word.
+6. Wide screens show the form in the bottom bar in two field columns. Narrow screens show it as a full-height sheet in one column.
 
-The Witnesses pane separates **Reading witness** from source edits. It exposes every apparatus alternative and direct attribution. **New witness** creates a description in the selected list; structured descriptions use **Edit witness XML**. Reading-attribution controls change the selected reading's witness pointers. Missing definitions, ambiguous readings and existing external pointers remain visible. Arbitrary list restructuring and external-reference conventions use exact XML.
+### Findings list
 
-Witness forms share staged recovery and read-only behaviour. The [witness contract](specification.md#witness-reading-and-descriptions) defines supported evidence and preservation. Selecting a witness expresses a reading preference and provides no scholarly acceptance of that witness's reconstruction.
+1. The user finds out why a check failed and goes to the affected place.
+2. Findings with document, check (Wohlgeformtheit, TEI All, Schematron phase), location and message.
+3. The check and its result, then per finding the message and the location in folio, column and line where it lies in the text.
+4. The XML path and the rule identifier of a finding.
+5. Choosing a finding selects its location in the text or XML view, and the list opens from the status line or Prüfen, Befundliste.
+6. Wide screens show it in the bottom area of draggable height. Narrow screens show it as a full-height sheet.
 
-## Wenzelsbibel interaction
+## Interaction rules
 
-The Wenzelsbibel workspace places specialized forms beside the shared reading, XML and metadata surfaces. Bounded word tables keep transcription controls accessible. Apparatus forms retain existing type, language and responsibility values. The [Wenzelsbibel contract](wenzelsbibel.md) owns the field mapping and operating routes.
+- The selection survives the switch between Text and XML in both directions, and unfinished input stays in the inspector across the switch.
+- Escape closes in a fixed order: first an open autocomplete list, then the inspector, then the selection. Each step returns focus to the element that opened the closed layer.
+- The unsaved marker stays at the status line until a save of the current revision succeeds.
+- A failed check shows its reason at the status line and in the findings list, from which a finding jumps to its location.
+- A refused action (a wrap that would split an element, a duplicate register ID) states its reason at the inspector field that triggered it and leaves the source unchanged.
+- No control is rendered that cannot work in the detected browser. Native open, in-place save and Zuletzt geöffnet appear only after the File System Access capability check, and the download path replaces in-place save elsewhere.
+- Printing and page zoom stay with the browser and get no controls of their own.
 
-Companions are explicitly attached under **Linked project documents**. A word-range picker preserves the active form. Following an image reference from a codex word opens that image record through the normal document-switch boundary. The miniature viewer focuses an available codex zone and explains missing image access.
+## Responsive behaviour
 
-ICONCLASS lookup follows an explicit search or notation request. A selected result fills fields for review before Apply; manual values remain usable if the service fails. Project checks distinguish relationship failures, structural issues and editorial completeness. Their findings retain separate labels from output-schema authorization.
+The wide layout places text and facsimile side by side with the inspector below both. The narrow layout shows the text alone, stacks the facsimile above it at reduced height or hides it, and turns the inspector and the findings list into full-height sheets. The menu bar keeps all six menus reachable on narrow screens, the document bar wraps its navigation onto a second row, and no view scrolls the document horizontally. The breakpoint lives in the stylesheet, and reading text stays under 80 characters per line in both layouts.
 
-## Model assistance
+## Accessibility minima
 
-Generated-document banners, proposal layers and model actions use violet. Dashed outlines and **AI-proposed, unverified** identify pending proposals without relying on colour. Accepted model-origin content uses solid violet treatment and explicit origin text. Confirmation retains responsibility evidence; rejection addresses pending proposals.
+These minima are acceptance criteria for every view and are checked in the browser tests of [Testing](testing.md).
 
-Reload restores model-origin state from matching source declarations. Provider controls distinguish endpoint and model settings from memory-only API keys. Disabling assistance removes model surfaces while preserving deterministic work. [Specification](specification.md#llm-assistance-and-provenance) defines provenance and provider constraints.
+1. Text and interface elements reach a contrast of at least 4.5:1 against their background, measured on the rendered views.
+2. Every focusable element shows a visible focus indicator.
+3. Interactive targets measure at least 24 by 24 CSS pixels, including chips, line positions and menu entries.
+4. Menu bar, document bar, text selection (word, sequence, line), inspector and autocomplete are fully operable by keyboard.
+5. Escape closes the topmost layer and returns focus to its origin.
+6. Status changes (well-formedness, validation results, save) are announced to assistive technology, and no state relies on colour alone.
+7. Animations and smooth scrolling are disabled under `prefers-reduced-motion`.
 
-## Browser capability disclosure
+## Start page
 
-File input and Download provide the portable Chromium and Firefox workflow. A native writable handle enables in-place Save; otherwise Save uses validated Download. Folder and handle controls appear only where the capability exists. Missing capabilities and unavailable images are explained at the affected action while source editing remains accessible.
+The fork's start page (`docs/index.html`) states the tool's purpose in one German sentence, namely that it edits the TEI files of the Wenzelsbibel edition locally in the browser against the project's transcription rules. Its primary path is two actions, Projekt öffnen and Datei öffnen, followed by Zuletzt geöffnet where the browser supports it. It carries no marketing copy, no feature list and no counters. Licence and the link to the teiCrafter base sit in a plain footer line.
 
-## Accessibility contract
+## Action layer
 
-- Tabs use tablist relationships and roving keyboard focus.
-- The splitter exposes its separator role, value, orientation and keyboard controls.
-- Reading and panel regions have visible focus and accessible names.
-- Asynchronous status, loading, validation and failures use appropriate live regions.
-- Popovers and dialogs return focus to their originating control or reading location.
-- Actions remain reachable without hover; hover emphasis also appears on keyboard focus.
-- Provenance, validation, review and annotations use text or pattern alongside colour.
-- Body copy uses the darker body-text token; contrast and automated accessibility checks apply to the actual rendered views.
-- Decorative motion respects `prefers-reduced-motion`.
-
-## Local SZD mapping interaction
-
-The local mapping view places the facsimile beside the immutable OCR transcription and the active role decision. Editors select an exact text range, adopt a recorded rule or Jev proposal, or mark a role absent or uncertain. Confirmation belongs to the individual decision and can be removed. Jev provenance keeps the AI colour treatment after confirmation; manual assignments carry their own origin. The page-function classification is read-only context.
-
-The role list exposes confirmation state, and Undo reverses mapping changes. Browser persistence, portable decision files and the TEI preview remain distinct actions. Opening the draft continues in the existing editor with its facsimile and ordinary validation controls. The [mapping contract](specification.md#local-szd-mapping-contract) limits the scholarly claims of this view; [architecture](architecture.md#local-szd-source-mapping) owns the storage and transfer mechanisms.
-
-Imported confirmations are labelled as confirmations in the working copy. The interface does not attribute them to the current user. The editor identifies an imported mapping as an unsaved SZD mapping draft, retaining the distinction from deterministic plaintext conversion.
-
-## Label discipline
-
-One command keeps one label across its control, tooltip, dialog and status. Source-derived terms remain consistent across pager, review and context panels. **AI-proposed, unverified**, **Output schema gate** and **XML-only** identify distinct provenance, authorization and editing states.
+The action layer of the fork, [CLAUDE.md](../CLAUDE.md), takes this document as its source of design values and translates them into instructions for coding agents. Rules for the content of interface text follow the global UI practice yardstick that the action layer names.

@@ -1,111 +1,32 @@
-# teiCrafter
+# wenzelsbibel-teiCrafter
 
-A browser editor for creating, reading and editing TEI XML with exact source preservation.
+The editing environment for the digital edition of Codex 2759, the Wenzelsbibel of the Austrian National Library, derived from [teiCrafter](https://github.com/DigitalHumanitiesCraft/teiCrafter).
 
-[Open the published editor](https://digitalhumanitiescraft.github.io/teiCrafter/) | [Start with the workflows](knowledge/worked-examples.md) | [Project knowledge](knowledge/INDEX.md)
+This repository holds the tool and its project layer. The edition itself, meaning the TEI files, the Transkribus exports and the images, belongs to the edition team at the Paris Lodron University Salzburg and is not part of this repository.
 
-**Research preview.** The working implementation targets **0.2.0**; package metadata remains **0.1.0**. The published site may differ from this repository revision. The [editorial workspace report](reports/editorial-completion-2026-09-11.md) records the current implementation and verification boundary, extending the [Wenzelsbibel workflow report](reports/wenzelsbibel-workflow-2026-09-11.md). The [0.2.0 plan](reports/implementation-plan-0.2.0.md) describes the broader product target.
+## What it is
 
-## Rebuild in progress
+teiCrafter is a browser-based editor for TEI XML that keeps the source document as the canonical state and writes it back byte-faithfully outside the deliberate edits. This derived version specialises it for the Wenzelsbibel: word-level transcription with diplomatic and normalised readings, a stand-off apparatus, registers of persons, places and peoples, image annotations with ICONCLASS references, facsimiles from the IIIF service of the Austrian National Library, and validation against TEI All plus the project's own Schematron. The rules it fulfils are the edition's published transcription handbook; the comparison with the earlier DHCraft specification and with the base's conventions is kept in [knowledge/editorial-guidelines.md](knowledge/editorial-guidelines.md).
 
-teiCrafter is being rebuilt as a source-first TEI XML editor in `src/`. The XML source in a code editor becomes the primary surface for creating TEI from plain text, editing existing TEI and reading it, with continuous well-formedness checks, schema validation on demand and optional model proposals that an editor accepts or rejects. Three viewer prototypes run locally with `npm install` and `npm run dev:prototypes`. The [specification](knowledge/specification.md) describes the target behaviour. The published editor and the sections below describe the current legacy application in `docs/`.
+The repository is a Git clone of teiCrafter with the base as `upstream`. Generic mechanisms are built in the base and merged in; this repository changes only its own zones, see [knowledge/architecture.md](knowledge/architecture.md).
 
-## What editors can do
+## Status
 
-| Task | Current route |
-| --- | --- |
-| Turn a transcription into TEI | Load... > New document...; choose a transcription, letter, charter, legal-source, dictionary-entry or encyclopedia-article starter and supply the known facts. |
-| Edit an existing TEI document | Open or drop a UTF-8 XML file. Use Reading text, XML source and Metadata; the source remains canonical. |
-| Manage lexicon entries | Use the dictionary or encyclopedia starter, or open existing entries. Entries supports search, completeness checks, creation, safe duplication and reference-protected deletion. Preview language or number changes across an explicit selection before applying one undoable batch. |
-| Read and inspect TEI | Choose Read only. Navigation, source inspection and copying remain available. Witnesses exposes encoded attestations, reading alternatives and witness descriptions. |
-| Work on historical-source metadata and indices | Inspect the complete header, edit safe fields, open structured content as exact XML, and manage supported register entities and their references. |
-| Compare text with a facsimile | Open encoded image references or attach a local image folder where the browser provides that capability. |
-| Preserve unfinished work | Download a Working copy containing the active XML, unfinished fields, attached project documents, their settings and loaded images, or restore a local browser checkpoint. |
-| Deliver attached project documents | Project package validates every XML file against its own schema set before requesting one ZIP download. Native Save writes the active document. |
+The project knowledge base under [knowledge/](knowledge/INDEX.md) is written; the derived application is being built from the base's legacy editor, see [knowledge/plan.md](knowledge/plan.md). Nothing in this repository has been accepted by the edition team.
 
-The interface derives its navigation and editing capabilities from actual TEI structure. Entries, pages, speech turns and sections can coexist. A project manifest can refine that choice and supply schemas, vocabulary, indices, images and interchange settings. Genre-specific starters provide an initial encoding; existing documents are not converted into templates to fit a form.
+## Run locally
 
-## Quick start
-
-1. Open a TEI file, or choose Load... > New document... for a deterministic draft. Supply historical facts explicitly; the starters do not infer them.
-2. Inspect the source-derived navigation and the Source context panel. Double-click a supported text run, or focus it and press F2, to edit. Use XML source for operations without a safe form mapping.
-3. Use Metadata for the complete header and Index for supported registers. Select reading text to annotate it. Apply, cancel or reset unfinished fields before changing their context.
-4. Save or Download validates the exact project output against every configured schema. Invalid, unavailable or stale validation blocks that TEI output.
-5. Use Working copy whenever unfinished input, unavailable schemas or attached images need preservation. A requested download does not establish a durable savepoint or remove recovery.
-
-Open project folder and in-place Save use the browser's optional File System Access capability. The portable file-input and download workflow is exercised in Chromium and Firefox. Local recovery is independent of native file handles. Reopening a working copy recreates image URLs and requires renewed permission for project files.
-
-## Work with the Wenzelsbibel
-
-Open the codex or Bildannotationen.xml. Its project identifier selects the Wenzelsbibel workspace; project manifests can explicitly declare `"workspace": "wenzelsbibel"`. The specialized pane supports paired word readings, multilingual apparatus comments, Vulgate verse references, image descriptions, artist attributions, ICONCLASS concepts and shared persons, places and peoples registers.
-
-Attach the companion codex, image annotations or registers under **Linked project documents** for word-range selection, image-zone lookup and reference checks. **Project checks** reports cross-file problems and editorial completeness. **Import PAGE XML** converts selected Transkribus PAGE files, with optional METS ordering, into a separate TEI draft. Switching documents retains their edited source and settings in recovery and Working copy. Reattach a companion when its external source file changes.
-
-Use **Project package** for one ZIP containing the attached XML documents and eligible loaded images. Every XML file must pass its configured schemas before any package is downloaded. **Working copy** remains available for unfinished or invalid material. In-place Save affects the active document and does not write all companions to disk.
-
-The bundled image Schematron is an explicitly authored editorial profile. Its editing phase permits unfinished records; its review phase checks completeness. The original Bilderfassung.sch was unavailable. The [Wenzelsbibel contract and walkthrough](knowledge/wenzelsbibel.md) explains the encodings, sources and practical boundaries.
-
-## Preservation and support boundaries
-
-The raw XML string is canonical. The editor applies exact offset splices instead of serializing the whole document tree. With the supported UTF-8 file boundary, including an optional BOM, an unchanged ordinary TEI file round-trips identically; intentional edits preserve unrelated source bytes. Explicit project interchange formats can apply a target projection before output validation.
-
-Source preservation, readable projection and guided editing are separate capabilities. Exact XML remains available for structures without a safe interactive inverse. Witness reading selects explicitly attributed alternatives and identifies missing or ambiguous attestations, omissions and fragment markers. Text outside apparatus entries remains the edition's base text. Witness descriptions and reading attribution can be edited through their forms or exact XML. UTF-16 and conflicting encoding declarations are refused before editing.
-
-Entry forms support TEI dictionary entries and article divisions with the declared entry/article shape. Mixed or ambiguous fields remain available through XML. Batch changes and entry deletion checks cover the active XML document; references in other files require separate review.
-
-Review records retain their history and identify the reviewed source scope. A later change can make that review stale. Schema validation, human review and annotation coverage answer different questions; none establishes scholarly correctness by itself.
-
-## Optional model assistance and data handling
-
-New from text (LLM) can propose a TEI draft; Propose (AI) can suggest annotations in the current navigation unit. These features share a user-controlled AI toggle. Deterministic editing and starters require no model or key.
-
-Model output is violet and initially unverified. Confirmation records acceptance while retaining responsibility pointers and visible machine origin; rejection removes the proposed construct through the normal mutation path. API keys remain in page memory. Provider calls, authority lookup, remote images and schema fetching have distinct external data flows documented in [SECURITY.md](SECURITY.md).
-
-teiCrafter has no application backend or account system. The browser retains recovery data locally until explicit discard or a complete native save. Working-copy files may contain the complete source and image material, so treat them as project data.
-
-## Development and verification
-
-Use **Node 24.13.0**, **npm 11.6.2**, and Python with **lxml 5.4.0**, matching the repository's verification setup.
-
-```bash
-npm ci
+```
+npm install
 npm run dev
 ```
 
-Vite prints the local URL. For direct source inspection, run `python -m http.server 8000 --directory docs` and open `http://localhost:8000/editor.html`. Browser file capabilities require a secure context such as localhost; opening editor.html through file:// is insufficient. Built-in examples appear on local development hosts.
+The editor is served from `docs/`. Open a local copy of the edition files from a `data/` folder next to the repository root; that folder is ignored by Git. Tests run with `npm run test:e2e` and `node test/verify.mjs`, see [knowledge/testing.md](knowledge/testing.md).
 
-```bash
-npm run verify
-npx playwright install chromium firefox
-npm run test:e2e
-```
+## Rights
 
-The required gate runs Node proofs, the Python harness, JavaScript checking, Biome, Vite and the deployment-asset contract. Playwright tests the built artifact in Chromium and Firefox with the configured Axe checks. Optional real-corpus sweeps use `npm run verify:full-corpus` and require their source material. See [test commands](test/README.md), [evidence policy](knowledge/testing.md) and [manual acceptance](test/acceptance/BROWSER-CHECKS.md).
-
-## Documentation and project history
-
-The local [SZD mapping view](docs/szd-mapping.html) compares recorded rule and Jev proposals against source text and scans. It edits role assignments and exact spans, then opens a page-level draft in the existing editor. Prepare the local files with the [fixture instructions](docs/data/editor/szd-mapping-local/README.md), run `npm run dev`, and open `/szd-mapping.html` on that server. It makes no live model requests and is not included in the production build. The [mapping report](reports/szd-mapping-closeout-2026-09-19.md) states the verification and scholarly limits.
-
-Start at [knowledge/INDEX.md](knowledge/INDEX.md). Each knowledge document owns one question: product, formats, requirements, architecture, design, testing, integration or examples. The [journal](knowledge/journal.md) records decisions and their reasons; the [handoff inbox](knowledge/handoff.md) holds received deltas awaiting integration. [reports/README.md](reports/README.md) separates release requirements and implementation evidence from historical observations. Run-specific outcomes belong in dated reports.
-
-The original prototype was developed in 2023 and presented at FORGE using Hugo Schuchardt correspondence. Digital Humanities Craft maintains the current open-source tool for editorial projects using the Promptotyping method. Project manifests support configuration; the knowledge base supports deeper adaptations through ordinary development or a coding agent. See [project identity and history](knowledge/project.md).
-
-## Contributing
-
-Feedback and concrete editorial workflows are welcome through GitHub issues. Include a minimal shareable example and expected behavior. Discuss larger changes before submitting a pull request, and follow the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities through the contact in [SECURITY.md](SECURITY.md).
-
-## Citation
-
-If you use teiCrafter in academic work, please cite:
-
-> Pollin, C., Fischer, F., Sahle, P., Scholger, M., & Vogeler, G. (2025). When it was 2024 -- Generative AI in the Field of Digital Scholarly Editions. *Zeitschrift fuer digitale Geisteswissenschaften*, 10. DOI: [10.17175/2025_008](https://doi.org/10.17175/2025_008)
-
-The original prototype and idea:
-
-> Pollin, C., Steiner, C., & Zach, C. (2023). New Ways of Creating Research Data: Conversion of Unstructured Text to TEI XML Using GPT on the Correspondence of Hugo Schuchardt with a Web Prototype for Prompt Engineering. FORGE 2023, Tuebingen. DOI: [10.5281/zenodo.8425163](https://doi.org/10.5281/zenodo.8425163)
+The TEI files and the images of the codex are accessible on the edition server of the Austrian National Library. Technical access implies no permission to store, redistribute or publish them. This repository contains no edition data.
 
 ## Licence
 
-Code is [MIT licensed](LICENSE). Vendored libraries, TEI schemas, guidelines and reference material retain their own notices. [knowledge/data.md](knowledge/data.md) records the source and rights boundaries; rights-local editions are not automatically redistributable.
-
-This research preview requires editorial verification before scholarly use. Technical tests do not certify the correctness, completeness or fitness of model-generated or manually edited scholarly content.
+Code under the MIT licence of the base, see [LICENSE](LICENSE). Documentation under CC BY 4.0.

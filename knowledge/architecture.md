@@ -1,159 +1,167 @@
 ---
-title: teiCrafter Architecture
+title: Architecture
 project:
-  name: teiCrafter
-  repository: https://github.com/DigitalHumanitiesCraft/teiCrafter
+  name: wenzelsbibel-teiCrafter
+  repository: https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter
 method:
   name: Promptotyping
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
 template:
   name: Vorlage Architecture
-  version: 0.1
+  version: 0.4
   url: https://dhcraft.org/Promptotyping/promptotyping-document/architecture
-status: complete
-created: 2026-02-05
-updated: 2026-10-04
+  alias: https://dhcraft.org/Promptotyping/#promptotyping-document-architecture
+status: draft
+created: 2026-10-10
+updated: 2026-10-10
 language: en
 topics: ["[[Software Architecture]]", "[[TEI XML]]"]
-related: [specification, data, design, testing]
+related: [project, specification, data, design, editorial-guidelines, testing, integration, plan]
 ---
 
-# teiCrafter Architecture
+# Architecture
 
-## Application and canonical state
+wenzelsbibel-teiCrafter is the teiCrafter legacy editor under `docs/` plus a Wenzelsbibel project layer, derived by a Git fork that keeps merging the base. The fork changes three zones and leaves the generic editor untouched, so every base improvement arrives through an ordinary merge. Requirements live in [specification](specification.md), the interface in [design](design.md), the editorial rules in [editorial-guidelines](editorial-guidelines.md).
 
-teiCrafter is a static browser application with ES modules in `docs/` and a Vite build in `dist/`. Document interpretation, editing, validation and serialization run locally. Optional image, authority and model services enter through explicit integration boundaries. [Integration](integration.md) owns deployment and external-service contracts; [data](data.md) owns serialized formats.
+## Derivation model
 
-The complete XML source is canonical. `tei-document.js` retains that string and parses a namespace-aware tree with exact element, attribute and text offsets. TEI queries require the TEI namespace URI. Mutations splice source ranges and reparse the result without normalizing unrelated XML.
+The repository is a Git clone of teiCrafter with two remotes.
+
+| Remote | Repository | Use |
+| --- | --- | --- |
+| `upstream` | DigitalHumanitiesCraft/teiCrafter | Source of base changes, fetched and merged |
+| `origin` | DigitalHumanitiesCraft/wenzelsbibel-teiCrafter | The fork's own publication repository |
+
+Base changes enter with `git fetch upstream` and `git merge upstream/main`. The fork removed the inherited `knowledge/` folder and carries its own knowledge base. A merge that touches a base knowledge file therefore produces a modify/delete conflict; the resolution is always to keep the deletion (`git rm` the file). Base knowledge is read in the base repository, not copied here.
+
+The fork changes three zones.
+
+| Zone | Content | Merge behaviour |
+| --- | --- | --- |
+| Shell: `docs/index.html`, `docs/editor.html` | The fork's start page and the editor page with the new interface | Conflicts with base edits to these two files are resolved in favour of the fork, then base changes that matter (new script or stylesheet links) are carried over by hand |
+| Project folder: `docs/js/projects/wenzelsbibel/` | The Wenzelsbibel specialisation after the base refactor | The base owns the folder's existence; the fork changes its content, so conflicts are local to this folder |
+| Editorial layer: `editorial/` | Tool-neutral rules: transcription guidelines, `wenzelsbibel.sch`, `xml-model.md`, `fixtures/` | Fork-only, no conflicts |
+
+Everything else stays as merged from the base: `docs/js/editor/`, `docs/css/style.css` with the design tokens, `docs/schemas/` including the vendored TEI All RelaxNG, `docs/vendor/`, `src/`, `prototypes/`, `pipeline/`, the build and test configuration. New fork-only files (new shell components, fork browser tests) avoid conflicts because the base never writes them.
+
+## Current state
+
+The fork equals the base at commit `b2a057d` plus its own knowledge base. The Wenzelsbibel code still sits in the generic editor folder as `docs/js/editor/wenzels-*.js`, with `docs/css/wenzels-workspace.css`, `docs/schemas/wenzelsbibel-editorial.sch` and the manifest `docs/data/editor/wb-codex/teicrafter.project.json`. Five places in the generic editor name the workspace literally: `editor-app.js`, `project-manifest.js`, `working-copy.js`, `project-output-controller.js`, `page-xml-onramp.js`, plus the stylesheet link in `editor.html`. This changes when the base refactor described in the teiCrafter `knowledge/plan.md` lands and is merged here ([plan](plan.md), phase 3).
+
+## Stack
+
+| Choice | Reason |
+| --- | --- |
+| Plain ES modules in the browser, no framework | Inherited from the base legacy editor, which is the derivable base since 2026-10-10 |
+| `tei-document.js` offset tree over the canonical XML string | Byte-faithful editing: every change is a splice of the raw string, untouched XML stays identical |
+| libxml2-wasm in a module worker for RelaxNG | Inherited validation runtime of the base |
+| Browser XPath 1.0 for raw Schematron | No SaxonJS dependency; the editorial layer is written to that subset |
+| OpenSeadragon, vendored under `docs/vendor/` | Facsimile viewer with IIIF tile sources and zone overlays |
+| German interface text, English code and documentation | The edition team and its handbook work in German |
+
+## Components
+
+The target module map after the base refactor has three parts.
+
+Generic editor, `docs/js/editor/`, merged from the base and not edited in the fork:
+
+| Module | Purpose |
+| --- | --- |
+| `editor-app.js` | Composition of session, controllers and the base shell |
+| `editor-session.js` | Document identity, revision, history, dirty savepoint |
+| `tei-document.js` | Canonical string, namespace-aware offset tree, splice and reparse |
+| `project-manifest.js` with the workspace registry | Manifest validation; `workspace` is checked against registered names instead of the literal `"wenzelsbibel"` |
+| `schema-set.js`, `schema-validation.js`, worker client and worker, `validation-view.js` | Ordered schema set, RelaxNG in the worker, raw Schematron in the page, results bound to session and revision |
+| `facsimile.js`, `project-profiles.js` | OpenSeadragon viewer, IIIF resolution from the manifest template |
+| `source-view.js` | XML view of the canonical source |
+| `staged-input.js`, `working-copy.js`, `session-recovery.js` | Unfinished-input ownership, portable working copy, IndexedDB recovery; the staged mode name comes from the registry |
+| `project-documents.js` | Linked file collection (codex, image annotations, registers) with separate sources, schemas and dirty states |
+| `output-controller.js` | Save gate: every effective schema must pass for the exact bytes |
+| XML record helpers (today `wenzels-xml.js`, renamed by the base) | ID index, attribute and text patches, record removal; also used by the witness modules |
+| `iconclass-lookup.js`, `page-xml-import.js`, `page-xml-onramp.js` | ICONCLASS requests, PAGE intake; the TEI type of an imported draft becomes a workspace parameter |
+
+Project folder, `docs/js/projects/wenzelsbibel/`:
+
+| Module | Purpose |
+| --- | --- |
+| Entry file | Exports the workspace object: detection (TEI types `wenzelsbibel-registers`, `wenzelsbibel-transcription`, PID pattern `^o:wen\.`), default schema set, panels, working-copy mode, flags such as model features off |
+| Text model | Words with `@orig` and `@norm`, stand-off apparatus with anchors, register references |
+| Image model | Image-annotation records, codex index for text relations |
+| Register model | Persons, places and peoples in the separate register file |
+| Project checks | Cross-file checks that Schematron cannot perform (register targets, image-to-codex pointers) |
+| Forms, workspace stylesheet | Staged form ownership; only project-specific style rules |
+| Schematron | Source of truth is `editorial/wenzelsbibel.sch`; the manifest schema set references a published copy under `docs/` |
+
+New shell components of the fork:
+
+| Component | Proposed location | Reason |
+| --- | --- | --- |
+| Menu bar | `docs/js/projects/wenzelsbibel/ui/` (definition), rendering open | German menu entries and their actions are project-specific |
+| Document bar | `docs/js/projects/wenzelsbibel/ui/` | Document chooser (codex, image annotations) and folio, column, miniature navigation are project-specific |
+| Bottom inspector | `docs/js/editor/` as a reusable component rendering forms from a field table | The mechanism is generic; the field tables for word, apparatus and miniature stay in the project folder |
+| Register autocomplete | `docs/js/editor/` as a reusable component over any list in a register file | Same mechanism serves any project with registers |
+| Status line and findings list | Generic status logic, German labels in the project folder | Reuses `validation-view.js` results |
+
+Whether inspector and autocomplete become base components is an open decision of the base (see the teiCrafter plan). Built here as new files, they do not conflict with merges; if the base later adopts them under the same name, the fork takes the base version.
+
+Whether the new `editor.html` composes the generic controllers through `editor-app.js` or through a fork-specific composition module is open. `editor-app.js` assembles the base shell's DOM, so a separate composition module in the project folder that reuses session, validation, facsimile, recovery and output controllers is the likely path (inference from the module structure, to be confirmed while building phase 5).
+
+## Data flow
+
+All five workflows of the meeting prototype pass through the same chain.
 
 ```text
-canonical XML string
-  -> namespace-aware offset tree
-  -> document inventory
-  -> Source Profile and Navigation Model
-  -> reading, metadata, annotation and project views
-  -> exact mutation
-  -> new canonical XML string
+selection in the text view (word, word sequence, line, zone) or cursor in the XML view
+  -> element and offset range in the raw string (tei-document offset tree, word xml:id)
+  -> project model computes the edit (text, register or image model)
+  -> splice through tei-document, new canonical string, EditorSession revision
+  -> re-render of text view, inspector, facsimile overlay
+  -> validation: RelaxNG in the worker, Schematron in the page, bound to the revision
+  -> status line; Save passes the output gate only when every schema result is valid
 ```
 
-`EditorSession` owns document identity, revision, history and dirty savepoint. A changed document enters through its mutation boundary; Undo and Redo restore canonical source through inverse patches. Byte-identical reprojection preserves revision, history and dirty state. Read-only mode rejects mutations and history changes while retaining navigation and inspection.
+| Workflow | Modules involved |
+| --- | --- |
+| 1 Page, facsimile, word edit | Document bar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; inspector word fields write `w/@orig` and `w/@norm` through the text model |
+| 2 Apparatus comment | Selection of a word range; the text model inserts empty anchors and an `app` with `@from`/`@to` and bilingual notes with sigle in the stand-off apparatus |
+| 3 Register link | Autocomplete over the register file held in the project collection; the link encoding follows the pending decision (typed `ref` on the words per handbook, see [editorial-guidelines](editorial-guidelines.md)); a new entry is written to the register file as a companion edit |
+| 4 Miniature | Zone selection opens the image-annotation form in the inspector; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
+| 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the bottom area; `output-controller.js` writes the file |
 
-`editor-app.js` composes the session and controllers. `reading-view.js` renders source-backed cells and handles reading navigation; `inline-editor.js` supplies text and dual-reading controls; `annotation-ui.js` collects selections and dispatches annotations. Internal imports use one module URL per file so shared state has one instance.
+## External services
 
-## Source-first core under `src/`
-
-The successor architecture lives beside the current application in `docs/` until an app shell covers open, edit and save. The layers depend downward only, so every layer stays testable without the ones above it.
-
-| Layer | Path | Content |
+| Service | Role | Endpoint |
 | --- | --- | --- |
-| Core | `src/core/` | DOM-free JavaScript, Node-testable. The unchanged exact-source modules `tei-document.js` and `file-encoding.js`, `line-offsets.js` for line-separator arithmetic, `format.js` for formatting one element without touching mixed content, `plaintext-to-tei.js` for the deterministic starter, `proposal.js` for the proposal shape and its splice, `proposal-fixture.js` as an offline demo producer, `well-formed.ts` as the browser-parser check |
-| Editor | `src/editor/` | CodeMirror 6 extensions. `xml-editor.ts` holds the shared configuration, `offsets.ts` translates editor positions to raw offsets, `structural-fold.ts` folds by element with a default-collapsed list and summarising placeholders, `element-path.ts` derives the breadcrumb, `markup-levels.ts` offers the source and reading levels |
-| Validation | `src/validate/` | RelaxNG and XSD through libxml2-wasm in a module worker with a compiled-schema cache and line-bearing diagnostics. Schematron is not supported |
-| Files | `src/io/` | Open, drop and save behind the File System Access capability check with file input and download as fallback, external-change refusal, recent handles |
-| Model proposals | `src/llm/` | The provider adapter boundary with memory-only keys, `proposeEdit` with a delimited answer format and a fragment check, and an offline fixture provider |
-| Tokens | `src/ui/tokens.css` | The design token sheet |
+| ONB IIIF Image API | Facsimile images at runtime | `https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2/info.json` |
+| ICONCLASS | Label lookup on explicit user request | Official ICONCLASS service, as in the base |
 
-Runtime assets that are served unbundled (schemas, the libxml2-wasm runtime, the TEI Guidelines subset, samples, brand assets) live in `public/`. Identical copies stay under `docs/` while GitHub Pages publishes `main:/docs`. Viewer prototypes under `prototypes/` import only `src/` and are served by `npm run dev:prototypes` with the repository as server root.
+The IIIF request is a network request to a third party. The project accepts it because the images are not redistributable and must not be stored in the repository. Language model features are switched off for this workspace.
 
-The code editor counts a CRLF line break as one position and joins lines with LF, while the core addresses raw string offsets. Every splice, fold, diagnostic and proposal therefore passes through `offsets.ts`. The first TEI All validation compiles the schema, which takes seconds; later validations reuse the compiled schema in the worker.
+## Security
 
-## Staged input and restoration
+The tool runs in the browser without a backend. Edition files are opened from the local disk and written back through the save gate or a download; nothing is uploaded. Image requests reveal the requested folio to the ONB server. ICONCLASS requests transmit only the search term or notation. Edition data and images are not versioned (see [data](data.md)).
 
-`staged-input.js` gives one unfinished-input surface ownership through `hasChanges`, `value`, `apply` and `restore`. Ownership binds the session and canonical source captured on mount. A stale Apply is refused and retains recoverable input. Navigation, history and unrelated mutations cannot silently displace changed controls. XML, metadata, inline input and the specialized workspaces use this same boundary; context forms pause while the source or metadata pane owns it.
+## Accessibility
 
-`session-recovery.js` commits independently keyed checkpoints in one IndexedDB transaction. Its promise resolves only after transaction completion. `recovery-coordinator.js` clones captured values before queueing, orders writes and explicit-ID deletion, and remains usable after storage failure. `document-facts.js` supplies recovery presentation and restoration; `working-copy.js` supplies portable encoding. The [recovery formats](data.md#local-recovery-and-portable-working-copies) retain unfinished state independently of schema validity.
+The base's automated Axe floor and keyboard paths apply to inherited views. The new shell components need the same: reachable by keyboard, Esc closes the inspector, Ctrl+E on a selection opens the list of allowed elements, `lang="de"` on the interface. Manual keyboard and screen-reader review of the new shell is open.
 
-Restoration establishes the intended recovery identity and document-specific schemas at the load boundary. It restores the dirty baseline and defers automatic persistence until source metadata, images and staged controls are installed. The first checkpoint therefore contains the complete restored state under one identity. Later Undo preserves the restored dirty baseline. Object URLs are recreated; native file permissions must be acquired again.
+## Repository structure
 
-`project-documents.js` retains the active file and previously opened companions with separate names, sources, encodings, schemas, dirty states, reading preferences and images. It checks active identity, safe filenames and role uniqueness. Switching a companion first captures the outgoing session and persists recovery. The shell checks collection identity and relevant session, source, schema and image state across every asynchronous boundary before replacing the document. Edits or attachments made while storage is pending cancel that replacement. Storage failure leaves the current document available.
-
-The target document's schema settings are installed before its first checkpoint. A newly created document receives its own effective defaults. The outgoing document retains its override in the collection. Saving the active file does not remove recovery needed by dirty companions.
-
-## Source discovery and navigation
-
-Source interpretation is a pipeline of pure projections.
-
-| Module | Responsibility |
+| Folder | Function |
 | --- | --- |
-| `document-inventory.js` | Inventory TEI structures, attributes, distinct values, readable text, facsimile pointers and `xml-model` references |
-| `source-profile-rules.js` | Derive capability evidence from observed structures |
-| `schema-profile.js` | Inspect ODD, RelaxNG and XSD for conservative vocabulary evidence |
-| `navigation-model.js` | Materialize source-backed units with exact ranges and labels |
-| `source-profile.js` | Compose document evidence, schema evidence and manifest policy |
-| `unit-labels.js` | Supply source-specific navigation and progress terminology |
-| `edition.js` | Project reading cells, layers and facsimile alignment from the resolved profile |
+| `knowledge/` | The fork's knowledge base |
+| `editorial/` | Tool-neutral project layer: `transcription-guidelines.md`, `wenzelsbibel.sch`, `xml-model.md`, `fixtures/` |
+| `docs/` | Published application; `index.html` start page, `editor.html` new interface, `js/editor/` generic editor, `js/projects/wenzelsbibel/` specialisation |
+| `test/` | Inherited proofs and browser tests plus the fork's demo workflow tests |
+| `snapshots/` | Demo protocol and test runs with real files |
+| `wireframe/` | Static wireframe with fol. 1r, not published |
+| `data/` | Local edition files and extractions, ignored by git |
+| `src/`, `prototypes/`, `pipeline/`, `reports/` | Inherited from the base, unchanged |
 
-Inventories are cached by immutable document identity. Sets retain first-occurrence order when exposing distinct values. `editionFromDocument` reuses an already parsed mutation. Review indexing likewise caches membership, unique IDs, TEI roots and records per document; progress computes one review state per unit without repeated whole-document traversal.
+## Build and deployment
 
-Observed capabilities determine the initial profile. Closed reachable schema evidence can constrain vocabulary, and project `uiProfile` can disable capabilities or request an available primary channel. Ambiguity and unavailable requests remain visible issues. The whole-document range provides the final fallback. Several navigation channels can coexist; the primary channel determines pager, review scope and unit XML. The historical `folios` API contains those primary units, whose labels come from `unit-labels.js`.
+The fork publishes `docs/` directly on GitHub Pages from `main:/docs`, without a build step. The base additionally runs `vite build` from `docs/` into `dist/` (inputs `index.html`, `editor.html`, `about.html`; versioned files under `docs/data`, `docs/schemas` and `docs/vendor` are copied). The inherited Playwright configuration builds and serves that artifact for tests, so the tested form and the published form differ by bundling (see [testing](testing.md)). Repository creation, push and the Pages setting are operator actions.
 
-Reading granularity follows each local structure. Encoded `w` and `pc` elements yield token cells; other readable source yields exact text runs. `reading-policy.js` selects diplomatic, normalized or apparatus branches while preserving every alternative. Base apparatus reading prefers a lemma and then a reading. A selected witness supplies an explicit attribution policy. Prose respects source adjacency, token spacing respects punctuation and joins, and hidden alternatives contribute no whitespace. CDATA and selections without a safe interactive inverse remain editable through XML.
+Runtime dependencies are the browser, the ONB IIIF service for images, the vendored TEI All RelaxNG (`docs/schemas/tei-p5-4.11.0/`), the vendored libxml2-wasm runtime and OpenSeadragon. The base Schematron runtime supports XPath 1.0 query binding, namespaces, phases, scalar `let`, `assert`, `report`, diagnostics and common child or attribute rule contexts. Includes, abstract patterns, advanced match patterns, node-set `let` and XPath 2.0 or later require precompiled XSLT and are otherwise reported as unavailable, which blocks output. The runtime executes the schema's `defaultPhase`; the base review action switches phases by rewriting that attribute. A Schematron cannot read a second file, so cross-file checks remain in project checks.
 
-### Active schema evidence
-
-`validation-view.js` owns the effective schema selection used for both authoring evidence and output. Schema inspection reuses the resolved dependency graph. Closed RelaxNG profiles support positive and negative vocabulary evidence; XSD contributes approximate positive evidence. ODD declarations can supply modules, elements and classes. Multiple vocabulary schemas combine conjunctively. Schematron contributes constraints without vocabulary allowances.
-
-Inspection runs asynchronously and cannot prevent opening a source. Missing dependencies remove negative allowances and disclose partial or unknown evidence. Schema replacement or reset invalidates that evidence and recomputes the derived profile through a projection-only session transaction. Unchanged navigation retains the reading DOM and browser selection. This inspection has no authority to approve output.
-
-## Project policy and mutation workspaces
-
-`project-manifest.js` validates the declarative project contract and binds files to document types. `schema-set.js` normalizes ordered schema declarations, including legacy ingest forms. `project-path.js` confines relative paths to the granted folder; `project-schema-files.js` resolves nested dependencies relative to their containing schema and terminates cycles. A manifest overrides built-in source-signature fallbacks. The project layer supplies markup, navigation policy, indices, images, interchange and model mapping; [integration](integration.md#project-folder-and-schema-handoff) defines the external handoff.
-
-Mutation modules preserve semantic no-ops and refuse operations without a lossless inverse. Literal input escapes ampersands and rejects XML-illegal characters. Unknown entity spellings cannot acquire a guessed expansion during editing.
-
-| Surface | Projection and mutation boundary |
-| --- | --- |
-| Reading and inline annotation | Exact cell text, token attributes, wrappers and structural primitives |
-| Complete header | `metadata-view.js` inventories every legitimate TEI header descendant and ordinary attribute; scalar changes use descending splices, structured content uses XML |
-| Unit XML | Exact unit-span substitution in the complete document |
-| Entries | `entry-model.js` supplies unambiguous scalar mappings, creation, ID-safe duplication, protected deletion and revision-bound batch plans |
-| Witnesses | `witness-model.js` inventories definitions, groups and direct attestation, supplies explicit reading states and guards referenced identifiers |
-| Wenzelsbibel | `wenzels-text-model.js`, `wenzels-image-model.js` and `wenzels-register-model.js` edit source-preserving project records |
-
-`entry-workspace.js` adds list filtering, detail forms, creation, reference navigation and batch preview. Display sorting preserves XML order. Duplication rewrites supported internal pointers within the copied source; deletion checks descendant references within the active document. A confirmed batch becomes one canonical change and one history step. Restored fields and targets require a newly computed preview. [Data](data.md#entry-and-witness-encodings) specifies the supported encodings and pointer limits.
-
-`witness-workspace.js` uses the shared staged contract for descriptions, exact witness XML and reading assignments. Reading projection discloses missing, ambiguous, omitted and fragment-boundary states. It does not infer inherited attestation from grouping or reconstruct unencoded witness text.
-
-`wenzels-workspace.js` composes the project panels over the ordinary session and retained companion collection. `wenzels-form.js` supplies staged ownership. `wenzels-project-checks.js` checks linked records and offers a narrowly guarded, explicit sole-reading repair. `wenzels-profile.js` supplies project defaults; `iconclass-lookup.js` guards user-triggered requests against stale completion. `page-xml-import.js` and `page-xml-onramp.js` produce a separate draft through the same guarded load boundary. [Wenzelsbibel](wenzelsbibel.md) owns these editorial rules.
-
-`starter-profiles.js` and `image-onramp.js` create deterministic TEI for explicitly selected source templates. They do not rebuild existing XML. Starter drafts enter the normal session, recovery and output paths; template availability does not establish a complete specialized workspace.
-
-## Annotation and review projections
-
-`span-annotations.js` turns exact, non-overlapping text segments into prefix-faithful boundary anchors and a TEI-level span group. `span-projection.js` resolves those pointers into reading ranges. Group identity travels with every segment so relinking and removal affect the complete discontinuous annotation. Cleanup removes only unreferenced anchors. An interchange projection can refuse shapes its target vocabulary cannot represent.
-
-`annotation-progress.js` derives the Markup navigator from existing layer and note indexes. Filtering changes local UI state only. Result navigation uses the normal staged-input guard; deferred scrolling or focus checks the captured session, revision and view context.
-
-`review-record.js` resolves a unique navigation target, supplies an identifier when needed and appends a review change in the relevant document or corpus-member header. `review-evidence.js` fingerprints the exact review scope; `review-progress.js` distinguishes current, changed, historical and reopened state. Duplicate targets and incompatible revision structures prevent writing. A matching verified record establishes current review only for its encoded scope. Annotation presence and linked register content outside that scope do not establish review.
-
-`proposal-provenance.js` keeps model origin separate from per-responsibility acceptance. Whole-document origin is reconstructed from a root responsibility pointer and its header declaration after loading. The [serialized evidence](data.md#machine-provenance) remains the source of truth for these projections.
-
-## Schema execution and currentness
-
-`schema-validation.js` normalizes effective sources and resolves dependencies. RelaxNG and XSD execute through local libxml2-WASM in a module worker. The client correlates requests, the worker serializes execution, and cancellation terminates active work. Worker failure cannot authorize output. Raw Schematron and compiled SVRL have the explicit [runtime limits](data.md#schema-set-and-validation-result) described in the data contract.
-
-`xml-schema-runtime.js` snapshots primitive inputs and copies the resource map before its first asynchronous step. Compiled validators are keyed by the complete schema graph. A bounded successful-result cache additionally binds exact XML content. Invalid results are not reusable successes; changes to the main grammar or any included resource invalidate reuse. Progress distinguishes preparation, parsing, validation and reuse.
-
-`validation-view.js` binds results to session, revision, document object, projected source and ordered schema key. A custom-schema chooser captures a selection generation and session before reading its file. Replacement, reset and restore invalidate previous choices and abort active validation. Late completion can update only its owning controller and current snapshot. Manual validation clears a prior result so cancellation or runtime failure can be retried.
-
-## Output and file operations
-
-The output transaction resolves staged input, derives the exact target projection, validates every effective schema and rechecks the captured authorization before delivery. The schema set must be nonempty and every result valid. An unavailable dependency or stale result blocks output.
-
-`output-controller.js` serializes native Save and binds filename, encoding, file version, images and recovery identity to the captured session. It checks currentness across asynchronous file operations and aborts a failed writable stream when supported. An older completed write cannot mark a newer revision saved or remove another session's checkpoint. `file-target.js` allocates unused derived names; image persistence compares actual bytes before reusing files. A download request does not establish disk persistence.
-
-`project-output-controller.js` captures the whole collection, derives each file's target projection and schemas, and obtains separate authorization for every XML member. `project-bundle.js` creates one ZIP only after all decisions remain current. Cancellation, new staging, changed collection metadata or any invalid member prevents package delivery. Decoding checks the archive and restores editing state without importing output authorization.
-
-IndexedDB recovery commits one checkpoint atomically. Native XML and image writes have no cross-file transaction. The validated package supplies a single portable delivery artifact. Capability-gated native handles enhance the [portable file contract](integration.md#browser-files-and-deployment) without changing those guarantees.
-
-## Local SZD source mapping
-
-`/szd-mapping.html` is a development-only page that loads a compact local dataset through `szd-mapping.js`. The [fixture builder](../test/tools/make_szd_mapping_fixture.mjs) reads the external `typesafe-lab` frozen experiment, verifies recorded choices against source spans, converts Unicode codepoint offsets to browser UTF-16 offsets, and copies the selected scans. Dataset and image payloads remain gitignored. The [fixture README](../docs/data/editor/szd-mapping-local/README.md) gives the regeneration command and provenance. The browser receives recorded rule and Jev proposals without reference annotations or correctness labels; this path makes no model-service requests.
-
-Mapping decisions are stored separately from the immutable transcription and proposals. Browser storage and portable JSON bind them to a page identifier and source hash. `szd-mapping-export.js` inserts anchors into the preserved page text and represents overlapping roles with stand-off spans. Decision notes retain origin and individual confirmation, while a facsimile surface links the draft to its scan. A same-tab session-storage handoff enters the existing editor through its normal load boundary as a dirty draft; the transfer payload is removed only after successful loading. The [specification](specification.md#local-szd-mapping-contract) defines the scope and [design](design.md#local-szd-mapping-interaction) defines review interaction.
-
-`szd-mapping-state.js` owns working-copy validation and the offset conversion between normalized textarea line endings and the original source. Restoration also checks the experiment identifier. A stale tab cannot overwrite a newer browser record. Failed writes retain the changes in memory across page switches and trigger a warning on navigation. An asynchronous file restore is cancelled if the page or decision revision changed while reading. Confirmation is a property of the working copy; it does not identify an authenticated reviewer.
-
-## Remote service boundary
-
-`services/llm.js` keeps built-in providers and a registry of trusted code-level adapters. Project data selects prompts, mappings and responsibility; it cannot supply executable functions. Keys remain in memory and requests omit ambient credentials. Generated documents and proposals enter structural gates and ordinary canonical mutations. [Integration](integration.md#model-and-authority-services) defines what leaves the browser and how external results enter the editor.
+Pages serves only `docs/`, so `editorial/wenzelsbibel.sch` is not reachable by the published editor. The proposed resolution is a byte-identical copy under `docs/js/projects/wenzelsbibel/`, guarded by a check that fails when the two differ; a build step would contradict the no-build publication. This is open until phase 4 ([plan](plan.md)).
