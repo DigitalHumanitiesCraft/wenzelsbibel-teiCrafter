@@ -25,7 +25,7 @@
         <option value="codex" title="codex-2759.xml">Codex 2759</option>
         <option value="images" title="Bildannotationen.xml">Bildannotationen</option>
       </select>
-      <span role="status"><span class="unsaved" id="status-unsaved" title="Ungesicherte Änderungen" hidden><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span></span>
+      <span role="status"><span class="unsaved is-clean" id="status-unsaved" title="Ungesicherte Änderungen"><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span></span>
       <div class="pager" id="pager">
         <!-- The wireframe holds one folio, so the folio pager of F12 is left out. -->
         <span class="folio" id="folio-label">fol. 1r</span>
@@ -74,15 +74,18 @@
         <ul class="menu-list" role="menu" aria-label="Prüfen" hidden>
           <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:wf">Wohlgeformtheit</button></li>
           <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:tei">TEI All</button></li>
-          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-editing">Schematron editing</button></li>
-          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-review">Schematron review</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-editing">Editionsregeln</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-review">Editionsregeln, Bericht</button></li>
           <li class="menu-sep" role="separator"></li>
           <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="findings">Befundliste</button></li>
         </ul>
       </div>
+      <!-- Shown in the XML view only (xml.js setView). -->
+      <button type="button" class="toggle" id="toggle-ids" data-cmd="ids" aria-pressed="false" hidden>IDs anzeigen</button>
     </div>
   </header>
 
+  <!-- Lies over the top of the work area (wireframe.css), so it moves nothing (F44). -->
   <section class="notice-bar" id="notice" aria-live="polite" hidden></section>
   <p class="visually-hidden" id="announce" aria-live="polite"></p>
 
@@ -98,6 +101,10 @@
         </div>
         <p class="surface-note" id="popover-note" role="status" hidden></p>
         <div class="popover-body" id="popover-body"><div class="popover-content" id="popover-content"></div></div>
+        <div class="popover-foot" id="popover-foot" hidden>
+          <button type="button" class="act-btn" id="popover-cancel">Abbrechen</button>
+          <button type="button" class="act-btn is-primary" id="popover-apply">Anwenden</button>
+        </div>
       </section>
       <div class="minis" id="minis" hidden></div>
       <div id="xml-view" hidden>

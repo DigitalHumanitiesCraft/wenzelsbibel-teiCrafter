@@ -6,7 +6,7 @@
 import { $, el, state } from "./state.js";
 import { activeDoc, onChange } from "./history.js";
 import { flowEvents, highlightSelection, placeCaret, renderFlow, setColumn, setWordRange, wireFlow } from "./flow.js";
-import { formatXml, renderXml, setView } from "./xml.js";
+import { formatXml, renderXml, setView, toggleIds } from "./xml.js";
 import { setFacs, toggleZones } from "./facsimile.js";
 import { closePopover, refreshPopover } from "./popover.js";
 import { initPanel, refreshPanel } from "./panel.js";
@@ -34,6 +34,7 @@ async function main() {
   renderXml();
   wireFlow();
   flowEvents.addEventListener("refused", (e) => notify(e.detail));
+  flowEvents.addEventListener("structure", (e) => afterWordCommand(e.detail));
   wireControls();
   initPanel();
   initToolbar();
@@ -51,6 +52,16 @@ function wireControls() {
   command("facs", () => setFacs(state.side !== "facs"));
   command("zones", () => toggleZones(!state.zones), () => (state.side === "facs" ? null : "Erst das Faksimile einblenden."));
   command("format", formatXml, () => (activeDoc() === "images" ? "XML formatieren gilt für den Codex." : null));
+  command("ids", toggleIds);
+}
+
+// After a word command (flow.js) the apparatus index and the flow are rebuilt from the
+// model, and the caret returns to where the command left it; the popover follows it.
+function afterWordCommand({ k, off }) {
+  indexApparatus();
+  renderFlow();
+  if (state.words[k]) placeCaret(k, off, false);
+  highlightSelection();
 }
 
 // After undo or redo every view is rebuilt from state.data, whose tokens are new

@@ -27,9 +27,11 @@ export function onChange(fn) { listeners.push(fn); }
 
 // Kinds: commit, restore, undo, redo, saved, and document (the active document changed,
 // so the marker and the toolbar follow; nothing in the data changed).
+// The dot keeps its place while hidden (visibility), so its coming and going moves no
+// control of the Arbeitsleiste.
 function emit(kind, label) {
   const h = active();
-  $("#status-unsaved").hidden = h.revision === h.saved;
+  $("#status-unsaved").classList.toggle("is-clean", h.revision === h.saved);
   for (const fn of listeners) fn(kind, label);
 }
 

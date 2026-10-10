@@ -23,10 +23,12 @@ async function main() {
   const tok = (id) => page.evaluate(async (id) => { const { state } = await import("/wireframe/js/state.js"); for (const c of state.data.columns) for (const l of c.lines) for (const t of l.tokens) if (t.id === id) return t; return null; }, id);
   const gotTok = () => page.evaluate(async () => { const { state } = await import("/wireframe/js/state.js"); for (const l of state.data.columns[0].lines) for (const t of l.tokens) if (t.text === "Got") return t; return null; });
   // A word under the open popover is reached as a user reaches it: Escape closes the
-  // popover (the selection stays), then the click lands on the word.
+  // popover (the selection stays), then the click lands on the word. A word under the
+  // notice bar, which lies over the top of the work area, is clicked once it has gone.
   const click = async (sel) => {
-    const covered = await page.$eval(sel, (n) => { n.scrollIntoView({ block: "center" }); const r = n.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !(hit === n || n.contains(hit)); });
-    if (covered) await page.keyboard.press("Escape");
+    const covered = await page.$eval(sel, (n) => { n.scrollIntoView({ block: "center" }); const r = n.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return hit === n || n.contains(hit) ? null : hit?.closest("#notice") ? "notice" : "popover"; });
+    if (covered === "notice") await page.waitForSelector("#notice", { state: "hidden", timeout: 6000 });
+    if (covered === "popover") await page.keyboard.press("Escape");
     await page.click(sel);
     await page.waitForTimeout(250);
   };
@@ -36,7 +38,7 @@ async function main() {
   const note = () => page.textContent("#popover-note");
   const bar = () => page.evaluate(() => (document.querySelector("#notice").hidden ? "" : document.querySelector("#notice").textContent));
   const undoKey = async () => { await page.focus("#flow"); await page.keyboard.press("Control+z"); await page.waitForTimeout(150); };
-  const CHECK = { Wohlgeformtheit: "check:wf", "TEI All": "check:tei", "Schematron editing": "check:sch-editing", "Schematron review": "check:sch-review", Befundliste: "findings" };
+  const CHECK = { Wohlgeformtheit: "check:wf", "TEI All": "check:tei", Editionsregeln: "check:sch-editing", "Editionsregeln, Bericht": "check:sch-review", Befundliste: "findings" };
   const menu = async (m, item) => { await page.click(`.act[data-action="${m}"] > button`); await page.click(`[data-cmd="${CHECK[item]}"]`); await page.waitForTimeout(100); };
   const findings = "#side-findings .panel-body";
   const select = (from, to) => page.evaluate(async ([a, b]) => {
@@ -53,7 +55,7 @@ async function main() {
   const before = await tok(ID.sich);
   const normInput = page.locator(".field:has(span:text-is('Normalisiert')) input");
   await normInput.fill("sych");
-  await page.click(".field-group:has(span:text-is('Normalisiert')) button:text-is('Anwenden')");
+  await page.click("#popover-apply"); // the popover's one Anwenden (F28)
   const after = await tok(ID.sich);
   ok("C3 only @norm changed", after.norm === "sych" && JSON.stringify({ ...after, norm: before.norm }) === JSON.stringify(before));
   ok("C3 unsaved marker shown", await unsaved());
@@ -76,7 +78,7 @@ async function main() {
   // Refusal: a space would split the word.
   await clickWord(ID.sich);
   await dipl.fill("ſi ch"); await dipl.press("Enter");
-  ok("C4 space refused at field", (await note()).includes("Leerzeichen") && (await S()) === original);
+  ok("C4 space refused at the field", (await page.textContent("#popover-content .field:has(input[aria-invalid='true']) .field-error")).includes("Leerzeichen") && (await S()) === original);
 
   // US1.2 criterion 5: merteín
   await column(1);
@@ -182,23 +184,24 @@ async function main() {
   ok("P2 TEI All clean confirmation", (await bar()).includes("TEI All: keine Befunde"), await bar());
   await page.waitForTimeout(4200);
   ok("P2 confirmation disappears", !(await page.isVisible("#notice")));
-  await menu("Prüfen", "Schematron editing");
-  ok("P3 Schematron editing clean", (await bar()).includes("Schematron editing: keine Befunde"), await bar());
+  await menu("Prüfen", "Editionsregeln");
+  ok("P3 Editionsregeln clean", (await bar()).includes("Editionsregeln: keine Befunde"), await bar());
   await page.waitForTimeout(4200);
-  await menu("Prüfen", "Schematron review");
+  await menu("Prüfen", "Editionsregeln, Bericht");
   const rb = await bar();
-  ok("P3 Schematron review findings in bar", /Schematron review: \d+ Befunde/.test(rb) && rb.includes("xml:id") && rb.includes("Befunde anzeigen"), rb.slice(0, 160));
+  ok("P3 Editionsregeln, Bericht findings in bar", /Editionsregeln, Bericht: \d+ Befunde/.test(rb) && rb.includes("xml:id") && rb.includes("Befunde anzeigen"), rb.slice(0, 160));
   await page.click("#notice button:text-is('Befunde anzeigen')");
   const list = await page.textContent(findings);
-  ok("P4 list grouped per check", ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"].every((c) => list.includes(c)));
+  ok("P4 list grouped per check", ["Wohlgeformtheit", "TEI All", "Editionsregeln", "Editionsregeln, Bericht"].every((c) => list.includes(c)));
   const panelText = await page.textContent("#side-findings");
   ok("P4 the title names the document once as the chooser does, findings name rule and location", (await page.textContent("#side-findings .panel-title")) === "Befunde Codex 2759" && panelText.split("Codex 2759").length === 2 && !panelText.includes("codex-2759.xml") && list.includes("w-id") && list.includes("fol. 1r a Z. 5") && list.includes("hi-rend-data-only"));
   ok("P4 no scope sentence about the page excerpt", !(await page.locator(".findings-scope").count()) && !list.includes("Seitenauszug") && !list.includes("Seitenmodell"));
   const wid = page.locator(".finding:has(code:text-is('w-id')) button");
   await wid.click(); await page.waitForTimeout(300);
   ok("P4 jump selects Got", (await page.evaluate(() => document.querySelector("#flow .w.is-current")?.textContent)) === "Got");
-  // Outdated after an edit
-  await clickWord(ID.sich);
+  // Outdated after an edit. The standing findings notice lies over the first lines of the
+  // text (F44), so the word is selected as Shift+Arrow would select it.
+  await select(ID.sich, ID.sich);
   const n2 = page.locator(".field:has(span:text-is('Normalisiert')) input");
   await n2.fill("sich2"); await n2.press("Enter");
   ok("P5 bar says outdated", (await bar()).includes("Ergebnis veraltet, Prüfung erneut ausführen"), await bar());
@@ -220,7 +223,7 @@ async function main() {
   ok("S1 save runs the set (TEI All running)", (await bar()).includes("Speichern: TEI All läuft"), await bar());
   await page.waitForTimeout(2300);
   const fb = await bar();
-  ok("S1 failed save names schema and count, nothing more", fb.includes("Nicht gespeichert: Schematron editing mit 1 Befund") && fb.includes("Befunde anzeigen") && !fb.includes("ungesichert"), fb);
+  ok("S1 failed save names schema and count, nothing more", fb.includes("Nicht gespeichert: Editionsregeln mit 1 Befund") && fb.includes("Befunde anzeigen") && !fb.includes("ungesichert"), fb);
   ok("S1 unsaved dot stays", await unsaved());
   await page.click("#notice button:text-is('Befunde anzeigen')");
   ok("S1 list shows register-type", (await page.textContent(findings)).includes("register-type"));

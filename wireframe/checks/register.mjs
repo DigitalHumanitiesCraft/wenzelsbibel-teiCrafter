@@ -21,10 +21,11 @@ const col = async (i) => { await page.click(`[data-column="${i}"]`); await page.
 const select = async (a, b = a, nth = 0) => {
   const ok = await page.evaluate(([a, b, nth]) => {
     const ws = [...document.querySelectorAll("#flow .w")];
-    const hit = ws.filter((w) => w.textContent === a)[nth];
+    const text = (w) => w.textContent.replace(/\n/g, ""); // without the soft break of an inner lb
+    const hit = ws.filter((w) => text(w) === a)[nth];
     if (!hit) return false;
     const i = ws.indexOf(hit);
-    const j = ws.findIndex((w, k) => k >= i && w.textContent === b);
+    const j = ws.findIndex((w, k) => k >= i && text(w) === b);
     const flow = document.querySelector("#flow");
     flow.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     flow.focus();
@@ -37,9 +38,10 @@ const select = async (a, b = a, nth = 0) => {
   return ok;
 };
 const groupOf = (word, nth = 0) => page.evaluate(([word, nth]) => {
-  const w = [...document.querySelectorAll("#flow .w")].filter((x) => x.textContent === word)[nth];
+  const text = (x) => x.textContent.replace(/\n/g, "");
+  const w = [...document.querySelectorAll("#flow .w")].filter((x) => text(x) === word)[nth];
   const g = w && w.closest(".ref-group");
-  return g ? { words: [...g.querySelectorAll(".w")].map((x) => x.textContent), chip: g.querySelector(".chip")?.textContent } : null;
+  return g ? { words: [...g.querySelectorAll(".w")].map(text), chip: g.querySelector(".chip")?.textContent } : null;
 }, [word, nth]);
 const regChip = () => page.locator("#popover-content .register .linked .chip").textContent({ timeout: 1000 }).catch(() => null);
 const note = () => page.locator("#popover-note").textContent();
@@ -122,7 +124,7 @@ const idField = page.locator("#popover-content .reg-form label:has-text('ID') in
 const nameField = page.locator("#popover-content .reg-form label:has-text('Vorzugsname') input");
 check("3.2.1 form prefilled with type, ID and preferred name", (await page.locator("#popover-content .reg-form select").inputValue()) === "person" && (await idField.inputValue()) === "Got" && (await nameField.inputValue()) === "Got"); // finding 18
 await idField.fill(" Martin ");
-await page.click('#popover-content .reg-form button:text-is("Anwenden")');
+await page.click("#popover-apply"); // the popover's one Anwenden (F28)
 await page.waitForTimeout(150);
 const err = await page.locator("#reg-id-error").textContent();
 check("3.2.2 existing ID refused at the ID field", /besteht bereits/.test(err) && (await idField.getAttribute("aria-invalid")) === "true" && (await groupOf("Got")) === null, err);
@@ -167,14 +169,14 @@ const textX = (await page.locator("#flow .w").first().boundingBox()).x;
 await menu("register:refs");
 const refs = await page.locator("#side-refs .reg-refs li").allTextContents();
 check("Verweise open in the Seitenleiste tab, the text stays in place", (await page.getAttribute("#tab-refs", "aria-selected")) === "true" && (await page.locator("#flow .w").first().boundingBox()).x === textX);
-check("3.2.3 panel lists every reference in either form", refs.length === 2 && refs.some((r) => r.includes("Z. 16 bis Z. 17") && r.includes("ref/@target")) && refs.some((r) => r.includes("Z. 13") && r.includes("rs/@ref")), refs.join(" | "));
+check("3.2.3 panel lists every reference in either form", refs.length === 2 && refs.some((r) => r.includes("Spalte b, Z. 16") && !r.includes("bis") && r.includes("ref/@target")) && refs.some((r) => r.includes("Z. 13") && r.includes("rs/@ref")), refs.join(" | "));
 check("panel shows the codex-wide count", (await page.locator("#side-refs .reg-meta").textContent()).includes("2 Verweise im Codex"));
 await page.screenshot({ path: `${SHOTS}wireframe-register-3.png` });
 await page.locator("#side-refs .reg-refs li button").first().focus();
 await key("ArrowDown");
 await key("Enter");
 let t = await page.locator("#side-refs .panel-title").textContent();
-const cur = await page.evaluate(() => [...document.querySelectorAll("#flow .w.is-current")].map((w) => w.textContent).join(" "));
+const cur = await page.evaluate(() => [...document.querySelectorAll("#flow .w.is-current")].map((w) => w.textContent.replace(/\n/g, "")).join(" "));
 check("jump selects the reference's words (keyboard), panel stays open", cur === "Rotlebín herren merteín" && t.startsWith("Verweise"), `${cur} / ${t}`);
 await key("Control+z");
 await select("merteín");

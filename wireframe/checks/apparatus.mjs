@@ -65,7 +65,7 @@ await page.screenshot({ path: `${SHOTS}wireframe-apparatus-1.png` });
 const before = await anchorsOfLine(page, 0, 5);
 const de = gotEntry.locator("textarea[lang=de]");
 await de.fill("Die doppelte Apostrophe ist Emphase. (MK)");
-await gotEntry.locator("button", { hasText: "Anwenden" }).click();
+await page.click("#popover-apply"); // the popover's one Anwenden (F28)
 const noteNow = await data(page, (d) => d.apparatus.find((a) => a.from === "start_42597").notes.de);
 check("US2.2.2 note edited in data", noteNow === "Die doppelte Apostrophe ist Emphase. (MK)");
 check("US2.2.2 anchors unchanged", (await anchorsOfLine(page, 0, 5)) === before, before);
@@ -99,11 +99,11 @@ const appCount0 = await data(page, (d) => d.apparatus.length);
 await selectRange(page, "line_1639403125044_125_1", "line_1639403125044_125_2"); // hat er, crosses end of start_42715..end_42725
 await page.locator("#popover-content .app-add").click();
 check("overlapping range takes anchors (no refusal)", (await page.locator("#popover-content .app-refusal").count()) === 0);
-await page.locator("#popover-content .app-form button", { hasText: "Abbrechen" }).click();
+await page.click("#popover-cancel");
 await selectRange(page, "region_1639399497290_13l1_3"); // liebes, ligature
 await page.locator("#popover-content .app-add").click();
 check("ligature boundary word takes anchors (no refusal)", (await page.locator("#popover-content .app-refusal").count()) === 0);
-await page.locator("#popover-content .app-form button", { hasText: "Abbrechen" }).click();
+await page.click("#popover-cancel");
 
 // US2.1.1 to 2.1.3 through the Arbeitsleiste: keíner hand geticht
 const SEQ = ["region_1639399497290_13l7_2", "region_1639399497290_13l7_3", "region_1639399497290_13l7_4"];
@@ -127,7 +127,7 @@ const covered = await page.evaluate((ids) => {
 }, SEQ);
 check("the form in the popover leaves the selected range visible", covered.length === 0, covered.join());
 await page.screenshot({ path: `${SHOTS}wireframe-apparatus-2.png` });
-await page.locator("#popover-content .app-form button", { hasText: "Anwenden" }).click();
+await page.click("#popover-apply");
 await page.waitForTimeout(150);
 const line11 = await anchorsOfLine(page, 0, 11);
 const created = await data(page, (d) => d.apparatus[d.apparatus.length - 1]);
@@ -160,7 +160,7 @@ await selectRange(page, GOT2);
 await page.locator("#popover-content .app-add").click();
 await page.fill("#popover-content .app-form textarea[lang=de]", "Zweiter Kommentar.");
 await page.fill("#popover-content .app-form textarea[lang=en]", "Second comment.");
-await page.locator("#popover-content .app-form button", { hasText: "Anwenden" }).click();
+await page.click("#popover-apply");
 const l5 = await anchorsOfLine(page, 0, 5);
 check("+ Kommentar: start before the in-word anchors, end after the word", l5.startsWith("Got , #start_43594 #start_42597 #end_42599 got #end_43595 ,"), l5);
 check("got now shows both comments", (await entryFroms(page)).join() === "start_42597,start_43594" || (await entryFroms(page)).length === 2, (await entryFroms(page)).join());

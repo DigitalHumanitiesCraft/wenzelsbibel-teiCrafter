@@ -31,7 +31,7 @@ const data = (page, src) => page.evaluate(async (s) => {
   return new Function("d", `return (${s})(d)`)(state.data);
 }, src);
 // Toolbar commands: a dropdown entry (Prüfen) or a toolbar button.
-const PRUEFEN = { Wohlgeformtheit: "check:wf", "Schematron review": "check:sch-review", Befundliste: "findings" };
+const PRUEFEN = { Wohlgeformtheit: "check:wf", "Editionsregeln, Bericht": "check:sch-review", Befundliste: "findings" };
 const prufen = async (page, item) => { await page.click('.act[data-action="Prüfen"] > button'); await page.click(`[data-cmd="${PRUEFEN[item]}"]`); await page.waitForTimeout(150); };
 const notice = (page) => page.evaluate(() => (document.querySelector("#notice").hidden ? "" : document.querySelector("#notice").textContent));
 const active = (page) => page.evaluate(() => { const a = document.activeElement; return a ? `${a.tagName}#${a.id}.${a.className}[${a.dataset.cmd || ""}]:${(a.getAttribute("aria-label") || a.textContent || "").slice(0, 30)}` : ""; });
@@ -187,7 +187,7 @@ await scenario("Save", async () => {
 // 6: every finding of the page resolves
 await scenario("F6", async () => {
   const page = await open();
-  await prufen(page, "Schematron review");
+  await prufen(page, "Editionsregeln, Bericht");
   await prufen(page, "Befundliste");
   const metas = await page.$$eval("#side-findings .finding", (fs) => fs.map((f) => ({ link: !!f.querySelector(".link-btn"), where: f.querySelector(".link-btn")?.textContent || "", path: f.querySelector(".finding-meta").textContent })));
   let ok = 0;
@@ -215,7 +215,7 @@ await scenario("F6", async () => {
 // 12: outdated position finding after anchors were inserted
 await scenario("F12", async () => {
   const page = await open();
-  await prufen(page, "Schematron review");
+  await prufen(page, "Editionsregeln, Bericht");
   // Two anchors at the start of the line that holds 13l1_4, as an apparatus comment would insert.
   await page.evaluate(async () => {
     const { commit } = await import("/wireframe/js/history.js");
@@ -243,7 +243,7 @@ await scenario("F12", async () => {
 // 7: a findings jump from Bildannotationen switches to the codex first
 await scenario("F7", async () => {
   const page = await open();
-  await prufen(page, "Schematron review");
+  await prufen(page, "Editionsregeln, Bericht");
   await page.selectOption("#doc-select", "images");
   await page.waitForTimeout(150);
   await prufen(page, "Befundliste");
@@ -288,7 +288,7 @@ for (const view of ["narrow", "zoom200"]) {
     await page.waitForTimeout(150);
     check(`F8 ${view} Zum Text closes the sheet and returns focus`, await page.evaluate(() => document.querySelector("#popover").hidden && document.activeElement === document.querySelector("#flow")), await active(page));
     // A side panel covers the text pane, which is inert meanwhile.
-    await prufen(page, "Schematron review");
+    await prufen(page, "Editionsregeln, Bericht");
     await page.click('#notice button:has-text("Befunde anzeigen")');
     await page.waitForTimeout(150);
     check(`F8 ${view} findings sheet makes the covered text inert`, await page.evaluate(() => document.querySelector("#text-pane").inert === true));
@@ -338,7 +338,7 @@ await scenario("F9", async () => {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("Enter"); // Prüfen, Schematron review: findings, so Befundliste has links to focus
+  await page.keyboard.press("Enter"); // Prüfen, Editionsregeln, Bericht: findings, so Befundliste has links to focus
   await page.waitForTimeout(150);
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter"); // Prüfen, Wohlgeformtheit

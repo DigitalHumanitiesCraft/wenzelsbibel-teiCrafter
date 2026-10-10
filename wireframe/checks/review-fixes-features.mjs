@@ -36,9 +36,10 @@ const select = async (a, b = a, nth = 0) => {
   if (!ok) results.push(`FAIL select ${a}..${b}`);
 };
 const groupOf = (word, nth = 0) => page.evaluate(([word, nth]) => {
-  const w = [...document.querySelectorAll("#flow .w")].filter((x) => x.textContent === word)[nth];
+  const text = (x) => x.textContent.replace(/\n/g, ""); // without the soft break of an inner lb
+  const w = [...document.querySelectorAll("#flow .w")].filter((x) => text(x) === word)[nth];
   const g = w && w.closest(".ref-group");
-  return g ? { words: [...g.querySelectorAll(".w")].map((x) => x.textContent), chip: g.querySelector(".chip")?.textContent } : null;
+  return g ? { words: [...g.querySelectorAll(".w")].map(text), chip: g.querySelector(".chip")?.textContent } : null;
 }, [word, nth]);
 const combo = () => page.locator('#popover-content [role="combobox"]');
 const pickFirst = async (q) => { await combo().fill(q); await wait(150); await page.keyboard.press("ArrowDown"); await page.keyboard.press("Enter"); await wait(); };
@@ -90,7 +91,7 @@ const namev = await page.locator("#popover-content .reg-form label:has-text('Vor
 const hint = await page.locator("#popover-content .reg-form").innerText();
 check("18 ID and Vorzugsname from the selection", idv === "Got" && namev === "Got", `${idv}/${namev}`);
 check("18 typed text shown as hint", hint.includes("Gott"), hint.replace(/\n/g, " | "));
-await page.click('#popover-content .reg-form button:text-is("Abbrechen")');
+await page.click("#popover-cancel"); // the popover's one Abbrechen (F28)
 
 // 19: Hervorhebung gold on Rotlebín names the replaced rubrication; the menu marks the current value.
 await col(1);
@@ -121,7 +122,7 @@ check("20 hint z. B. MK beside the field", (await page.locator("#popover-content
 await page.locator('#popover-content .app-form textarea[lang="de"]').fill("Test de");
 await page.locator('#popover-content .app-form textarea[lang="en"]').fill("Test en");
 await sig.fill("CP");
-await page.click('#popover-content .app-form button[type="submit"]');
+await page.click("#popover-apply");
 await wait();
 check("5 comment on the ligature word created, confirmed with übernommen", /übernommen/.test(await page.locator("#popover-note").textContent()));
 await col(1);
@@ -129,7 +130,7 @@ await select("NB");
 await menu("comment");
 check("5 apparatus form for NB (ligature, anchor after it) shows no refusal", (await page.locator("#popover-content .app-refusal").count()) === 0);
 check("20 last used sigle prefilled as value", (await page.locator("#popover-content .app-sigle input").inputValue()) === "CP");
-await page.click('#popover-content .app-form button:text-is("Abbrechen")');
+await page.click("#popover-cancel");
 await page.keyboard.press("Control+z");
 await wait();
 
@@ -164,7 +165,7 @@ const title = await page.locator("#side-refs .panel-title").textContent();
 check("Verweise panel stays open after the jump", title.startsWith("Verweise"), title);
 check("chosen entry marked and focused", (await page.locator('#side-refs .reg-jump[aria-current="true"]').count()) === 1
   && (await page.evaluate(() => document.activeElement?.getAttribute("aria-current"))) === "true");
-const selText = await page.evaluate(() => [...document.querySelectorAll("#flow .w.is-current")].map((w) => w.textContent).join(" "));
+const selText = await page.evaluate(() => [...document.querySelectorAll("#flow .w.is-current")].map((w) => w.textContent.replace(/\n/g, "")).join(" "));
 check("selection moved to the chosen run", selText === "Rotlebín herren merteín", selText);
 await page.keyboard.press("ArrowDown");
 await page.keyboard.press("Enter");

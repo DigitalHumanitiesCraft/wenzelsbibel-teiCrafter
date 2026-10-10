@@ -23,7 +23,6 @@
   .ref-form { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .reg-form { display: grid; gap: var(--space-sm); max-inline-size: 32rem; }
   .reg-form select, .reg-form input { font-size: 1rem; }
-  .field-error { font-size: var(--font-size-sm); color: var(--color-problem); }
   .reg-meta { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin: 0; }
   .reg-refs, .reg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
   .reg-list { max-block-size: 18rem; overflow: auto; }

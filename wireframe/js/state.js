@@ -8,6 +8,7 @@ export const state = {
   data: null, column: 0, view: "text",
   side: null,         // tab shown in the Seitenleiste ("facs", "findings", "refs", "image") or null when it is closed
   zones: true,        // zone overlay of the facsimile
+  ids: false,         // "IDs anzeigen": xml:id and facs unfolded in the XML view
   words: [],          // rendered words of the current column: { tok, line, lineNo, node }
   sel: null,          // { from, to, line } indices into state.words; line is set in the state "Zeile"
   pendingLine: null,  // line chosen by line number or zone, confirmed once the selection arrives

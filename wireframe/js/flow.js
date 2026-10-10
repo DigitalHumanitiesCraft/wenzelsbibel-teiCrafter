@@ -4,7 +4,9 @@
 // so this module stays below them:
 //   "select" (detail.changed: the selected range or state differs from before),
 //   "refused" (detail: the reason a keystroke was refused),
-//   "edit" (a word changed in the flow), "column" (the column switched).
+//   "edit" (a word changed in the flow), "column" (the column switched),
+//   "structure" (detail { k, off }: a word command changed the words; app.js rebuilds
+//   the flow and puts the caret at offset `off` of word k).
 import { $, chipFor, columns, el, island, refKey, state } from "./state.js";
 import { commit } from "./history.js";
 
@@ -29,6 +31,9 @@ export function renderFlow() {
   let group = null;
   let lineNo = "";
   const target = () => group || flow;
+  // A line whose lb lies inside the last word of the line before (data.md, the line rule)
+  // starts at that word's soft break, so it takes no break of its own.
+  const opensInWord = (line) => { const t = line.tokens[line.tokens.length - 1]; return Boolean(t && t.type === "w" && /\n/.test(t.text || "")); };
   const closeGroup = () => { if (group) { group.append(chipFor(group.dataset.ref)); flow.append(group, " "); group = null; } };
   flat.forEach((item, idx) => {
     const tok = item.tok;
@@ -38,7 +43,7 @@ export function renderFlow() {
     }
     if (item.ln) {
       lineNo = item.ln;
-      if (item.i) target().append(el("br"));
+      if (item.i && !opensInWord(col.lines[item.i - 1])) target().append(el("br"));
       target().append(island("ln", lineNo, { "aria-hidden": "true", "data-line": item.line.id }));
       return;
     }
@@ -67,7 +72,9 @@ export function wordNode(tok, k) {
   if (tok.unclear) classes.push("is-unclear");
   if (tok.damage) classes.push("is-damage");
   if (state.appsByWord.has(tok)) classes.push("in-app");
-  const node = el("span", { class: classes.join(" "), "data-k": String(k), "data-id": tok.id || "", text: tok.text || tok.orig || "" });
+  const text = tok.text || tok.orig || "";
+  if (text.includes("\n")) classes.push("has-lb"); // the inner lb renders as a soft break
+  const node = el("span", { class: classes.join(" "), "data-k": String(k), "data-id": tok.id || "", text });
   for (const decorate of wordDecorators) decorate(tok, node, k);
   return node;
 }
@@ -214,11 +221,10 @@ export function selectLine(lineId) {
   state.words[ks[0]].node.scrollIntoView({ block: "nearest" });
 }
 
-// Editing stays inside one word: every input is handled here, so the browser
-// never splits spans, deletes islands or inserts line breaks. Structural edits
-// (splitting, joining or deleting words) are the word commands of F18, which the
-// wireframe does not have yet, so they are refused here. Its XML view is read-only,
-// so no refusal points there.
+// Editing stays inside the word model: every input is handled here, so the browser
+// never splits spans, deletes islands or inserts line breaks. Typing changes the text
+// of one word; a space, a boundary deletion and the deletion of a selected word are the
+// word commands of F18 below. Its XML view is read-only, so no refusal points there.
 // IME composition cannot be cancelled and is not covered by the wireframe.
 // Native history inputs are refused as well; Ctrl+Z reaches history.js through toolbar.js.
 // A refused keystroke says why (design: a refused action states its reason), at most
@@ -240,31 +246,151 @@ function onBeforeInput(e) {
   const a = wordAt(r.startContainer, r.startOffset);
   const b = wordAt(r.endContainer, r.endOffset);
   if (!a || !b || a.w !== b.w) return refuse(STRUCTURE);
+  const k = Number(a.w.dataset.k);
   const node = a.w.firstChild;
   const text = node.data;
   let [s, t] = [a.off, b.off];
   let insert = "";
-  if (e.inputType === "insertText" || e.inputType === "insertReplacementText" || e.inputType === "insertFromPaste") {
+  const kind = e.inputType;
+  if (kind === "insertText" || kind === "insertReplacementText" || kind === "insertFromPaste") {
     const raw = e.data ?? (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
+    // The source would need them escaped, and the spike refuses them the same way.
+    if (/[<&]/.test(raw)) return refuse("Die Zeichen < und & gehören zum Markup und lassen sich nicht in ein Wort tippen.");
+    if (raw && !raw.trim()) return splitWord(k, s, t);
     insert = raw.replace(/\s+/g, "");
-    if (!insert) return refuse(raw ? "Ein Leerzeichen würde das Wort teilen." : STRUCTURE);
-  } else if (e.inputType === "deleteContentBackward" || e.inputType === "deleteContentForward") {
-    if (s === t && e.inputType === "deleteContentBackward") s = [...graphemes.segment(text)].map((g) => g.index).filter((i) => i < s).pop() ?? s;
-    if (s === t && e.inputType === "deleteContentForward") { const g = [...graphemes.segment(text)].find((x) => x.index >= t); if (g) t = g.index + g.segment.length; }
+    if (!insert) return refuse(STRUCTURE);
+  } else if (kind === "deleteContentBackward" || kind === "deleteContentForward") {
+    if (s === 0 && t === text.length) return deleteWord(k);
+    if (s === t && s === 0 && kind === "deleteContentBackward") return joinWords(k - 1);
+    if (s === t && t === text.length && kind === "deleteContentForward") return joinWords(k);
+    if (s === t && kind === "deleteContentBackward") s = [...graphemes.segment(text)].map((g) => g.index).filter((i) => i < s).pop() ?? s;
+    if (s === t && kind === "deleteContentForward") { const g = [...graphemes.segment(text)].find((x) => x.index >= t); if (g) t = g.index + g.segment.length; }
     if (s === t) return refuse(STRUCTURE);
+    if (text.slice(s, t).includes("\n")) return refuse(`Der Zeilenumbruch in ${quote(state.words[k])} ist ein Element <lb> und bleibt stehen.`);
   } else return refuse(STRUCTURE);
   const next = text.slice(0, s) + insert + text.slice(t);
-  if (!next) return refuse("Ein Wort braucht Text."); // deleting a whole word is a structural edit
-  const tok = state.words[Number(a.w.dataset.k)].tok;
-  // F29: the diplomatic reading is the text and @orig together; a word without @orig keeps none.
-  commit("Diplomatisch", () => { tok.text = next; if (tok.orig != null) tok.orig = next; });
+  if (!next) return refuse("Ein Wort braucht Text.");
+  const tok = state.words[k].tok;
+  // F29: the diplomatic reading is the text and @orig together; a word without @orig keeps
+  // none. @orig carries no soft break, because the lb is an element of the source.
+  commit("Diplomatisch", () => { tok.text = next; if (tok.orig != null) tok.orig = next.replace(/\n/g, ""); });
   node.data = next;
   sel.setBaseAndExtent(node, s + insert.length, node, s + insert.length);
+  // The open Diplomatisch field shows what it showed before: @orig, else the text.
   if (state.diplo && state.sel && state.sel.from === state.sel.to && state.words[state.sel.from].node === a.w) {
-    state.diplo.value = next;
-    state.diplo.defaultValue = next;
+    state.diplo.value = tok.orig ?? next;
+    state.diplo.defaultValue = state.diplo.value;
   }
   flowEvents.dispatchEvent(new Event("edit"));
+}
+
+// Word commands (F18). Each is one commit, so Rückgängig names and reverts it as one
+// step. The in-memory model carries the result; the read-only XML view does not.
+
+// Names of the elements inside a word (hi, lb, choice, anchor), which a split would cut.
+// markup.js sets `of`, because it reads the word's content from the excerpt.
+export const innerElements = { of: () => [] };
+
+const quote = (w) => `„${w.node.textContent.replace(/\n/g, "")}“`;
+const rebuild = (k, off) => flowEvents.dispatchEvent(new CustomEvent("structure", { detail: { k, off } }));
+
+// The xml:id of a new word in `line`, formed like the word ids of the data: the line's zone
+// id and the next token index above every one in use with that stem.
+function newWordId(line) {
+  const stem = (line.facs || "").replace("#", "") || line.id;
+  let max = -1;
+  for (const c of state.data.columns) for (const l of c.lines) for (const t of l.tokens) {
+    if (!t.id || !t.id.startsWith(`${stem}_`)) continue;
+    const m = /^\d+/.exec(t.id.slice(stem.length + 1));
+    if (m) max = Math.max(max, Number(m[0]));
+  }
+  return `${stem}_${max + 1}`;
+}
+
+// A space inside a word splits it at the caret (replacing a selection inside the word).
+// The first part keeps the id, and its @orig and @norm follow its text where they
+// equalled the whole word; the new word takes the rest with @orig and @norm equal to it.
+function splitWord(k, s, t) {
+  const w = state.words[k];
+  const tok = w.tok;
+  const text = w.node.firstChild.data;
+  const before = text.slice(0, s);
+  const after = text.slice(t);
+  if (!before || !after) return refuse("Ein Leerzeichen am Wortrand würde ein leeres Wort anlegen.");
+  const inner = innerElements.of(tok);
+  if (inner.length) return refuse(`Ein Leerzeichen würde das Element <${inner[0]}> in ${quote(w)} teilen.`);
+  const id = newWordId(w.line);
+  commit("Wort teilen", () => {
+    const added = { ...tok, rend: [...(tok.rend || [])], id, text: after, orig: after, norm: after };
+    if (tok.orig === text) tok.orig = before;
+    if (tok.norm === text) tok.norm = before;
+    tok.text = before;
+    w.line.tokens.splice(w.line.tokens.indexOf(tok) + 1, 0, added);
+  });
+  rebuild(k + 1, 0);
+}
+
+const BETWEEN = { pc: "ein Satzzeichen", anchor: "ein Apparatanker", milestone: "ein Absatzzeichen" };
+// What two words must share to become one: every element that encloses either of them.
+const ENCLOSING = [
+  ["ref", (t) => refKey(t)], ["hi", (t) => (t.rend || []).join(" ")], ["Markup", (t) => t.markup],
+  ["supplied", (t) => t.supplied], ["unclear", (t) => t.unclear], ["damage", (t) => t.damage],
+  ["fw", (t) => t.fw], ["del", (t) => t.del], ["choice", (t) => `${t.abbr}${t.expan}`],
+];
+
+// The reason words a and b cannot be joined, or null. Nothing may lie between them but
+// one line break, which the joined word keeps as its inner lb (data.md, the line rule).
+function joinRefusal(a, b) {
+  const pair = `${quote(a)} und ${quote(b)}`;
+  for (const w of [a, b]) {
+    const inner = innerElements.of(w.tok);
+    if (inner.length) return `${quote(w)} enthält das Element <${inner[0]}>.`;
+  }
+  const lines = columns()[state.column].lines;
+  if (a.line !== b.line && lines.indexOf(b.line) !== lines.indexOf(a.line) + 1) return `Zwischen ${pair} liegt mehr als ein Zeilenumbruch.`;
+  const between = a.line === b.line
+    ? a.line.tokens.slice(a.line.tokens.indexOf(a.tok) + 1, a.line.tokens.indexOf(b.tok))
+    : [...a.line.tokens.slice(a.line.tokens.indexOf(a.tok) + 1), ...b.line.tokens.slice(0, b.line.tokens.indexOf(b.tok))];
+  if (between.length) return `Zwischen ${pair} steht ${BETWEEN[between[0].type] || "ein Element"}.`;
+  for (const [name, key] of ENCLOSING) {
+    if (key(a.tok) === key(b.tok)) continue;
+    const element = name === "Markup" ? (a.tok.markup || b.tok.markup).element : name;
+    return `${pair} liegen in verschiedenen Elementen <${element}>.`;
+  }
+  return null;
+}
+
+// Backspace at the start of word i + 1 or Delete at the end of word i joins the two; the
+// first keeps its id, and the caret stands at the join.
+function joinWords(i) {
+  const a = state.words[i];
+  const b = state.words[i + 1];
+  if (!a) return refuse("Vor dem Wort steht in dieser Spalte kein Wort.");
+  if (!b) return refuse("Nach dem Wort steht in dieser Spalte kein Wort.");
+  const reason = joinRefusal(a, b);
+  if (reason) return refuse(`Verbinden nicht möglich: ${reason}`);
+  const lb = a.line === b.line ? "" : "\n";
+  const at = a.node.firstChild.length + lb.length;
+  commit("Wörter verbinden", () => {
+    const [x, y] = [a.tok, b.tok];
+    const flat = (tok) => (tok.text || "").replace(/\n/g, "");
+    if (x.orig != null || y.orig != null) x.orig = (x.orig ?? flat(x)) + (y.orig ?? flat(y));
+    if (x.norm != null || y.norm != null) x.norm = (x.norm ?? flat(x)) + (y.norm ?? flat(y));
+    x.text = `${x.text}${lb}${y.text}`;
+    b.line.tokens.splice(b.line.tokens.indexOf(y), 1);
+  });
+  rebuild(i, at);
+}
+
+// Delete or Backspace on a selected whole word removes it. An inner lb or anchor would
+// go with it, so such a word stays. The caret goes to the end of the word before it.
+function deleteWord(k) {
+  const w = state.words[k];
+  const inner = innerElements.of(w.tok).find((n) => n === "lb" || n === "anchor");
+  if (inner) return refuse(`Löschen nicht möglich: ${quote(w)} enthält das Element <${inner}>.`);
+  commit("Wort löschen", () => { w.line.tokens.splice(w.line.tokens.indexOf(w.tok), 1); });
+  if (k > 0) rebuild(k - 1, state.words[k - 1].node.firstChild.length);
+  else rebuild(0, 0);
 }
 
 // Highlighting across text, facsimile and XML
@@ -272,7 +398,7 @@ function onBeforeInput(e) {
 export function selectedWords() { return state.sel ? state.words.slice(state.sel.from, state.sel.to + 1) : []; }
 
 export function highlightSelection() {
-  for (const n of document.querySelectorAll(".w.is-current, .ln.is-current, .zone.is-current, .xml .is-selected")) n.classList.remove(n.closest(".xml") ? "is-selected" : "is-current");
+  for (const n of document.querySelectorAll(".w.is-current, .ln.is-current, .zone.is-current, .xml .is-selected, .xml .is-target")) n.classList.remove("is-current", "is-selected", "is-target");
   const words = selectedWords();
   const lines = new Set(words.map((w) => w.line));
   for (const w of words) w.node.classList.add("is-current");
@@ -286,8 +412,13 @@ export function highlightSelection() {
     const z = line.facs && document.querySelector(`.zone[data-id="${line.facs.replace("#", "")}"]`);
     if (z) z.classList.add("is-current");
   }
-  if (state.view === "xml" && words.length && words[0].tok.id) {
+  if (state.view !== "xml") return;
+  if (words.length && words[0].tok.id) {
     const x = document.querySelector(`.xml .xw[data-id="${CSS.escape(words[0].tok.id)}"]`);
     if (x) { x.classList.add("is-selected"); x.scrollIntoView({ block: "center" }); }
+  }
+  // The anchors that the comments on the selection point to unfold their xml:id (F57).
+  for (const app of new Set(words.flatMap((w) => state.appsByWord.get(w.tok) || []))) {
+    for (const id of [app.from, app.to]) if (id) document.querySelector(`.xml .xa[data-id="${CSS.escape(id)}"]`)?.classList.add("is-target");
   }
 }

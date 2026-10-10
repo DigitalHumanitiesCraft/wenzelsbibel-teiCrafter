@@ -3,7 +3,7 @@
 import { $, chipFor, columns, el, refKey, state, TYPE_LABEL } from "./state.js";
 import { commit } from "./history.js";
 import { flowEvents, highlightSelection, renderFlow, selectedWords, setColumn, setWordRange } from "./flow.js";
-import { isPopoverOpen, openPopover, popoverNote, sections } from "./popover.js";
+import { addField, applyPopover, isPopoverOpen, openPopover, popoverNote, sections, syncFoot } from "./popover.js";
 import { closePanel, narrow, openPanel, tabs } from "./panel.js";
 import { command, selectionReason } from "./toolbar.js";
 import { setView } from "./xml.js";
@@ -61,7 +61,7 @@ function runs(words = pageWords()) {
 
 // Links written here are the proposed rs[@ref]; links read from the codex are ref[@target].
 const elementOf = (ref) => (ref.run ? "rs" : "ref");
-const runText = (run) => run.words.map((w) => w.tok.text || w.tok.orig || "").join(" ");
+const runText = (run) => run.words.map((w) => (w.tok.text || w.tok.orig || "").replace(/\n/g, "")).join(" "); // no soft break of an inner lb
 const where = (ws) => {
   const at = (w) => (w.lineNo === "Kopfzeile" ? "Kopfzeile" : `Z. ${w.lineNo}`);
   const a = ws[0];
@@ -131,24 +131,26 @@ function redraw(from, to) {
   openPopover();
 }
 
-// US3.1: one wrapper around the selected whole words in one commit. The wireframe has no
-// element tree, so setting the same ref on every selected word token stands in for one
-// rs[@type][@ref] start and end tag around them; `run` keeps two adjacent links to the
-// same entry apart, as two rs elements would be. `refuse` shows a refusal at the field
+// US3.1: one wrapper around the selected whole words. The wireframe has no element tree,
+// so setting the same ref on every selected word token stands in for one rs[@type][@ref]
+// start and end tag around them; `run` keeps two adjacent links to the same entry apart,
+// as two rs elements would be.
+function linkWords(data, words, entry) {
+  const run = `s${++runSeq}`;
+  for (const w of words) w.tok.ref = { type: entry.type, target: entry.id, run };
+  const e = findEntry(data, entry.type, entry.id);
+  if (e) e.count += 1;
+}
+
+// Enter on a hit links at once, in one commit. `refuse` shows a refusal at the field
 // that triggered the link (design.md, interaction rules).
-function link(entry, refuse, extra = null) {
+function link(entry, refuse) {
   const words = selectedWords();
   if (!words.length) { refuse("Zum Verknüpfen zuerst Wörter im Text auswählen."); return false; }
   const reason = wrapRefusal(words.map((w) => w.tok));
   if (reason) { refuse(reason); return false; }
   const { from, to } = state.sel;
-  const run = `s${++runSeq}`;
-  commit(extra ? "Eintrag anlegen" : "Verknüpfen", (data) => {
-    if (extra) extra(data);
-    for (const w of words) w.tok.ref = { type: entry.type, target: entry.id, run };
-    const e = findEntry(data, entry.type, entry.id);
-    if (e) e.count += 1;
-  });
+  commit("Verknüpfen", (data) => linkWords(data, words, entry));
   redraw(from, to);
   popoverNote(`Verknüpft mit ${label(entry)}.`);
   $("#popover-content .register .link-btn")?.focus();
@@ -184,10 +186,10 @@ export function registerSection(words) {
   const body = el("div", { class: "register-body" });
   sec.append(body);
   const text = words.map((w) => w.node.textContent).join(" ");
-  const showCombo = () => body.replaceChildren(...combo(showForm));
+  const showCombo = () => { body.replaceChildren(...combo(showForm)); syncFoot(); };
   // US3.2: ID and preferred name come from the selected text; the search text that led
   // to "+ neu anlegen" is shown as a hint only.
-  const showForm = (type, searched = "") => body.replaceChildren(createForm({ type, id: text, name: text, searched }, showCombo));
+  const showForm = (type, searched = "") => { body.replaceChildren(createForm({ type, id: text, name: text, searched }, showCombo)); syncFoot(); };
   if (pendingCreate) { pendingCreate = false; showForm("person"); } else showCombo();
   return sec;
 }
@@ -266,9 +268,10 @@ function combo(showForm) {
   return [el("div", { class: "combo" }, [typeSel, input]), error, list];
 }
 
-// US3.2 / F39: type, ID and preferred name; Anwenden creates the entry and links the
-// selection in one commit. IDs are unique across all three types, compared trimmed
-// and case-sensitively, as xml:id values in one register file would be.
+// US3.2 / F39: type, ID and preferred name; the popover's Anwenden creates the entry and
+// links the selection in one commit, its Abbrechen returns to the search field. IDs are
+// unique across all three types, compared trimmed and case-sensitively, as xml:id values
+// in one register file would be.
 function createForm(prefill, back) {
   const form = el("div", { class: "reg-form", role: "group", "aria-label": "Registereintrag anlegen" });
   const typeSel = el("select", {}, TYPES.map((v) => el("option", { value: v, text: TYPE_LABEL[v] })));
@@ -284,19 +287,33 @@ function createForm(prefill, back) {
     if (invalid) idInput.setAttribute("aria-invalid", "true");
     idInput.focus();
   };
-  const apply = () => {
-    const id = idInput.value.trim();
-    const name = nameInput.value.trim() || id;
-    const type = typeSel.value;
-    if (!id) { fail("Nicht angelegt: Die ID darf nicht leer sein."); return; }
-    const clash = registerEntries().find((e) => e.id === id);
-    if (clash) { fail(`Nicht angelegt: Die ID „${id}“ besteht bereits (${TYPE_LABEL[clash.type]}).`); return; }
-    error.hidden = true;
-    idInput.removeAttribute("aria-invalid");
-    // count starts at 0; link() adds the one reference it writes.
-    link({ type, id }, (msg) => fail(msg, false), (data) => { data.registers.codex[type].push({ type, id, count: 0, name, created: true }); });
-  };
-  const onEnter = (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } };
+  addField({
+    node: form,
+    name: "Eintrag anlegen",
+    // The open form is the intent to create; Abbrechen withdraws it.
+    changed: () => true,
+    check: () => {
+      const id = idInput.value.trim();
+      if (!id) { fail("Nicht angelegt: Die ID darf nicht leer sein."); return false; }
+      const clash = registerEntries().find((e) => e.id === id);
+      if (clash) { fail(`Nicht angelegt: Die ID „${id}“ besteht bereits (${TYPE_LABEL[clash.type]}).`); return false; }
+      const words = selectedWords();
+      const reason = words.length ? wrapRefusal(words.map((w) => w.tok)) : "Zum Verknüpfen zuerst Wörter im Text auswählen.";
+      if (reason) { fail(reason, false); return false; }
+      error.hidden = true;
+      idInput.removeAttribute("aria-invalid");
+      return true;
+    },
+    // count starts at 0; linkWords adds the one reference it writes.
+    apply: (data) => {
+      const id = idInput.value.trim();
+      const type = typeSel.value;
+      data.registers.codex[type].push({ type, id, count: 0, name: nameInput.value.trim() || id, created: true });
+      linkWords(data, selectedWords(), { type, id });
+    },
+    reset: back,
+  });
+  const onEnter = (e) => { if (e.key === "Enter") { e.preventDefault(); applyPopover(); } };
   idInput.addEventListener("keydown", onEnter);
   nameInput.addEventListener("keydown", onEnter);
   idInput.addEventListener("input", () => { error.hidden = true; idInput.removeAttribute("aria-invalid"); });
@@ -306,10 +323,6 @@ function createForm(prefill, back) {
     el("label", { class: "field" }, [el("span", { text: "ID" }), idInput, error,
       ...(prefill.searched && prefill.searched !== prefill.id ? [el("span", { class: "mixed", text: `Gesucht war „${prefill.searched}“.` })] : [])]),
     el("label", { class: "field" }, [el("span", { text: "Vorzugsname" }), nameInput]),
-    el("div", { class: "field-actions" }, [
-      el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { back(); $("#popover-content .register input")?.focus(); } }),
-      el("button", { type: "button", class: "act-btn is-primary", text: "Anwenden", onclick: apply }),
-    ]),
   );
   queueMicrotask(() => idInput.focus());
   return form;

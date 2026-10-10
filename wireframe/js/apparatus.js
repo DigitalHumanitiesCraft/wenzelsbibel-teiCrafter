@@ -4,9 +4,8 @@
 // editor keeps the selected words in view while writing (the side panel would hide the
 // facsimile and move the eye away from the range).
 import { $, el, state } from "./state.js";
-import { commit } from "./history.js";
 import { selectedWords, wordDecorators } from "./flow.js";
-import { hideNote, isPopoverOpen, openPopover, popoverNote, sections } from "./popover.js";
+import { addField, applyPopover, isPopoverOpen, openPopover, popoverNote, refuseAt, sections, syncFoot } from "./popover.js";
 import { command, selectionReason } from "./toolbar.js";
 
 // The two types the form offers (specification US2.1); other types in the data are shown as they are.
@@ -95,8 +94,6 @@ function markWord(tok, node) {
 }
 wordDecorators.push(markWord);
 
-// After a commit app.js does not re-render the flow, so the marks are refreshed in place.
-function refreshMarks() { for (const w of state.words) markWord(w.tok, w.node); }
 
 const typeName = (a) => (a.type ? TYPE_NAME[a.type] || a.type : "ohne Typ");
 
@@ -154,7 +151,8 @@ function insertAnchors(words, startId, endId) {
 }
 
 // Comment form state: the open form belongs to one selection and keeps its draft
-// across popover rebuilds (undo, redo, view switch) while that selection holds.
+// across popover rebuilds (undo, redo, view switch) while that selection holds. The
+// popover's Anwenden creates the comment, its Abbrechen closes the form.
 let form = null;
 let lastSigle = "";
 const selKey = () => (state.sel ? `${state.column}:${state.sel.from}-${state.sel.to}` : null);
@@ -168,44 +166,13 @@ export function openCommentForm() {
   $("#popover-content .app-form select")?.focus();
 }
 
-function closeForm() {
-  form = null;
-  showSection();
-  $("#popover-content .app-add")?.focus();
-}
-
 // Replaces only the apparatus section, so unapplied input in other sections survives.
 function showSection() {
   const current = isPopoverOpen() ? $("#popover-content .apparatus") : null;
-  if (current) current.replaceWith(apparatusSection(selectedWords()));
-  else openPopover();
+  if (current) { current.replaceWith(apparatusSection(selectedWords())); syncFoot(); } else openPopover();
 }
 
-function applyForm(words, fields) {
-  const reason = refusal(words);
-  if (reason) { popoverNote(reason); return; }
-  const sigle = form.sigle.trim().replace(/^\(|\)$/g, "").trim();
-  const missing = [["de", "Die deutsche Anmerkung fehlt."], ["en", "Die englische Anmerkung fehlt."]].find(([k]) => !form[k].trim());
-  if (missing) { popoverNote(missing[1]); fields[missing[0]].focus(); return; }
-  if (!sigle || /[()]/.test(sigle)) { popoverNote("Die Sigle fehlt, etwa MK."); fields.sigle.focus(); return; }
-  const signed = (text) => { const t = text.trim(); return t.endsWith(`(${sigle})`) ? t : `${t} (${sigle})`; };
-  let ids = null;
-  const done = commit("Apparatkommentar", (data) => {
-    if (refusal(words)) return false;
-    ids = nextIds(data);
-    insertAnchors(words, ids[0], ids[1]);
-    data.apparatus.push({ from: ids[0], to: ids[1], type: form.type, notes: { de: signed(form.de), en: signed(form.en) }, id: null });
-    return true;
-  });
-  if (!done) return;
-  lastSigle = sigle;
-  form = null;
-  indexApparatus();
-  refreshMarks();
-  openPopover();
-  popoverNote(`Apparatkommentar ${ids[0]} bis ${ids[1]} übernommen.`);
-  $(`#popover-content .app-entry[data-from="${ids[0]}"] textarea`)?.focus();
-}
+const cleanSigle = () => form.sigle.trim().replace(/^\(|\)$/g, "").trim();
 
 function commentForm(words) {
   const reason = refusal(words);
@@ -236,15 +203,36 @@ function commentForm(words) {
     el("span", { class: "sigle-row" }, [sigle, el("span", { class: "sigle-example", text: "z. B. MK" })]),
     el("span", { class: "mixed", id: "app-sigle-hint", text: "Wird beiden Anmerkungen in Klammern angehängt." }),
   ]));
-  f.append(el("div", { class: "field-actions" }, [
-    el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { hideNote(); closeForm(); } }),
-    el("button", { type: "submit", class: "act-btn is-primary", text: "Anwenden" }),
-  ]));
-  f.addEventListener("submit", (e) => { e.preventDefault(); applyForm(words, fields); });
+  // Enter in the sigle submits the form, which is the popover's Anwenden.
+  f.addEventListener("submit", (e) => { e.preventDefault(); applyPopover(); });
+  addField({
+    node: f,
+    name: "Apparatkommentar",
+    changed: () => Boolean(form && (form.de.trim() || form.en.trim())),
+    check: () => {
+      const reason = refusal(words);
+      if (reason) { popoverNote(reason); return false; }
+      const missing = [["de", "Die deutsche Anmerkung fehlt."], ["en", "Die englische Anmerkung fehlt."]].find(([k]) => !form[k].trim());
+      if (missing) { refuseAt(fields[missing[0]], missing[1]); return false; }
+      const sigle = cleanSigle();
+      if (!sigle || /[()]/.test(sigle)) { refuseAt(fields.sigle, "Die Sigle fehlt, etwa MK."); return false; }
+      return true;
+    },
+    apply: (data) => {
+      const sigle = cleanSigle();
+      const signed = (text) => { const t = text.trim(); return t.endsWith(`(${sigle})`) ? t : `${t} (${sigle})`; };
+      const ids = nextIds(data);
+      insertAnchors(words, ids[0], ids[1]);
+      data.apparatus.push({ from: ids[0], to: ids[1], type: form.type, notes: { de: signed(form.de), en: signed(form.en) }, id: null });
+    },
+    // The flow marks and the list read the index, so it follows before they are rebuilt.
+    after: () => { lastSigle = cleanSigle(); form = null; indexApparatus(); },
+    reset: () => { form = null; showSection(); },
+  });
   return f;
 }
 
-// One existing comment: type, anchors and both notes as textareas, applied per comment.
+// One existing comment: type, anchors and both notes as textareas, applied by the popover.
 function commentEntry(app) {
   const entry = el("article", { class: "app-entry", "data-from": app.from ?? "", "aria-label": `Kommentar ${app.from ?? "?"} bis ${app.to}` });
   entry.append(el("div", { class: "type" }, [
@@ -260,18 +248,19 @@ function commentEntry(app) {
     areas[lang] = ta;
     entry.append(el("label", { class: "field" }, [el("span", { text: label }), ta]));
   }
-  const apply = () => {
-    const next = { de: areas.de.value.trim(), en: areas.en.value.trim() };
-    if (!next.de) { popoverNote("Die deutsche Anmerkung darf nicht leer sein."); areas.de.focus(); return; }
-    if (next.de === (notes.de ?? "") && next.en === (notes.en ?? "")) { popoverNote("Keine Änderung am Kommentar."); return; }
-    commit("Apparatkommentar bearbeiten", () => { app.notes = { ...app.notes, ...next }; });
-    for (const [lang, ta] of Object.entries(areas)) { ta.value = next[lang]; ta.defaultValue = next[lang]; }
-    popoverNote("Kommentar übernommen, die Anker bleiben unverändert.");
-  };
-  entry.append(el("div", { class: "field-actions" }, [
-    el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { for (const [lang, ta] of Object.entries(areas)) ta.value = app.notes?.[lang] ?? ""; hideNote(); } }),
-    el("button", { type: "button", class: "act-btn is-primary", text: "Anwenden", onclick: apply }),
-  ]));
+  // The anchors stay as they are; only the note text changes (F43).
+  addField({
+    node: entry,
+    name: "Kommentartext",
+    changed: () => LANGS.some(([lang]) => areas[lang].value.trim() !== (notes[lang] ?? "")),
+    check: () => {
+      if (areas.de.value.trim()) return true;
+      refuseAt(areas.de, "Die deutsche Anmerkung darf nicht leer sein.");
+      return false;
+    },
+    apply: () => { app.notes = { ...app.notes, de: areas.de.value.trim(), en: areas.en.value.trim() }; },
+    reset: () => { for (const [lang, ta] of Object.entries(areas)) ta.value = notes[lang] ?? ""; },
+  });
   return entry;
 }
 

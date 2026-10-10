@@ -75,6 +75,7 @@ export function syncToolbar() {
   }
   $("#toggle-facs").setAttribute("aria-pressed", String(state.side === "facs"));
   $("#toggle-zones").setAttribute("aria-pressed", String(state.zones));
+  $("#toggle-ids").setAttribute("aria-pressed", String(state.ids));
   for (const bar of document.querySelectorAll(".toolbar")) rove(bar);
 }
 

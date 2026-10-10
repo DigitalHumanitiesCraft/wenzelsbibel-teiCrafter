@@ -21,6 +21,9 @@ Design decisions:
   slice is not well-formed on its own (it opens inside `div` and `p`). The
   tokeniser is the one of the first wireframe round, ported unchanged except
   that end tags no longer create phantom columns, anchors and milestones.
+- A word whose text contains an `lb` belongs to the line on which it begins
+  (knowledge/data.md). The inner `lb` still opens its line, and it stays in
+  the word text as a newline, the soft break the flow renders inside the word.
 - Everything else (header, standOff apparatus, facsimile, register counts,
   image annotations) comes from an lxml parse of the whole file; a full DOM
   of the codex fits in memory (measured at about 1 s and under 400 MB).
@@ -49,12 +52,6 @@ XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 FOLIO = "1r"
 IIIF_BASE = "https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2"
 REGISTER_TYPES = ("person", "place", "folk")
-REGISTERS_NOTE = (
-    "Die Codex-Datei enthält keine Registerlisten (kein listPerson, listPlace oder listOrg). "
-    "Die Einträge sind die verschiedenen Werte von ref/@target der Typen person, place und folk "
-    "im Codex-Text, ohne Leerraum am Rand; der Vorzugsname ist daher die ID. "
-    "count zählt die ref-Elemente, die auf die ID zeigen."
-)
 DEFAULT_OUT = (
     Path(__file__).resolve().parent.parent / "data" / "wireframe" / "fol-1r.json"
 )
@@ -126,14 +123,16 @@ def _context(stack: list[tuple[str, dict[str, str]]]) -> dict:
 def _tokenise(seg: str) -> list[dict]:
     """Split the page slice into columns, lines and tokens.
 
-    A word token is appended to its line at `</w>`, so anchors inside a word
-    precede it in the line; `inWord` names the enclosing word for them.
+    A word token is appended at `</w>` to the line on which the word began, so
+    anchors inside a word precede it in that line; `inWord` names the
+    enclosing word for them.
     """
     columns: list[dict] = []
     lines: list[dict] | None = None
     cur: dict | None = None
     stack: list[tuple[str, dict[str, str]]] = []
     word: dict | None = None
+    word_line: dict | None = None  # the line at the word's start tag
     for m in TOKEN.finditer(seg):
         close, name, raw, selfclosing, text = m.groups()
         if text is not None:
@@ -153,9 +152,14 @@ def _tokenise(seg: str) -> list[dict]:
                     lines = columns[-1]["lines"]
                 cur = {"id": at.get("xml:id"), "facs": at.get("facs"), "tokens": []}
                 lines.append(cur)
+                # An lb before the word's first character moves the word to its line.
+                if word is not None and word["text"]:
+                    word["text"] += "\n"
+                elif word is not None:
+                    word_line = cur
         elif name == "anchor":
             if not close and cur is not None:
-                cur["tokens"].append(
+                (word_line if word is not None else cur)["tokens"].append(
                     {
                         "type": "anchor",
                         "id": at.get("xml:id"),
@@ -175,10 +179,12 @@ def _tokenise(seg: str) -> list[dict]:
                     "text": "",
                 }
                 word.update(_context(stack))
+                word_line = cur
             else:
-                if cur is not None and word is not None:
-                    cur["tokens"].append(word)
+                if word_line is not None and word is not None:
+                    word_line["tokens"].append(word)
                 word = None
+                word_line = None
         elif name == "pc":
             if not close and cur is not None:
                 following = re.match(r"([^<]*)", seg[m.end() :]).group(1)
@@ -603,7 +609,6 @@ def build(codex_path: Path, bild_path: Path) -> tuple[dict, dict]:
             "artists": list(artist_names.items()),
             "codex": codex_registers,
         },
-        "registersNote": REGISTERS_NOTE,
         "registerUse": _register_use(columns),
         "iconclass": _iconclass_catalogue(bild),
         "miniature": items[0],

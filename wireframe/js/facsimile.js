@@ -1,7 +1,7 @@
 // Facsimile: OpenSeadragon on the IIIF info.json, zones as one SVG overlay in
 // image pixels so they scale with zoom. Without the library the static image stays.
 import { $, columns, el, state } from "./state.js";
-import { flowEvents, highlightSelection, selectLine, setColumn } from "./flow.js";
+import { flowEvents, highlightSelection, selectedWords, selectLine, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
 import { closePanel, showTab, tabs } from "./panel.js";
 
@@ -13,6 +13,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export const zoneActions = new Map();
 
 flowEvents.addEventListener("column", () => fitColumn());
+flowEvents.addEventListener("select", (e) => { if (e.detail.changed) revealSelection(); });
 
 // The facsimile is the first tab of the Seitenleiste; showing it opens the viewer once.
 tabs.set("facs", { fresh: true, show: () => { if (!$("#zones")) initFacsimile(); highlightSelection(); } });
@@ -48,18 +49,20 @@ export function initFacsimile() {
   state.viewer = viewer;
 }
 
+// Bounding box of zones in image pixels, or null without points.
+function box(list) {
+  const pts = list.flatMap((z) => z.points.trim().split(/\s+/).map((p) => p.split(",").map(Number)));
+  if (!pts.length) return null;
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
 // Bounding box of the current column in image pixels: the zones its lines point to,
 // widened by every text region whose horizontal centre lies inside them.
 function columnBox() {
   const { zones } = state.data;
   const byId = new Map(zones.map((z) => [z.id, z]));
-  const box = (list) => {
-    const pts = list.flatMap((z) => z.points.trim().split(/\s+/).map((p) => p.split(",").map(Number)));
-    if (!pts.length) return null;
-    const xs = pts.map((p) => p[0]);
-    const ys = pts.map((p) => p[1]);
-    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
-  };
   const col = columns()[state.column];
   const lineBox = col && box(col.lines.map((l) => byId.get((l.facs || "").replace("#", ""))).filter((z) => z && z.points));
   if (!lineBox) return null;
@@ -74,6 +77,25 @@ export function fitColumn(immediately = false) {
   const pad = 120;
   const rect = viewer.viewport.imageToViewportRectangle(b.x0 - pad, b.y0 - pad, b.x1 - b.x0 + 2 * pad, b.y1 - b.y0 + 2 * pad);
   viewer.viewport.fitBounds(rect, immediately || matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+// F24: a selection whose line zones lie outside the visible image pans them into view,
+// zooming only when they do not fit; zones already in view leave the image still.
+function revealSelection() {
+  const viewer = state.viewer;
+  if (state.side !== "facs" || !viewer || !viewer.world.getItemCount()) return;
+  const ids = new Set(selectedWords().map((w) => (w.line.facs || "").replace("#", "")));
+  const b = box(state.data.zones.filter((z) => ids.has(z.id) && z.points));
+  if (!b) return;
+  const pad = 40;
+  const vp = viewer.viewport;
+  const r = vp.imageToViewportRectangle(b.x0 - pad, b.y0 - pad, b.x1 - b.x0 + 2 * pad, b.y1 - b.y0 + 2 * pad);
+  const v = vp.getBounds();
+  const now = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (r.width > v.width || r.height > v.height) { vp.fitBounds(r, now); return; }
+  const dx = r.x < v.x ? r.x - v.x : Math.max(0, r.x + r.width - v.x - v.width);
+  const dy = r.y < v.y ? r.y - v.y : Math.max(0, r.y + r.height - v.y - v.height);
+  if (dx || dy) vp.panBy(new window.OpenSeadragon.Point(dx, dy), now);
 }
 
 function zoneLayer() {

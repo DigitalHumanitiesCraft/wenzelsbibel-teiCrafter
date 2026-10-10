@@ -27,10 +27,13 @@ const docLabel = (doc) => $(`#doc-select option[value="${doc}"]`).textContent;
 const CONFIRM_CLEAN = true;
 const TEI_ALL_MS = 2000;
 
-const CHECKS = ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"];
+// The two phases of the project Schematron under their working labels (F9): editing,
+// the save gate, and review, the report.
+const PHASE_LABEL = { editing: "Editionsregeln", review: "Editionsregeln, Bericht" };
+const CHECKS = ["Wohlgeformtheit", "TEI All", PHASE_LABEL.editing, PHASE_LABEL.review];
 // Wohlgeformtheit parses the excerpt as loaded (or formatted), not the model edits, and
 // only on request. The header badge states that the wireframe works in memory.
-const SAVE_SET = ["Wohlgeformtheit", "TEI All", "Schematron editing"];
+const SAVE_SET = ["Wohlgeformtheit", "TEI All", PHASE_LABEL.editing];
 
 // check => { findings, stale }. Findings hold positions and ids, never token objects,
 // so they stay valid across undo and redo.
@@ -75,7 +78,7 @@ const APP_TYPES = ["comment_edition", "comment_understanding", "comment_translat
 
 function schematron(phase) {
   const out = [];
-  const add = (role, rule, message, at, path) => out.push({ check: `Schematron ${phase}`, phase, role, rule, message, where: where(at), at, path });
+  const add = (role, rule, message, at, path) => out.push({ check: PHASE_LABEL[phase], phase, role, rule, message, where: where(at), at, path });
   const words = walk();
   const review = phase === "review";
 
@@ -213,7 +216,7 @@ async function evaluate(check, label = check) {
   if (check === "Wohlgeformtheit") return wellFormed();
   // Stand-in for the worker run; the real build validates the exact bytes.
   if (check === "TEI All") { await delay(TEI_ALL_MS, label); return []; }
-  return schematron(check === "Schematron editing" ? "editing" : "review");
+  return schematron(check === PHASE_LABEL.editing ? "editing" : "review");
 }
 
 export async function runCheck(check) {
@@ -324,7 +327,7 @@ export function showFindings() {
           el("span", { class: "finding-role", text: f.role === "error" ? "Fehler" : "Warnung" }),
           el("span", { class: "finding-msg", text: f.message }),
           f.at ? el("button", { type: "button", class: "link-btn", text: f.where, onclick: () => jumpToFinding(f) }) : el("span", { text: f.where }),
-          el("span", { class: "finding-meta" }, [el("code", { text: f.rule }), " · ", el("code", { text: f.path })]),
+          el("span", { class: "finding-meta" }, ["Regel ", el("code", { text: f.rule }), ", Pfad ", el("code", { text: f.path })]),
         ]));
       }
       group.append(list);
@@ -378,8 +381,8 @@ onChange((kind) => {
 
 command("check:wf", () => runCheck("Wohlgeformtheit"));
 command("check:tei", () => runCheck("TEI All"));
-command("check:sch-editing", () => runCheck("Schematron editing"));
-command("check:sch-review", () => runCheck("Schematron review"));
+command("check:sch-editing", () => runCheck(PHASE_LABEL.editing));
+command("check:sch-review", () => runCheck(PHASE_LABEL.review));
 command("findings", showFindings, () => (results.size ? null : "Noch keine Prüfung gelaufen."));
 command("save", save);
 command("download", download, () => {

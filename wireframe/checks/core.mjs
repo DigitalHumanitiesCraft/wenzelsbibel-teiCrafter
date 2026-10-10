@@ -122,9 +122,9 @@ const typed = await page.locator("#flow .w").nth(5).innerText();
 await page.keyboard.press("Control+z");
 await page.waitForTimeout(300);
 check("flow typing and undo", typed === `${w5text}x` && (await page.locator("#flow .w").nth(5).innerText()) === w5text && await page.isHidden("#status-unsaved"), `typed="${typed}" after="${await page.locator("#flow .w").nth(5).innerText()}"`);
-await page.keyboard.press(" ");
+await page.keyboard.press(" "); // the caret stands at the end of the word, where a space splits nothing (F18)
 const spaceReason = await page.locator("#notice").innerText();
-check("refused space states its reason without pointing to the read-only XML view", spaceReason === "Ein Leerzeichen würde das Wort teilen.", spaceReason);
+check("a space at the word edge states its reason without pointing to the read-only XML view", spaceReason === "Ein Leerzeichen am Wortrand würde ein leeres Wort anlegen.", spaceReason);
 await page.waitForTimeout(1100); // one refusal notice per second
 await page.keyboard.press("Enter");
 const enterReason = await page.locator("#notice").innerText();
@@ -151,7 +151,7 @@ const stops = await page.$$eval("#tb-document button, #tb-document select", (ns)
 check("toolbar: ArrowRight and End move inside, one Tab stop", next === "0" && end === "download" && stops === 1, `${next} ${end} ${stops}`);
 check("document select kept its value under ArrowRight", (await page.inputValue("#doc-select")) === "codex");
 
-// Schematron review
+// Editionsregeln, Bericht (the review phase of the project Schematron)
 await prufen("check:sch-review");
 check("notice bar below the Arbeitsleiste", await page.isVisible("#notice") && await page.evaluate(() => document.querySelector("#notice").getBoundingClientRect().top >= document.querySelector(".arbeitsleiste").getBoundingClientRect().bottom - 1), (await page.locator("#notice").innerText()).replace(/\s+/g, " ").slice(0, 80));
 const textX = (await page.locator("#flow .w").nth(3).boundingBox()).x;

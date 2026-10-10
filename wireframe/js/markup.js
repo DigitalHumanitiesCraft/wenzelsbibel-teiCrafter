@@ -2,8 +2,8 @@
 // Arbeitsleiste (F32, F33) and the element list behind Strg+E (F21).
 import { $, el, refKey, state } from "./state.js";
 import { commit } from "./history.js";
-import { flowEvents, highlightSelection, renderFlow, selectedWords, setWordRange, wordDecorators } from "./flow.js";
-import { field, hideNote, isPopoverOpen, openPopover, popoverNote, sections, wordFields } from "./popover.js";
+import { highlightSelection, innerElements, renderFlow, selectedWords, setWordRange, wordDecorators } from "./flow.js";
+import { addField, applyPopover, field, isPopoverOpen, openPopover, popoverNote, refuseAt, sections, wordFields } from "./popover.js";
 import { closeMenus, command, openMenu, selectionReason } from "./toolbar.js";
 import { notify } from "./notice.js";
 import { setView } from "./xml.js";
@@ -53,6 +53,18 @@ export function hasInnerMarkup(tok) {
   return /</.test(whole ? whole[1] : content);
 }
 
+// The elements inside a word, for the word commands (flow.js): those the excerpt shows
+// in the word, its inner lb, a ligature and the anchors the model places in it.
+innerElements.of = (tok) => {
+  const names = new Set();
+  const content = tok.id ? wordContent(tok.id) : undefined;
+  for (const m of (content || "").matchAll(/<([\w:]+)/g)) names.add(m[1]);
+  if (/\n/.test(tok.text || "")) names.add("lb");
+  if ((tok.rend || []).includes("ligature")) names.add("hi");
+  if (tok.id && state.data.columns.some((c) => c.lines.some((l) => l.tokens.some((t) => t.type === "anchor" && t.inWord === tok.id)))) names.add("anchor");
+  return [...names];
+};
+
 // Re-render after a commit that changed what the flow shows; app.js re-renders only
 // after undo and redo. The selection and an open popover return to the same words, and
 // the focus to the toolbar control that applied the change.
@@ -66,38 +78,35 @@ function rerenderWords(focusSelector) {
   if (focusSelector) $(focusSelector)?.focus();
 }
 
-// Diplomatisch (F29)
+// Diplomatisch (F29), in the state "Wort" and in a row of the state "Zeile" (`row` names
+// the word there). Anwenden of the popover applies it together with the other fields.
 
-function diplomaticField(tok) {
+function diplomaticField(tok, row = null) {
   const shown = tok.orig ?? tok.text ?? "";
   if (hasInnerMarkup(tok)) {
-    const f = field("Diplomatisch", shown, "Enthält Binnen-Markup, Bearbeitung in der XML-Ansicht");
+    const f = field("Diplomatisch", shown, "Enthält Binnen-Markup, Bearbeitung in der XML-Ansicht", row);
     f.querySelector("input").readOnly = true;
     const route = el("button", { type: "button", class: "act-btn", text: "In der XML-Ansicht bearbeiten", onclick: () => openInXml(tok) });
     return el("div", { class: "field-group" }, [f, el("div", { class: "field-actions" }, [route])]);
   }
-  const f = field("Diplomatisch", shown, "");
+  const f = field("Diplomatisch", shown, "", row);
   const input = f.querySelector("input");
-  const apply = () => {
-    const value = input.value.trim();
-    if (value === shown) { popoverNote("Keine Änderung an der diplomatischen Lesung."); return; }
-    if (!value) { popoverNote("Ein Wort braucht Text."); return; }
-    if (/\s/.test(value)) { popoverNote("Ein Leerzeichen würde das Wort teilen."); return; }
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyPopover(); } });
+  addField({
+    node: input,
+    name: "Diplomatisch",
+    changed: () => input.value.trim() !== input.defaultValue,
+    check: () => {
+      const value = input.value.trim();
+      const reason = !value ? "Ein Wort braucht Text." : /\s/.test(value) ? "Ein Leerzeichen würde das Wort teilen." : null;
+      if (reason) refuseAt(input, reason);
+      return !reason;
+    },
     // Text and @orig change together; a word without @orig (Got) keeps none.
-    commit("Diplomatisch", () => { tok.text = value; if (tok.orig != null) tok.orig = value; });
-    const w = state.words.find((x) => x.tok === tok);
-    if (w) w.node.firstChild.data = value;
-    input.value = value;
-    input.defaultValue = value;
-    flowEvents.dispatchEvent(new Event("edit"));
-    popoverNote(`Diplomatische Lesung „${value}“ übernommen.`);
-  };
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } });
-  const buttons = el("div", { class: "field-actions" }, [
-    el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { input.value = input.defaultValue; hideNote(); } }),
-    el("button", { type: "button", class: "act-btn is-primary", text: "Anwenden", onclick: apply }),
-  ]);
-  return el("div", { class: "field-group" }, [f, buttons]);
+    apply: () => { const value = input.value.trim(); tok.text = value; if (tok.orig != null) tok.orig = value; },
+    reset: () => { input.value = input.defaultValue; },
+  });
+  return f;
 }
 
 function openInXml(tok) {

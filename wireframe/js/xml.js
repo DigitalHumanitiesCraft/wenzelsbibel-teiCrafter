@@ -11,6 +11,12 @@ const XML_TOKEN = /<!--[\s\S]*?-->|<(\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*"[^"]*"
 // so the DOM is rebuilt only when the string differs (load, formatting, its undo).
 let renderedSource = null;
 
+// xml:id and facs fold into a marker at the end of their start tag (F57), whose title
+// holds them. "IDs anzeigen" (#xml.show-ids) unfolds them all; the selected word (its own
+// attributes, class "own") and the anchors its comments point to (.xa.is-target, set by
+// flow.js) unfold regardless. Display only: the source string stays as it is.
+const FOLDED = new Set(["xml:id", "facs"]);
+
 export function renderXml() {
   const source = state.data.xmlExcerpt;
   if (source === renderedSource) return;
@@ -19,14 +25,32 @@ export function renderXml() {
   for (const m of source.matchAll(XML_TOKEN)) {
     const [raw, close, name, attrs, selfClose] = m;
     if (!name) { html += raw.startsWith("<!--") ? `<span class="com">${escapeHtml(raw)}</span>` : escapeHtml(raw); continue; }
-    const id = name === "w" && !close ? (/xml:id="([^"]*)"/.exec(attrs) || [])[1] : null;
-    if (id) html += `<span class="xw" data-id="${escapeHtml(id)}">`;
+    const id = close ? null : (/xml:id="([^"]*)"/.exec(attrs) || [])[1];
+    const word = name === "w" && id;
+    const anchor = name === "anchor" && id;
+    if (word) html += `<span class="xw" data-id="${escapeHtml(id)}">`;
+    if (anchor) html += `<span class="xa" data-id="${escapeHtml(id)}">`;
     html += `&lt;${close}<span class="tag">${name}</span>`;
-    for (const a of attrs.matchAll(/([\w:.-]+)\s*=\s*"([^"]*)"/g)) html += ` <span class="attr">${a[1]}</span>=<span class="val">"${escapeHtml(a[2])}"</span>`;
+    const own = word ? " own" : "";
+    let folded = "";
+    for (const a of attrs.matchAll(/([\w:.-]+)\s*=\s*"([^"]*)"/g)) {
+      const attr = ` <span class="attr">${a[1]}</span>=<span class="val">"${escapeHtml(a[2])}"</span>`;
+      if (!FOLDED.has(a[1])) { html += attr; continue; }
+      html += `<span class="fold${own}">${attr}</span>`;
+      folded += ` ${a[1]}="${a[2]}"`;
+    }
+    if (folded) html += `<span class="fold-mark${own}" title="${escapeHtml(folded.trim())}"> …</span>`;
     html += `${selfClose}&gt;`;
+    if (anchor) html += "</span>";
     if (name === "w" && (close || selfClose)) html += "</span>";
   }
   $("#xml").innerHTML = html;
+}
+
+// The toolbar switch "IDs anzeigen", shown in the XML view only.
+export function toggleIds() {
+  state.ids = !state.ids;
+  $("#xml").classList.toggle("show-ids", state.ids);
 }
 
 // Deterministic formatter for the excerpt: empty elements self-close, two-space
@@ -75,6 +99,7 @@ export function setView(view) {
   $("#xml-view").hidden = view !== "xml";
   for (const n of document.querySelectorAll("#xml-view [data-doc]")) n.hidden = n.dataset.doc !== (images ? "images" : "codex");
   $("#column-switch").hidden = view === "xml"; // the excerpt is the whole page
+  $("#toggle-ids").hidden = view !== "xml" || images;
   for (const b of document.querySelectorAll("[data-view]")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
   $("#popover-xml").textContent = view === "xml" ? "Im Text zeigen" : "XML-Stelle";
   state.sel = keep;
