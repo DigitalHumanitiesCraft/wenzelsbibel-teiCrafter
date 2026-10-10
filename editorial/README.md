@@ -1,12 +1,13 @@
 # Editorial layer
 
-This folder holds the project rules of the Wenzelsbibel edition in a form that both teiCrafter and Oxygen XML Editor can read. The rules come from [knowledge/editorial-guidelines.md](../knowledge/editorial-guidelines.md), which states them against the *Transkriptionshandbuch* (version February 2025) and the real data. Nothing here depends on the editor's code.
+This folder holds the fixtures and the check for the project rules of the Wenzelsbibel edition, whose Schematron both teiCrafter and Oxygen XML Editor can read. The rules come from [knowledge/editorial-guidelines.md](../knowledge/editorial-guidelines.md), which states them against the *Transkriptionshandbuch* (version February 2025) and the real data. Nothing here depends on the editor's code.
 
 | File | Purpose |
 |---|---|
-| `wenzelsbibel.sch` | ISO Schematron, `queryBinding="xslt1"`, TEI namespace, phases `editing` (default) and `review`, German messages for the editor |
+| `../docs/schemas/wenzelsbibel.sch` | ISO Schematron, `queryBinding="xslt1"`, TEI namespace, phases `editing` (default) and `review`, German messages for the editor. It lives under `docs/` because GitHub Pages serves only that folder, and it is the single source of the rules |
+| `../docs/schemas/wenzelsbibel-vocabulary.json` | The controlled value lists, edited by hand: per list the element and attribute, the schema rules that encode it, and per value its source (`handbook` or `data`) and, where the project carries one, a German label. The editor reads the offered apparatus types and their labels from it |
 | `fixtures/` | One synthetic positive and one synthetic negative TEI file per rule, named `<rule-id>.pass.xml` and `<rule-id>.fail.xml`, listed in `fixtures/index.json` with rule, phase, severity, expected outcome and file |
-| `check_fixtures.py` | Runs every fixture in its phase, reports per-rule counts over real files and prints the rule table |
+| `check_fixtures.py` | Runs every fixture in its phase, checks that schema and vocabulary list the same values, reports per-rule counts over real files and prints the rule table |
 
 The fixtures are hand-built and CC0. They model the structures of the codex and the image annotations (words with `@orig` and `@norm`, `standOff/listApp` with anchors, typed `ref`, annotation items) and contain no edition text beyond single words.
 
@@ -16,7 +17,7 @@ The `editing` phase holds only what a save must never break, and the published c
 
 ## Rules
 
-The rule table with id, phase, severity and message is generated from `wenzelsbibel.sch` and `fixtures/index.json` by `python editorial/check_fixtures.py --list`.
+The rule table with id, phase, severity and message is generated from `docs/schemas/wenzelsbibel.sch` and `fixtures/index.json` by `python editorial/check_fixtures.py --list`.
 
 The image rules come from the base draft `docs/schemas/wenzelsbibel-editorial.sch` of teiCrafter with three changes. Items with `@sameAs` are exempt from completeness, because the data uses them as empty pointers to an equivalent item. Short description and height are required for miniatures only, because marginal decorations carry neither in the data and the editor's form covers the miniature list. The range syntax is checked where `@corresp` is present, so that an empty statistical note on a marginal decoration is no error, while `#range(,)` still is.
 
@@ -36,10 +37,10 @@ Oxygen associates a Schematron through an `xml-model` processing instruction at 
 
 ```xml
 <?xml-model href="https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
-<?xml-model href="editorial/wenzelsbibel.sch" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron" phase="review"?>
+<?xml-model href="docs/schemas/wenzelsbibel.sch" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron" phase="review"?>
 ```
 
-The `href` is relative to the TEI file. Without `phase`, Oxygen runs the `defaultPhase` `editing`. Oxygen documents a `phase` pseudo-attribute for Schematron associations. Whether the version in use honours it was not tested for this layer. A validation scenario in Oxygen can fix the phase instead. The processing instructions change the edition files, so they belong in the working copies of the edition team. A later Oxygen framework (an `.exf` extension script with Author mode CSS) can bind the same schema without touching the files, as described in [knowledge/integration.md](../knowledge/integration.md).
+The `href` is relative to the TEI file, so the example fits a TEI file at the root of a clone of this repository; a file elsewhere names the path from its own folder or the published URL of the schema. Without `phase`, Oxygen runs the `defaultPhase` `editing`. Oxygen documents a `phase` pseudo-attribute for Schematron associations. Whether the version in use honours it was not tested for this layer. A validation scenario in Oxygen can fix the phase instead. The processing instructions change the edition files, so they belong in the working copies of the edition team. A later Oxygen framework (an `.exf` extension script with Author mode CSS) can bind the same schema without touching the files, as described in [knowledge/integration.md](../knowledge/integration.md).
 
 ## Binding in teiCrafter
 
@@ -49,12 +50,12 @@ The project manifest `teicrafter.project.json` declares the schema set in `schem
 "schema": {
   "schemas": [
     { "type": "relaxng", "path": "schemas/tei-p5-4.11.0/tei_all.rng", "name": "TEI All" },
-    { "type": "schematron", "path": "wenzelsbibel.sch", "name": "Editionsregeln" }
+    { "type": "schematron", "path": "schemas/wenzelsbibel.sch", "name": "Editionsregeln" }
   ]
 }
 ```
 
-Paths resolve inside the granted project folder. The runtime executes the schema's `defaultPhase`, and the review action switches to `review` by rewriting that attribute. GitHub Pages serves only `docs/`, so the published editor reads a byte-identical copy of `wenzelsbibel.sch` under `docs/`, guarded by an equality check. This copy is planned in [knowledge/plan.md](../knowledge/plan.md) and not yet in place.
+Paths resolve inside the granted project folder, so a folder that declares the schema holds the file itself. Without a declared schema the workspace applies its default set, TEI All and `docs/schemas/wenzelsbibel.sch` under the name "Editionsregeln", which the published editor loads directly from `docs/`. The runtime executes the schema's `defaultPhase`, and the review action switches to `review` by rewriting that attribute.
 
 ## Running the check
 
@@ -63,10 +64,11 @@ The script needs Python 3.11 or later and lxml. It carries its dependency as PEP
 ```
 python editorial/check_fixtures.py
 python editorial/check_fixtures.py --list
+python editorial/check_fixtures.py --vocabulary
 python editorial/check_fixtures.py --data path/to/codex-2759.xml path/to/Bildannotationen.xml
 python editorial/check_fixtures.py --phase editing --data path/to/codex-2759.xml
 ```
 
-The first form checks the fixture manifest against the schema (every rule has one pass and one fail fixture with matching phase and severity), runs all fixtures and exits with 1 on any mismatch. A pass fixture must leave its rule silent, a fail fixture must trigger it. The `--list` form prints the rule table as Markdown after the same manifest check. The `--data` form prints findings per rule with one example each and writes nothing. The review run over the public files of 2026-10-10 is recorded in [snapshots/schematron-findings-2026-10-10.md](../snapshots/schematron-findings-2026-10-10.md). The edition files stay outside the repository, see [knowledge/data.md](../knowledge/data.md#storage-and-rights).
+The first form checks the fixture manifest against the schema (every rule has one pass and one fail fixture with matching phase and severity), checks the vocabulary, runs all fixtures and exits with 1 on any mismatch. A pass fixture must leave its rule silent, a fail fixture must trigger it. The vocabulary check reads every value list a rule test enumerates, as `contains(' a b c ', concat(' ', @x, ' '))` or as `@x = 'a'` comparisons outside predicates, and compares it with the JSON list that names the rule, in both directions: scope `all` takes every value, scope `data` only the values with source `data`, and a rule that enumerates values no list claims is an error. `--vocabulary` runs this check alone. A changed value list is therefore edited in the schema and in the JSON together. The `--list` form prints the rule table as Markdown after the same manifest check. The `--data` form prints findings per rule with one example each and writes nothing. The review run over the public files of 2026-10-10 is recorded in [snapshots/schematron-findings-2026-10-10.md](../snapshots/schematron-findings-2026-10-10.md). The edition files stay outside the repository, see [knowledge/data.md](../knowledge/data.md#storage-and-rights).
 
-A new rule needs an `id`, a `role` and both fixtures with their entries in `fixtures/index.json`. The check fails until all of them exist.
+A new rule needs an `id`, a `role` and both fixtures with their entries in `fixtures/index.json`, and a rule that enumerates values needs its entry under `rules` in the vocabulary. The check fails until all of them exist.

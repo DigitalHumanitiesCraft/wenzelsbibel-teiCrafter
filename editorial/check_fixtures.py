@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["lxml>=5"]
 # ///
-"""Check editorial/wenzelsbibel.sch against its fixtures, or report it over real files.
+"""Check docs/schemas/wenzelsbibel.sch against fixtures and vocabulary, or over real files.
 
 Regime: single-file script (PEP 723), no first-party imports.
 
@@ -12,7 +12,16 @@ fixture in its declared phase. A pass fixture must not trigger its rule, a fail
 fixture must trigger it. Before running, the manifest is checked against the
 schema itself: every assert and report needs an id and a role, and every rule id
 needs exactly one pass and one fail fixture whose phase and severity match the
-schema. Any mismatch makes the exit code 1.
+schema, and the vocabulary check below runs too. Any mismatch makes the exit
+code 1.
+
+Vocabulary mode (--vocabulary) runs only the vocabulary check. It compares every
+value list the schema encodes in an assert or report test with
+docs/schemas/wenzelsbibel-vocabulary.json, the hand-edited source of the
+controlled vocabularies. Each JSON list names the rules that encode it, with
+scope "all" (the rule enumerates every value) or "data" (only the values with
+source data). A rule whose test enumerates values that no list claims is a
+mismatch as well, so the comparison runs in both directions.
 
 Data mode (--data FILE ...) runs one phase (default review) over real edition
 files and prints the number of findings per rule with one example each, the
@@ -26,19 +35,27 @@ hand-maintained copy of what the schema already says.
 Usage:
   python editorial/check_fixtures.py
   python editorial/check_fixtures.py --list
+  python editorial/check_fixtures.py --vocabulary
   python editorial/check_fixtures.py --data codex.xml bild.xml [--phase review]
 
 Design notes: rule ids are taken from the SVRL @id that the skeleton copies from
 each sch:assert and sch:report, so a finding is attributed by id and not by
 message text. lxml applies XSLT first-match semantics within a pattern; the
 schema keeps rule contexts within a pattern disjoint so that the browser runtime,
-which evaluates every rule independently, yields the same findings.
+which evaluates every rule independently, yields the same findings. The schema
+lives under docs/schemas/ because GitHub Pages serves only docs/ and the editor
+loads it from there; it is the single source, with no copy under editorial/.
+Value lists are read from the two XPath 1.0 forms the schema uses,
+contains(' a b c ', concat(' ', @x, ' ')) and comparisons @x = 'a' or $v = 'a',
+after bracketed predicates are removed, so that node tests such as
+tei:note[@type='description'] are not taken for vocabularies.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -47,11 +64,16 @@ from pathlib import Path
 from lxml import etree, isoschematron
 
 HERE = Path(__file__).resolve().parent
-SCHEMA_PATH = HERE / "wenzelsbibel.sch"
+SCHEMA_PATH = HERE.parent / "docs" / "schemas" / "wenzelsbibel.sch"
+VOCABULARY_PATH = HERE.parent / "docs" / "schemas" / "wenzelsbibel-vocabulary.json"
 FIXTURE_DIR = HERE / "fixtures"
 SCH = "http://purl.oclc.org/dsdl/schematron"
 SVRL = "http://purl.oclc.org/dsdl/svrl"
 XML_ID = "{http://www.w3.org/XML/1998/namespace}id"
+CONTAINS_LIST = re.compile(r"contains\(\s*'([^']*)'\s*,\s*concat\(\s*' '\s*,")
+COMPARISON = re.compile(r"(?:@[\w:.-]+|\$[\w.-]+)\s*=\s*'([^']*)'")
+SOURCES = frozenset({"handbook", "data"})
+SCOPES = frozenset({"all", "data"})
 
 
 @dataclass(frozen=True)
@@ -153,6 +175,105 @@ def _check_manifest(
     return problems
 
 
+def _without_predicates(expression: str) -> str:
+    """Drop every bracketed predicate, nested ones included, from an XPath expression."""
+    depth, kept = 0, []
+    for char in expression:
+        if char == "[":
+            depth += 1
+        elif char == "]":
+            depth = max(depth - 1, 0)
+        elif depth == 0:
+            kept.append(char)
+    return "".join(kept)
+
+
+def _encoded_values(test: str) -> frozenset[str]:
+    """Values an assert or report test enumerates, empty when it enumerates none."""
+    expression = _without_predicates(test)
+    values = {
+        value for match in CONTAINS_LIST.findall(expression) for value in match.split()
+    }
+    values.update(COMPARISON.findall(expression))
+    return frozenset(values)
+
+
+def _difference(
+    rule_id: str, key: str, in_schema: frozenset[str], in_json: frozenset[str]
+) -> str | None:
+    if in_schema == in_json:
+        return None
+    parts = []
+    if only_schema := sorted(in_schema - in_json):
+        parts.append(f"only in schema: {', '.join(only_schema)}")
+    if only_json := sorted(in_json - in_schema):
+        parts.append(f"only in vocabulary: {', '.join(only_json)}")
+    return f"rule {rule_id} and list {key} differ ({'; '.join(parts)})"
+
+
+def _check_list(entry: dict, tests: dict[str, str]) -> list[str]:
+    key = entry.get("key", "?")
+    values = entry.get("values", [])
+    problems = []
+    names = [value.get("value") for value in values]
+    if len(set(names)) != len(names):
+        problems.append(f"list {key} repeats a value")
+    for value in values:
+        if value.get("source") not in SOURCES:
+            problems.append(
+                f"list {key}: value {value.get('value')} needs source handbook or data"
+            )
+    if not entry.get("rules"):
+        problems.append(f"list {key} names no schema rule")
+    for rule_id, scope in entry.get("rules", {}).items():
+        if scope not in SCOPES:
+            problems.append(
+                f"list {key}: rule {rule_id} has scope {scope}, not all or data"
+            )
+        elif rule_id not in tests:
+            problems.append(f"list {key} names rule {rule_id}, which the schema lacks")
+        else:
+            expected = frozenset(
+                value["value"]
+                for value in values
+                if scope == "all" or value.get("source") == "data"
+            )
+            found = _encoded_values(tests[rule_id])
+            if problem := _difference(rule_id, key, found, expected):
+                problems.append(problem)
+    return problems
+
+
+def _check_vocabulary(schema: etree._ElementTree) -> list[str]:
+    """Compare the schema's enumerated value lists with the vocabulary JSON both ways."""
+    try:
+        vocabulary = json.loads(VOCABULARY_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"{VOCABULARY_PATH.name} is unreadable: {exc}"]
+    tests = {
+        test.get("id"): test.get("test") or ""
+        for test in schema.getroot().iter(f"{{{SCH}}}assert", f"{{{SCH}}}report")
+        if test.get("id")
+    }
+    lists = vocabulary.get("lists", [])
+    problems = [problem for entry in lists for problem in _check_list(entry, tests)]
+    claimed = {rule_id for entry in lists for rule_id in entry.get("rules", {})}
+    for rule_id, test in tests.items():
+        if rule_id not in claimed and (values := _encoded_values(test)):
+            problems.append(
+                f"rule {rule_id} enumerates {', '.join(sorted(values))}, but no vocabulary list claims it"
+            )
+    return problems
+
+
+def run_vocabulary() -> int:
+    problems = _check_vocabulary(etree.parse(str(SCHEMA_PATH)))
+    for problem in problems:
+        print(f"FEHLER vocabulary: {problem}", file=sys.stderr)
+    print(f"vocabulary: {len(problems)} problem(s)")
+    return 1 if problems else 0
+
+
 def run_fixtures() -> int:
     schema = etree.parse(str(SCHEMA_PATH))
     rules = _rule_inventory(schema)
@@ -160,10 +281,13 @@ def run_fixtures() -> int:
     problems = _check_manifest(manifest, rules)
     for problem in problems:
         print(f"FEHLER manifest: {problem}", file=sys.stderr)
+    vocabulary_problems = _check_vocabulary(schema)
+    for problem in vocabulary_problems:
+        print(f"FEHLER vocabulary: {problem}", file=sys.stderr)
 
     validators = {phase: _validator(schema, phase) for phase in ("editing", "review")}
     rows = []
-    failures = len(problems)
+    failures = len(problems) + len(vocabulary_problems)
     for entry in manifest:
         try:
             doc = etree.parse(str(FIXTURE_DIR / entry["file"]))
@@ -188,7 +312,9 @@ def run_fixtures() -> int:
         print(
             f"{entry['rule']:<26} {entry['phase']:<8} {entry['severity']:<8} {entry['expected']:<8} {result:<12} {status}"
         )
-    print(f"\n{len(rules)} rules, {len(rows)} fixtures, {failures} problem(s)")
+    print(
+        f"\n{len(rules)} rules, {len(rows)} fixtures, vocabulary {'OK' if not vocabulary_problems else 'MISMATCH'}, {failures} problem(s)"
+    )
     return 1 if failures else 0
 
 
@@ -287,11 +413,18 @@ def main() -> int:
         action="store_true",
         help="print the rule table as Markdown instead of running the fixtures",
     )
+    parser.add_argument(
+        "--vocabulary",
+        action="store_true",
+        help="only compare the schema's value lists with the vocabulary JSON",
+    )
     args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     if args.list:
         return run_list()
+    if args.vocabulary:
+        return run_vocabulary()
     if args.data:
         return run_data(args.data, args.phase)
     return run_fixtures()

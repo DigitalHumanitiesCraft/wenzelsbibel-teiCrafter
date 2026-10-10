@@ -1,7 +1,7 @@
 import { el, clear } from "../../editor/dom.js";
 import { parseDocument, getXmlId, getAttr, teiElementsByLocal, readSurfaces } from "../../editor/tei-document.js";
 import { readImageAnnotations, updateImageAnnotation, createImageAnnotation, indexWenzelsCodex, validateImageAnnotationPointers } from "./wenzels-image-model.js";
-import { readWenzelsWords, updateWenzelsWord, readWenzelsComments, createWenzelsComment, updateWenzelsComment, removeWenzelsComment, readBibleVerseMappings, addBibleVerseMapping, updateBibleVerseMapping, removeBibleVerseMapping } from "./wenzels-text-model.js";
+import { readWenzelsWords, updateWenzelsWord, readWenzelsComments, offeredCommentTypes, createWenzelsComment, updateWenzelsComment, removeWenzelsComment, readBibleVerseMappings, addBibleVerseMapping, updateBibleVerseMapping, removeBibleVerseMapping } from "./wenzels-text-model.js";
 import { createWenzelsRegistersDocument, readWenzelsRegisters, createWenzelsRegisterEntry, updateWenzelsRegisterEntry, removeWenzelsRegisterEntry, readWenzelsRegisterLinks, addWenzelsRegisterLink, updateWenzelsRegisterLink, removeWenzelsRegisterLink } from "./wenzels-register-model.js";
 import { mountWenzelsForm } from "./wenzels-form.js";
 import { decodeXmlBytes } from "../../editor/file-encoding.js";
@@ -23,7 +23,7 @@ const field = (key, label, extra = {}) => ({ key, label, ...extra });
 
 /** A project workspace edits the active session and reads explicitly attached companions. */
 export function createWenzelsWorkspace(ctx) {
-  const { app, stagedInput, setStatus, persist, applyDocument, loadDocument, editorialSchemaUrl, draftTeiType } = ctx;
+  const { app, stagedInput, setStatus, persist, applyDocument, loadDocument, editorialSchemaUrl, vocabularyUrl, draftTeiType } = ctx;
   let host = null;
   let section = "diplomatic";
   let selected = "";
@@ -34,6 +34,18 @@ export function createWenzelsWorkspace(ctx) {
   let imageViewer = null;
   const attachments = new Map();
   const parsedAttachments = new Map();
+  // Fetched rather than imported: Pages serves docs/ unbuilt, and JSON module
+  // imports lie outside the browser corridor. Loaded once per workspace.
+  let commentTypes = null;
+  let vocabularyError = "";
+  fetch(vocabularyUrl)
+    .then((response) => {
+      if (!response.ok) throw new Error(`The Wenzelsbibel vocabulary could not be loaded (HTTP ${response.status}).`);
+      return response.json();
+    })
+    .then((vocabulary) => { commentTypes = offeredCommentTypes(vocabulary); })
+    .catch((error) => { vocabularyError = error.message; })
+    .finally(() => { if (section === "commentary" && host?.isConnected) render(host); });
   let cache = new WeakMap();
   const memo = (doc, key, build) => {
     if (!doc) return null;
@@ -285,10 +297,14 @@ export function createWenzelsWorkspace(ctx) {
   function renderCommentary() {
     const doc = activeDoc();
     if (!words(doc).length) { note("Open the codex to annotate text passages with apparatus comments."); return; }
+    if (!commentTypes) {
+      note(vocabularyError ? `${vocabularyError} Edit apparatus comments in the XML source.` : "Loading the comment types of the edition vocabulary.");
+      return;
+    }
     const records = memo(doc, "comments", readWenzelsComments);
     const record = selectRecord(records, "Apparatus comment", (item) => `${item.type || "untyped"}: ${item.notes.map((n) => n.text).join(" / ").slice(0, 90)}`);
     const values = record ? { type: record.type, from: record.from || "", to: record.to || "" }
-      : { type: "comment_edition", from: "", to: "" };
+      : { type: commentTypes[0][0], from: "", to: "" };
     const noteFields = [];
     for (const [index, item] of (record?.notes || []).entries()) {
       values[`text-${index}`] = item.text; values[`lang-${index}`] = item.lang || ""; values[`resp-${index}`] = item.resp || "";
@@ -302,7 +318,7 @@ export function createWenzelsWorkspace(ctx) {
       field("newLang", "Language of new note", { options: [["de", "German"], ["en", "English"], ["la", "Latin"]] }),
       field("newResp", "Responsibility for new note", { placeholder: "#editor" }));
     const f = form(record ? "Edit apparatus comment" : "New apparatus comment", [
-      field("type", "Comment type", { options: [["comment_edition", "Editorial comment"], ["comment_understanding", "Interpretative comment"]] }),
+      field("type", "Comment type", { options: commentTypes }),
       field("from", record ? "Start anchor" : "First word ID", { required: !record }),
       field("to", record ? "End anchor" : "Last word ID", { required: !record }),
       ...noteFields,
@@ -312,7 +328,7 @@ export function createWenzelsWorkspace(ctx) {
       const patch = { notes };
       for (const key of ["type", "from", "to"]) if (v[key] !== values[key]) patch[key] = v[key];
       const next = record ? updateWenzelsComment(doc, record, patch)
-        : createWenzelsComment(doc, { from: v.from, to: v.to }, { type: v.type, notes });
+        : createWenzelsComment(doc, { from: v.from, to: v.to }, { type: v.type, types: commentTypes.map(([value]) => value), notes });
       const updated = readWenzelsComments(next);
       selected = record ? updated[records.indexOf(record)]?.id || updated[records.indexOf(record)]?.key || ""
         : updated.find((item) => !records.some((previous) => previous.id === item.id))?.id || "";

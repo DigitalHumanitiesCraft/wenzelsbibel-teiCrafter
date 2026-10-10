@@ -2,7 +2,8 @@
 import { DEFAULT_SCHEMA } from "../../editor/schema-validation.js";
 import { createWenzelsWorkspace } from "./wenzels-workspace.js";
 
-export const WENZELS_EDITORIAL_SCHEMA_URL = new URL("../../../schemas/wenzelsbibel-editorial.sch", import.meta.url).href;
+export const WENZELS_EDITORIAL_SCHEMA_URL = new URL("../../../schemas/wenzelsbibel.sch", import.meta.url).href;
+export const WENZELS_VOCABULARY_URL = new URL("../../../schemas/wenzelsbibel-vocabulary.json", import.meta.url).href;
 const DRAFT_TEI_TYPE = "wenzelsbibel-transcription";
 
 export const wenzelsbibel = Object.freeze({
@@ -20,7 +21,7 @@ export const wenzelsbibel = Object.freeze({
   // Applied when a project declares no schema: a granted folder cannot reference application schemas.
   defaultSchemas: Object.freeze([
     Object.freeze({ type: "relaxng", path: DEFAULT_SCHEMA.url, name: DEFAULT_SCHEMA.name }),
-    Object.freeze({ type: "schematron", path: WENZELS_EDITORIAL_SCHEMA_URL, name: "Wenzelsbibel editing profile" }),
+    Object.freeze({ type: "schematron", path: WENZELS_EDITORIAL_SCHEMA_URL, name: "Editionsregeln" }),
   ]),
   panel: Object.freeze({
     id: "wenzels", label: "Wenzelsbibel",
@@ -42,5 +43,5 @@ export const wenzelsbibel = Object.freeze({
       }),
     }),
   }),
-  createPanel: (ctx) => createWenzelsWorkspace({ ...ctx, editorialSchemaUrl: WENZELS_EDITORIAL_SCHEMA_URL, draftTeiType: DRAFT_TEI_TYPE }),
+  createPanel: (ctx) => createWenzelsWorkspace({ ...ctx, editorialSchemaUrl: WENZELS_EDITORIAL_SCHEMA_URL, vocabularyUrl: WENZELS_VOCABULARY_URL, draftTeiType: DRAFT_TEI_TYPE }),
 });

@@ -1,0 +1,153 @@
+{
+  "about": "Controlled value lists of the Wenzelsbibel edition, edited by hand. Each list names the element and attribute it governs and the Schematron rules in wenzelsbibel.sch that encode it: \"all\" means the rule lists every value, \"data\" means it lists only the values with source data. A value has source handbook when the Transkriptionshandbuch names it, and source data when only the edition data uses it. python editorial/check_fixtures.py --vocabulary fails when this file and the schema disagree.",
+  "lists": [
+    {
+      "key": "apparatus-type",
+      "element": "app",
+      "attribute": "type",
+      "rules": { "app-type-known": "all" },
+      "note": "The handbook has no apparatus chapter, so every value comes from the data and none is reported as a warning. offered marks the types the editor offers for a new comment.",
+      "values": [
+        { "value": "comment_edition", "source": "data", "label": "Editionskommentar", "offered": true },
+        { "value": "comment_understanding", "source": "data", "label": "Verständniskommentar", "offered": true },
+        { "value": "comment_translation", "source": "data" },
+        { "value": "comment_translation_ses", "source": "data" },
+        { "value": "comment_translation_vev", "source": "data" },
+        { "value": "comment_manuscript", "source": "data" },
+        { "value": "comment_variant", "source": "data" }
+      ]
+    },
+    {
+      "key": "hi-rend",
+      "element": "hi",
+      "attribute": "rend",
+      "rules": { "hi-rend-known": "all", "hi-rend-data-only": "data" },
+      "values": [
+        { "value": "rubrication", "source": "handbook" },
+        { "value": "inkRed", "source": "handbook" },
+        { "value": "gold", "source": "handbook" },
+        { "value": "initial", "source": "handbook" },
+        { "value": "initial_historisiert", "source": "handbook" },
+        { "value": "border_decoration", "source": "handbook" },
+        { "value": "ligature", "source": "data" },
+        { "value": "textStyle", "source": "data" },
+        { "value": "decoration", "source": "data" },
+        { "value": "full_page", "source": "data" },
+        { "value": "marginalia", "source": "data" },
+        { "value": "italic", "source": "data" }
+      ]
+    },
+    {
+      "key": "supplied-reason",
+      "element": "supplied",
+      "attribute": "reason",
+      "rules": { "supplied-reason-known": "all", "supplied-reason-data-only": "data" },
+      "values": [
+        { "value": "text_intervention", "source": "handbook" },
+        { "value": "switch", "source": "handbook" },
+        { "value": "damage", "source": "handbook" },
+        { "value": "additionalPunctuation", "source": "data" }
+      ]
+    },
+    {
+      "key": "surplus-reason",
+      "element": "surplus",
+      "attribute": "reason",
+      "rules": { "surplus-reason-known": "all" },
+      "note": "The attribute may also be absent.",
+      "values": [
+        { "value": "Diplography", "source": "handbook" },
+        { "value": "decor", "source": "handbook" },
+        { "value": "text_erasure", "source": "handbook" },
+        { "value": "switch", "source": "handbook" },
+        { "value": "instruction_note", "source": "handbook" }
+      ]
+    },
+    {
+      "key": "del-type",
+      "element": "del",
+      "attribute": "type",
+      "rules": { "del-type-known": "all", "del-type-data-only": "data" },
+      "note": "The attribute may also be absent. The handbook names redemption_point for the point of deletion that the data writes as erasure_point.",
+      "values": [
+        { "value": "erasure", "source": "handbook" },
+        { "value": "redemption_point", "source": "handbook" },
+        { "value": "erasure_point", "source": "data" }
+      ]
+    },
+    {
+      "key": "foreign-lang",
+      "element": "foreign",
+      "attribute": "xml:lang",
+      "rules": { "foreign-lang-known": "all" },
+      "values": [
+        { "value": "lat", "source": "handbook" },
+        { "value": "cze", "source": "handbook" }
+      ]
+    },
+    {
+      "key": "num-type",
+      "element": "num",
+      "attribute": "type",
+      "rules": { "num-type-known": "all" },
+      "values": [
+        { "value": "chapter", "source": "handbook" }
+      ]
+    },
+    {
+      "key": "note-type",
+      "element": "note",
+      "attribute": "type",
+      "rules": { "note-type-known": "all" },
+      "note": "Applies to notes in the codex text, not to notes inside the image-annotation lists.",
+      "values": [
+        { "value": "instruction", "source": "handbook", "label": "nicht ausgeführte Anweisung" }
+      ]
+    },
+    {
+      "key": "fw-ana",
+      "element": "fw",
+      "attribute": "ana",
+      "rules": { "fw-ana-known": "all" },
+      "values": [
+        { "value": "header", "source": "handbook" },
+        { "value": "instruction_note", "source": "handbook" },
+        { "value": "marginalia", "source": "handbook" },
+        { "value": "text_in_image", "source": "handbook" },
+        { "value": "borderdecoration", "source": "handbook" },
+        { "value": "scroll", "source": "handbook" },
+        { "value": "painter_instruction", "source": "handbook" }
+      ]
+    },
+    {
+      "key": "seg-ana",
+      "element": "seg",
+      "attribute": "ana",
+      "rules": { "seg-ana-known": "all" },
+      "note": "The handbook encodes text regions as fw/@ana; the data also uses seg/@ana, which the review phase reports as a warning for every value.",
+      "values": [
+        { "value": "header", "source": "handbook" },
+        { "value": "instruction_note", "source": "handbook" },
+        { "value": "marginalia", "source": "handbook" },
+        { "value": "text_in_image", "source": "handbook" },
+        { "value": "borderdecoration", "source": "handbook" },
+        { "value": "border-decoration", "source": "data" },
+        { "value": "border_decoration", "source": "data" },
+        { "value": "scroll", "source": "handbook" },
+        { "value": "painter_instruction", "source": "handbook" }
+      ]
+    },
+    {
+      "key": "register-type",
+      "element": "rs | ref",
+      "attribute": "type",
+      "rules": { "register-type": "all", "register-type-case": "all" },
+      "note": "The editing phase accepts any capitalisation, the review phase reports other spellings as a warning.",
+      "values": [
+        { "value": "person", "source": "handbook", "label": "Person" },
+        { "value": "place", "source": "handbook", "label": "Ort" },
+        { "value": "folk", "source": "handbook", "label": "Volk" }
+      ]
+    }
+  ]
+}

@@ -9,7 +9,6 @@ import {
   patchAttribute, patchNotes, patchText, readNotes, removeRecord, requireId, resolveRecord, topLevelStandOff,
 } from "../../editor/xml-records.js";
 
-const COMMENT_TYPES = new Set(["comment_edition", "comment_understanding"]);
 const indexes = new WeakMap();
 
 function indexFor(doc) {
@@ -122,9 +121,23 @@ export function readWenzelsComments(doc) {
   return apps.map((node, index) => ({ ...recordBase(doc, node, index), type: attr(node, "type"), notes: readNotes(doc, node) }));
 }
 
+/** Comment types the vocabulary offers for new entries, as [value, label] pairs in list order. */
+export function offeredCommentTypes(vocabulary) {
+  const list = vocabulary?.lists?.find((entry) => entry.key === "apparatus-type");
+  const offered = (list?.values || []).filter((entry) => entry.offered && entry.value);
+  if (!offered.length) throw new Error("The Wenzelsbibel vocabulary offers no apparatus comment type.");
+  return offered.map((entry) => [entry.value, entry.label || entry.value]);
+}
+
+/**
+ * options.types holds the offered values from offeredCommentTypes. The literal
+ * fallback serves callers without the vocabulary, such as the inherited Node
+ * proofs; the workspace always passes the vocabulary's types.
+ */
 export function createWenzelsComment(doc, selection, options = {}) {
-  const type = options.type || "comment_edition";
-  if (!COMMENT_TYPES.has(type)) throw new Error("Choose an editorial or comprehension comment.");
+  const types = options.types || null;
+  const type = options.type || types?.[0] || "comment_edition";
+  if (types && !types.includes(type)) throw new Error(`Choose a comment type the edition vocabulary offers: ${types.join(", ")}.`);
   if (!Array.isArray(options.notes) || !options.notes.some((note) => String(note.text || "").trim())) {
     throw new Error("Enter at least one comment note.");
   }
