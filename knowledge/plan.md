@@ -28,7 +28,7 @@ The tool is finished enough when the edition team actually edits with it. Until 
 
 - The five workflows (page with facsimile and word edit, apparatus comment, register link, miniature annotation, validate and save) run in the new German interface on the real files.
 - Every generic mechanism is built in teiCrafter and arrives by merge. The fork keeps only vocabularies, Schematron, field tables, German labels and the shell composition in `docs/js/projects/wenzelsbibel/` ([architecture](architecture.md#derivation-model)).
-- `editorial/` holds `wenzelsbibel.sch`, its fixtures and the fixture check, readable by the editor, by Oxygen and by the planned GitLab pipeline.
+- `docs/schemas/wenzelsbibel.sch` and `docs/schemas/wenzelsbibel-vocabulary.json` hold the project rules and value lists, readable by the editor, by Oxygen and by the planned GitLab pipeline, and `editorial/` holds their fixtures and the fixture check.
 - A demo protocol and a real-file run are recorded under `snapshots/`, and the wireframe is deleted.
 
 ## Phases
@@ -38,9 +38,9 @@ The tool is finished enough when the edition team actually edits with it. Until 
 | 1 Knowledge base | `knowledge/` documents, `data/` added to `.gitignore`, fork `CLAUDE.md` and `README.md` | Documents follow the Promptotyping convention; every link resolves | Operator review |
 | 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data, frozen as a design instrument | The agreed layout and every workflow run in memory on fol. 1r; the walkthroughs under `wireframe/checks/` pass | None |
 | 3 Base refactor and merge | Refactor steps a to e in teiCrafter, merged into the fork | Base acceptance holds (teiCrafter `knowledge/plan.md`); the inherited checks workflow passes on the fork | None |
-| 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); the [editorial layer](../editorial/README.md) with Schematron, fixtures and fixture check; the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) of the public data; the [published copy](architecture.md#build-and-deployment) under `docs/`, referenced by the workspace default schema set | Fixture check green; the editing phase accepts the published codex and image annotations unchanged; the published copy equals the source | None |
+| 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); the project Schematron `docs/schemas/wenzelsbibel.sch` as single source, named "Editionsregeln" in the workspace default schema set; the project vocabulary `docs/schemas/wenzelsbibel-vocabulary.json`; the [editorial layer](../editorial/README.md) with fixtures and the fixture check including the vocabulary comparison; the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) of the public data | Fixture check green, including equal value lists in Schematron and vocabulary; the editing phase accepts the published codex and image annotations unchanged | None |
 | 5a Base mechanisms in teiCrafter | Built in the base and merged: the inspector rendering forms from a field table, the register autocomplete over any register list, the notice bar and findings list over `validation-view.js` results, the CodeMirror flow view with its vendored bundle and "XML formatieren", and the `tei-document` seam between the legacy offset tree and `src/core` | Accepted against the base's own plan and checks (teiCrafter `knowledge/plan.md`); the merge leaves the inherited proofs green; the flow view keeps untouched bytes identical on the full codex | Operator decision on typing in the flow (specification F18) before the word commands; the base plan still lists inspector and autocomplete as an open decision |
-| 5b Fork composition | In `docs/js/projects/wenzelsbibel/`: field tables, markup value lists, German labels, menu and document bar definitions, and the composition of the new `editor.html` shell from the base mechanisms; inline register links ([specification](specification.md#key-decisions)); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; `npm run check:fork` clean; the wireframe deleted | Phase 5a merged |
+| 5b Fork composition | In `docs/js/projects/wenzelsbibel/`: field tables, markup value lists and labels read from the project vocabulary, German labels, menu and document bar definitions, and the composition of the new `editor.html` shell from the base mechanisms; inline register links ([specification](specification.md#key-decisions)); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; `npm run check:fork` clean; the wireframe deleted | Phase 5a merged |
 | 6 Verification with real files | Real-file run and demo protocol under `snapshots/` | All five workflows on the real codex, image annotations and registers; output passes the gate; untouched bytes identical | Operator names the machine that holds the edition files |
 | 7 Publication | Pages from `main:/docs` | The published start page and editor load and open a user-supplied file | Operator action: enabling Pages from `main:/docs` |
 | 8 Edition repository preparation | One-time preparation before the team starts editing: split the codex into book files with a shared apparatus and register, format every file once with "XML formatieren", seed the register from the existing link values, set up the GitLab pipeline (TEI All and the `review` phase, findings report) | The split files together carry the content of the codex unchanged apart from formatting; the editing phase accepts every file; the pipeline reports on a test push | Edition team confirms the [working model](integration.md#working-model) and the file topology; access to the university's GitLab |
@@ -51,7 +51,7 @@ The wireframe is frozen. It receives no further features and no refactoring, and
 
 ### Phase 4 notes
 
-The rules, phases and bindings live in the [editorial layer](../editorial/README.md), the findings on the public data in the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md). The remaining item is the [published copy](architecture.md#build-and-deployment), after which the default schema set in `docs/js/projects/wenzelsbibel/index.js` points to it instead of the base draft.
+The rules, phases and bindings live in the [editorial layer](../editorial/README.md), the value lists in the [project vocabulary](data.md#controlled-vocabulary), the findings on the public data in the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md). The base draft `wenzelsbibel-editorial.sch` leaves `docs/schemas/` and `public/schemas/` through the base, under the handoff the operator writes there ([integration](integration.md#base-teicrafter)).
 
 ### Phase 5 notes
 
@@ -72,7 +72,7 @@ The mark tables and register types these packages consume are project data and b
 | 1 Knowledge base | in progress | Operator review pending |
 | 2 Static wireframe | completed | Frozen until its deletion in phase 5b |
 | 3 Base refactor and merge | completed | Merged with the base knowledge deletions kept |
-| 4 Editorial layer | in progress | Published copy under `docs/` outstanding |
+| 4 Editorial layer | in progress | Move to `docs/schemas/`, vocabulary and its consistency check to be verified |
 | 5a Base mechanisms in teiCrafter | pending | Flow spike done in `prototypes/d-flow` |
 | 5b Fork composition | pending | |
 | 6 Verification with real files | pending | |
@@ -92,10 +92,8 @@ Legend: completed, in progress, pending.
 | `xml:space` handling in "XML formatieren" | Phase 5a, before phase 8 formats the files | Leave elements under `xml:space="preserve"` untouched |
 | Working model and file topology | Phase 8 | The operator's proposal in [integration](integration.md#working-model) |
 | Composition of the new shell through `editor-app.js` or a fork-specific module | Phase 5b | Fork-specific module reusing the generic controllers |
-| Whether the Schematron source moves under `docs/` | Phase 4 (published copy) | Open with the operator |
-| Whether the vocabularies get a JSON source | Phase 5b (field tables and markup value lists) | Open with the operator |
-| Whether the fol. 1r spike excerpt stays in the repository ([handoff](handoff.md)) | Phase 5a (the spike's checks run on it) | Open with the operator |
-| Whether a handoff to the base is written for the mechanisms of phase 5a | Phase 5a | Open with the operator |
+| Who edits the project vocabulary `docs/schemas/wenzelsbibel-vocabulary.json` in future, the operator or a member of the edition team | Phase 8, before the team's ratifications enter the value lists | Open with the operator |
+| Whether the edition team reads `knowledge/`, which decides whether a German summary layer is written | Before the knowledge base goes to the edition team for review | Open with the operator |
 
 Phase 5a depends on the completed phase 3, because the mechanisms bind to the project folder and the workspace registry. Phase 5b depends on the merge of phase 5a. Phase 8 depends on the edition team's confirmation of the working model and uses "XML formatieren" from phase 5a.
 

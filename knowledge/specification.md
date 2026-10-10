@@ -44,7 +44,7 @@ Edition data (`codex-2759.xml`, `Bildannotationen.xml`, the register file, Trans
 
 ## Inherited invariants
 
-The fork derives from the legacy application under `docs/` of teiCrafter, whose normative contract is the upstream specification at commit `a5f74d2` ([upstream specification](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/a5f74d2889f98ebcba51bfbdd9fd8b58d9ba3bf5/knowledge/specification.md), [upstream Wenzelsbibel contract](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/a5f74d2889f98ebcba51bfbdd9fd8b58d9ba3bf5/knowledge/wenzelsbibel.md)). The current upstream `specification.md` of 2026-10-04 describes the source-first core under `src/` and leaves the Save gate open. The fork follows the legacy contract, because the decision of 2026-10-10 makes `docs/` the derivable base. Every requirement below holds under these invariants, and a fork change that would break one of them is a defect.
+The fork derives from the legacy application under `docs/` of teiCrafter, whose normative contract is the upstream specification at commit `a5f74d2` ([upstream specification](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/a5f74d2889f98ebcba51bfbdd9fd8b58d9ba3bf5/knowledge/specification.md), [upstream Wenzelsbibel contract](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/a5f74d2889f98ebcba51bfbdd9fd8b58d9ba3bf5/knowledge/wenzelsbibel.md)). Later upstream specifications describe the source-first core under `src/`, which the fork does not use ([Key decisions](#key-decisions)). Every requirement below holds under these invariants, and a fork change that would break one of them is a defect.
 
 | ID | Invariant | Upstream reference |
 | --- | --- | --- |
@@ -176,7 +176,7 @@ As the project lead, I want to run well-formedness, TEI All and the project Sche
 4. "Befunde anzeigen" opens the findings list in the bottom area, and choosing a finding selects its location in the text or XML view.
 5. An edit after a run makes its result outdated, and the findings list says so.
 
-The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron with the phases `editing` and `review` ([editorial layer](../editorial/README.md#phases)).
+The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron `docs/schemas/wenzelsbibel.sch`, named "Editionsregeln", with the phases `editing` and `review` ([editorial layer](../editorial/README.md#phases)).
 
 #### US5.2 Save as file
 
@@ -242,7 +242,7 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 - F29 A diplomatic edit of a simple word changes the text and `@orig` together. For a word with inline markup the diplomatic field offers the route to the XML view and the normalised field stays editable.
 - F30 For a word sequence it shows the markup actions, the register field and the comments covering the sequence.
 - F31 For a line it lists the line's words with their diplomatic and normalised fields.
-- F32 The markup actions Hervorhebung, Ergänzung, Tilgung, Fremdsprache and Zahl take their values from the manifest, which carries the handbook vocabularies (`hi/@rend`, `supplied/@reason`, `del/@type` and `surplus/@reason`, `foreign/@xml:lang`, `num/@type`).
+- F32 The markup actions Hervorhebung, Ergänzung, Tilgung, Fremdsprache and Zahl take their values and German labels from the project vocabulary `docs/schemas/wenzelsbibel-vocabulary.json` (`hi/@rend`, `supplied/@reason`, `del/@type` and `surplus/@reason`, `foreign/@xml:lang`, `num/@type`), the same source the project Schematron's value lists are checked against ([Data](data.md#controlled-vocabulary)).
 - F33 A markup action that would split an existing element is refused with the reason and leaves the source unchanged.
 - F34 For a miniature zone it shows the image-annotation form of [US4.1](#us41-edit-an-image-annotation) with the ICONCLASS lookup and the text relation.
 - F35 For any other element in the XML view it shows the element name and its attributes, editing being done in the XML source.
@@ -299,6 +299,8 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 | Check feedback | 2026-10-10 | No permanent status line. The unsaved marker is a dot next to the file name, and a notice bar above the inspector appears only when well-formedness is broken or an explicit check returned findings, with "Befunde anzeigen" opening the findings list. No check line per field. | A permanent status line and per-field lines add standing noise, while a notice that appears only when something needs action keeps the attention on the text. |
 | Text view | 2026-10-10 | One continuous editable flow per column with a real caret, built in the product as a CodeMirror 6 view with replace decorations over the raw XML. Line numbers replace the switch between line-by-line and running text. | The spike in `prototypes/d-flow` showed on fol. 1r that such a view keeps untouched bytes identical and edits word text without touching tags, and one rendering keeps line reference and reading flow together. |
 | Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. Rules and phase assignment are listed in the [editorial layer](../editorial/README.md#phases). | The team must be able to save the existing data, while the review findings on the data ([findings snapshot](../snapshots/schematron-findings-2026-10-10.md)) need editorial decisions first. |
+| Rule files under `docs/schemas/` | 2026-10-10 | The project Schematron has its single source in `docs/schemas/wenzelsbibel.sch`, with no copy and no equality check, and `editorial/` keeps fixtures, fixture check and README. The controlled value lists have one hand-edited source, `docs/schemas/wenzelsbibel-vocabulary.json`, which the project modules read and against which the fixture check compares the Schematron's lists; the frozen wireframe keeps its own lists. | GitHub Pages serves only `docs/`, and the Vite build copies `docs/schemas/` into the tested build, so a source there needs no copy mechanism, and Oxygen reads the file from the same path. One vocabulary source keeps Schematron and interface from drifting apart. |
+| Tracked edition excerpts | 2026-10-10 | A publicly published and licensed excerpt may be tracked with a `NOTICE.md` beside it carrying the attribution, as the spike fixture `prototypes/d-flow/fixture/fol1r.xml` is. Working copies of the edition and page images are never tracked. | The excerpt is published by the Austrian National Library under CC BY 4.0, while the licence for project copies of the edition stays unresolved. The operator informs the edition team. |
 
 ## Open questions
 

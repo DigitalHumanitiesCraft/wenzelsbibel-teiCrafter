@@ -6,7 +6,7 @@ This repository holds the tool and its project layer. The edition itself, meanin
 
 ## What it is
 
-teiCrafter is a browser-based editor for TEI XML that keeps the source document as the canonical state and writes it back byte-faithfully outside the deliberate edits. This derived version specialises it for the Wenzelsbibel: word-level transcription with diplomatic and normalised readings, a stand-off apparatus, registers of persons, places and peoples, image annotations with ICONCLASS references, facsimiles from the IIIF service of the Austrian National Library, and validation against TEI All plus the project's own Schematron. The rules it fulfils are the edition's published transcription handbook; the comparison with the earlier DHCraft specification and with the base's conventions is kept in [knowledge/editorial-guidelines.md](knowledge/editorial-guidelines.md).
+teiCrafter is a browser-based editor for TEI XML that keeps the source document as the canonical state and writes it back byte-faithfully outside the deliberate edits. This derived version specialises it for the Wenzelsbibel: word-level transcription with diplomatic and normalised readings, a stand-off apparatus, registers of persons, places and peoples, image annotations with ICONCLASS references, facsimiles from the IIIF service of the Austrian National Library, and validation against TEI All plus the project's own Schematron [`docs/schemas/wenzelsbibel.sch`](docs/schemas/wenzelsbibel.sch), whose fixtures and fixture check live in [editorial/](editorial/README.md). The rules it fulfils are the edition's published transcription handbook; the comparison with the earlier DHCraft specification and with the base's conventions is kept in [knowledge/editorial-guidelines.md](knowledge/editorial-guidelines.md).
 
 The repository is a Git clone of teiCrafter with the base as `upstream`. Generic mechanisms are built in the base and merged in; this repository changes only its own zones, see [knowledge/architecture.md](knowledge/architecture.md).
 
@@ -25,7 +25,7 @@ The editor is served from `docs/`. Open a local copy of the edition files from a
 
 ## Rights
 
-The TEI files and the images of the codex are accessible on the edition server of the Austrian National Library. Technical access implies no permission to store, redistribute or publish them. This repository contains no edition data.
+The TEI files and the images of the codex are accessible on the edition server of the Austrian National Library. Technical access implies no permission to store, redistribute or publish them. This repository contains no working copy of the edition data and no images. The one tracked excerpt, fol. 1r of the public TEI of the codex under CC BY 4.0, carries its attribution in [prototypes/d-flow/fixture/NOTICE.md](prototypes/d-flow/fixture/NOTICE.md).
 
 ## Licence
 

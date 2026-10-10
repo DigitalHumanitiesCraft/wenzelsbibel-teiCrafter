@@ -42,6 +42,7 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 
 - `knowledge/` holds the maintained documents above, including `handoff.md` as the process inbox.
 - `snapshots/` holds dated reports and frozen states, such as the Schematron findings on the public data and the wireframe reviews.
+- `docs/schemas/` holds the rule files the knowledge base describes, the project Schematron and the project vocabulary, beside the files merged from the base.
 
 Every other folder, including the frozen `wireframe/` and the condition under which it is deleted, is described in [architecture](architecture.md#repository-structure).
 
@@ -68,6 +69,9 @@ Bildannotationen
 Codex
 : Codex 2759 of the Austrian National Library, and the TEI file `codex-2759.xml` that encodes it word by word with facsimile zones and a stand-off apparatus.
 
+Editionsregeln
+: The interface name of the project Schematron `docs/schemas/wenzelsbibel.sch` in the workspace default schema set.
+
 Handbook
 : The edition's published Transkriptionshandbuch (version February 2025), the rule source for the encoding, see editorial-guidelines.
 
@@ -75,7 +79,10 @@ Inspector
 : The bottom bar of the editor that shows and edits what is selected, in text and XML view alike.
 
 Project folder
-: The folder in the base that holds the Wenzelsbibel specialisation after the base refactor, `docs/js/projects/wenzelsbibel/`.
+: The folder in the base that holds the Wenzelsbibel specialisation, `docs/js/projects/wenzelsbibel/`.
+
+Project vocabulary
+: The hand-edited file `docs/schemas/wenzelsbibel-vocabulary.json`, the single source of the controlled value lists with source and German label per value, see data.
 
 Register
 : The shared file of persons, places and peoples that words in the codex and items in the image annotations refer to.

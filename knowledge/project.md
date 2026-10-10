@@ -42,7 +42,7 @@ PLUS decides the scholarly data model, the project-specific schema rules, the ri
 
 ## Rights boundary
 
-The codex and the image annotations are accessible on the edition server of the Austrian National Library, and the images resolve through its IIIF image service. Technical access implies no permission to store, redistribute or publish the data or the images. The repository therefore carries no edition data; a local `data/` folder is ignored by Git, and test material consists of synthetic twins and hand-built fixtures, with an extraction of fol. 1r for the wireframe kept local, see [data.md](data.md#storage-and-rights). The tracked excerpt `prototypes/d-flow/fixture/fol1r.xml` of the flow spike departs from this rule ([handoff](handoff.md)).
+The codex and the image annotations are accessible on the edition server of the Austrian National Library, and the images resolve through its IIIF image service. Technical access implies no permission to store, redistribute or publish the data or the images. The repository therefore carries no working copy of the edition data and no page image; a local `data/` folder is ignored by Git, and an extraction of fol. 1r for the wireframe stays local. A publicly published and licensed excerpt may be tracked when a `NOTICE.md` beside it carries the attribution its licence requires, which holds for the CC BY 4.0 excerpt `prototypes/d-flow/fixture/fol1r.xml` of the flow spike. All other test material consists of synthetic twins and hand-built fixtures, see [data.md](data.md#storage-and-rights).
 
 ## Relation to the base
 

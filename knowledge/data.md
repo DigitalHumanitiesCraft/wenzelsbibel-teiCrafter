@@ -31,7 +31,7 @@ related: [editorial-guidelines, project, specification, architecture, testing, i
 
 # Data
 
-The tool processes three linked TEI files of the Wenzelsbibel edition: the codex transcription, the image annotations and a shared register file, together with page images from the Austrian National Library (ONB) IIIF service. This document describes their formats, identifiers and cross-file references, the project manifest and schema set that bind them in the tool, the fixtures, and where the real data lives. The encoding rules for the content are in [editorial guidelines](editorial-guidelines.md).
+The tool processes three linked TEI files of the Wenzelsbibel edition: the codex transcription, the image annotations and a shared register file, together with page images from the Austrian National Library (ONB) IIIF service. This document describes their formats, identifiers and cross-file references, the project manifest, schema set and vocabulary that bind them in the tool, the fixtures, and where the real data lives. The encoding rules for the content are in [editorial guidelines](editorial-guidelines.md).
 
 ## Subject
 
@@ -128,20 +128,28 @@ The project keeps the register as a separate file and links from the codex inlin
 | `views` | `diplomatic`, `bible-verse`, `image-annotation` |
 | `schema` | absent; the workspace registry applies the default schema set of the workspace object in `docs/js/projects/wenzelsbibel/index.js` |
 
-The served manifest stays without a schema, because a user-granted project folder resolves schema paths only inside that folder, so a manifest cannot point to a schema shipped with the application (decided in the base refactor, step d). A project folder of its own, such as a clone of the edition repository in the [working model](integration.md#working-model), can carry the project Schematron and declare it in `schema.schemas` with folder-relative paths, as `editorial/README.md` shows. A declared schema wins over the workspace default. Value lists for the markup actions from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies) are still to be added to the manifest.
+The served manifest stays without a schema, because a user-granted project folder resolves schema paths only inside that folder, so a manifest cannot point to a schema shipped with the application (decided in the base refactor, step d). A project folder of its own, such as a clone of the edition repository in the [working model](integration.md#working-model), can carry the project Schematron and declare it in `schema.schemas` with folder-relative paths, as `editorial/README.md` shows. A declared schema wins over the workspace default. The value lists of the markup actions come from the [controlled vocabulary](#controlled-vocabulary), which the project modules read.
 
 ### Schema set
 
 | Schema | Location | Scope |
 |---|---|---|
 | TEI All RelaxNG, TEI P5 4.11.0 | `docs/schemas/tei-p5-4.11.0/tei_all.rng`, vendored | All three files |
-| `wenzelsbibel.sch` | `editorial/`, the project's source of truth | ISO Schematron, XPath 1.0; covers codex, image annotations and register links, with rules and phases in the [editorial layer](../editorial/README.md) |
-| Published copy of `wenzelsbibel.sch` | planned under `docs/` | The copy the published editor can reach ([architecture](architecture.md#build-and-deployment)) |
-| `wenzelsbibel-editorial.sch` | `docs/schemas/`, inherited from the base | The base draft for image annotations. It is still the Schematron in the workspace default schema set and is replaced by the published copy |
+| [`wenzelsbibel.sch`](../docs/schemas/wenzelsbibel.sch), named "Editionsregeln" | `docs/schemas/`, the single source, read by the published editor, the tested build, the fixture check and Oxygen | ISO Schematron, XPath 1.0; covers codex, image annotations and register links, with rules and phases in the [editorial layer](../editorial/README.md); the Schematron in the workspace default schema set |
+| `wenzelsbibel-editorial.sch` | `docs/schemas/` and `public/schemas/`, inherited from the base | The base draft for image annotations, referenced by no schema set of this workspace; it stays until the base removes it |
 
 The `editing` phase is the save gate and the `review` phase a report on request ([editorial layer](../editorial/README.md#phases)); the findings of a review run over the public data are recorded with their counts in the dated [findings snapshot](../snapshots/schematron-findings-2026-10-10.md).
 
 The project Schematron keeps to XPath 1.0, so that the same file runs in the browser, in Oxygen ([integration](integration.md)) and with lxml in the fixture check ([testing](testing.md)); its slow anchor rules and their upgrade path are described under [runtime limits](../editorial/README.md#runtime-limits). Cross-file targets (zones, ranges, register entries) are resolved by the tool's companion checks, because the Schematron sees one document at a time.
+
+### Controlled vocabulary
+
+[`docs/schemas/wenzelsbibel-vocabulary.json`](../docs/schemas/wenzelsbibel-vocabulary.json) is the one hand-edited source of the controlled value lists. It holds the apparatus types, `hi/@rend`, `supplied/@reason`, `surplus/@reason`, `del/@type`, `foreign/@xml:lang`, `num/@type`, `note/@type`, `fw/@ana`, `seg/@ana` and the register types, and gives each value its source (handbook or data) and a German label. Two consumers depend on it.
+
+- The fixture check `editorial/check_fixtures.py` fails when a value list of the project Schematron differs from the JSON ([testing](testing.md#test-strategy)).
+- The project modules under `docs/js/projects/wenzelsbibel/` read their value lists and labels from it.
+
+The frozen wireframe keeps its own lists. Why a value is accepted, reported or open is argued against the handbook in [editorial guidelines](editorial-guidelines.md#controlled-vocabularies).
 
 ## Fixtures
 
@@ -152,10 +160,10 @@ The project Schematron keeps to XPath 1.0, so that the same file runs in the bro
 | `Bilderfassung-synthetic.sch`, `tiers/Bilderfassung.sch` | `test/fixtures-synthetic/` | Small synthetic Schematron stand-ins, not the missing original |
 | `wenzelsbibel-synthetic-codex.xml` | `docs/data/editor/` | Synthetic sample for the start page |
 | `editorial/fixtures/` | `editorial/`, listed in `fixtures/index.json` | Hand-built Schematron fixtures, CC0, under the rules of the [editorial layer](../editorial/README.md) |
-| `fol1r.xml` | `prototypes/d-flow/fixture/`, tracked | Excerpt of fol. 1r from the public ONB TEI of the codex with its CC BY 4.0 header, used by the flow spike's checks; departs from the storage rule below ([handoff](handoff.md)) |
+| `fol1r.xml` | `prototypes/d-flow/fixture/`, tracked, with [`NOTICE.md`](../prototypes/d-flow/fixture/NOTICE.md) beside it | Excerpt of fol. 1r from the public ONB TEI of the codex, used by the flow spike's checks; a publicly published and licensed excerpt under the storage rule below, with the CC BY 4.0 attribution of its header in the NOTICE |
 | fol. 1r extraction (`fol-1r.json`) | `data/wireframe/`, local and ignored | Input for the wireframe, generated by the tracked script `wireframe/extract_data.py` from the public ONB TEI of the codex and the image annotations, whose docstring describes the extraction |
 
-The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies; tests of those need either new synthetic twins built from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies) or opt-in runs against the local real files ([testing](testing.md)).
+The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies; tests of those need either new synthetic twins built from the [controlled vocabulary](#controlled-vocabulary) or opt-in runs against the local real files ([testing](testing.md)).
 
 ## Limits
 
@@ -168,7 +176,9 @@ The synthetic twins model surfaces, zones, words and simple `standOff` notes. Th
 
 ## Storage and rights
 
-Real edition data stay outside this repository. In a working copy they belong in a local `data/` folder at the repository root, which the `.gitignore` excludes with the anchored pattern `/data/`, so `docs/data/` is not affected. Under the [working model](integration.md#working-model) the edition data live in the edition team's own repository on the university's GitLab. The inherited rule that ignores `docs/data/editor/*/*` except manifest, README and NOTICE keeps the manifest tracked and any local payload out. The public header licence CC BY 4.0 is not treated as clearance, because the licence for a project copy is recorded as unresolved; the tool and its fixtures therefore ship only synthetic data, and the fol. 1r extraction stays local. The spike excerpt `prototypes/d-flow/fixture/fol1r.xml` is the one exception in the repository ([handoff](handoff.md)).
+Real edition data stay outside this repository. In a working copy they belong in a local `data/` folder at the repository root, which the `.gitignore` excludes with the anchored pattern `/data/`, so `docs/data/` is not affected. Under the [working model](integration.md#working-model) the edition data live in the edition team's own repository on the university's GitLab. The inherited rule that ignores `docs/data/editor/*/*` except manifest, README and NOTICE keeps the manifest tracked and any local payload out. The public header licence CC BY 4.0 is not treated as clearance for working copies, because the licence for a project copy is recorded as unresolved.
+
+The repository rule distinguishes two kinds of material. Working copies of the edition data and page images are never tracked, so the fol. 1r extraction for the wireframe stays local. A publicly published and licensed excerpt may be tracked when a `NOTICE.md` beside it carries the attribution its licence requires, as for the spike excerpt `prototypes/d-flow/fixture/fol1r.xml`. Every other fixture is synthetic.
 
 ## Examples
 

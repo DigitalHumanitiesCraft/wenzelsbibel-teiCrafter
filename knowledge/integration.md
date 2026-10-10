@@ -37,8 +37,9 @@ edition repository on the university GitLab <--(pull, commit, push with a Git de
 local clone <--(folder access in Chromium, save through the output gate)--> tool at its published address
 edition repository --(every push)--> GitLab pipeline: TEI All and Schematron review, findings report
 
-editorial/ (TEI All now, project ODD later, wenzelsbibel.sch)
-  --> fork: workspace default schema set (published copy planned) or project manifest
+docs/schemas/ (TEI All now, project ODD later, wenzelsbibel.sch, wenzelsbibel-vocabulary.json)
+  --> fork: workspace default schema set ("Editionsregeln") or project manifest; project modules read the vocabulary
+  --> editorial/check_fixtures.py: fixtures and the vocabulary consistency check
   --> Oxygen: xml-model processing instruction or validation scenario; framework planned
   --> GitLab pipeline (planned)
 ```
@@ -51,9 +52,9 @@ editorial/ (TEI All now, project ODD later, wenzelsbibel.sch)
 | --- | --- |
 | Consumed | Generic editor under `docs/js/editor/`, the workspace registry, the manifest contract (`teicrafter.project.json` with `workspace`, `imageResolver`, `markup`, `indices`, `views` and the schema set), the vendored TEI All RelaxNG, the Schematron runtime, the design tokens in `docs/css/style.css` |
 | Not changed in the fork | Generic editor modules, the manifest validator, the token sheet, `src/`, the build and test configuration files. A needed change goes to the base first and arrives by merge |
-| Built in the base for the fork | The bottom inspector rendering forms from a field table, the autocomplete over register lists, the notice bar and findings list, the CodeMirror flow view with its vendored bundle, the `tei-document` seam between the legacy offset tree and `src/core`, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, and fixes for bugs found here |
+| Built in the base for the fork | The bottom inspector rendering forms from a field table, the autocomplete over register lists, the notice bar and findings list, the CodeMirror flow view with its vendored bundle, the `tei-document` seam between the legacy offset tree and `src/core`, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, the removal of the base draft `wenzelsbibel-editorial.sch` from `docs/schemas/` and `public/schemas/`, and fixes for bugs found here |
 
-The fork stays a derivation of teiCrafter permanently. Every generic mechanism is built in the base and arrives by merge, and the fork keeps only its vocabularies, Schematron, field tables, German labels and the shell composition ([architecture](architecture.md#components)). Whether the fork's requirements reach the base as a written handoff is open with the operator ([plan](plan.md#open-decisions-and-dependencies)).
+The fork stays a derivation of teiCrafter permanently. Every generic mechanism is built in the base and arrives by merge, and the fork keeps only its vocabularies, Schematron, field tables, German labels and the shell composition ([architecture](architecture.md#components)). The fork's requirements reach the base as a handoff that the operator writes into the base's `knowledge/handoff.md`; the base processes it under its own plan.
 
 Two base tokens in `docs/css/style.css` fall below the text contrast minimum of [design](design.md#accessibility-minima) against white: `--color-review` (about 2.9:1, computed from the token value), which the base uses for the unsaved marker, and `--color-orgName` (about 4.3:1), which the wireframe uses for XML attribute names. The point for the base is to darken both or to add text variants. Until the base changes them, the fork uses `--color-problem` or `--color-link` for the unsaved dot and `--color-text-secondary` for XML attribute names.
 
@@ -85,12 +86,12 @@ The one-time preparation (splitting the codex, formatting, seeding the register,
 
 ### Oxygen co-use (binding documented, framework planned)
 
-Shared use is possible when the rule-bearing layer consists of files both tools read. That layer lives in `editorial/`.
+Shared use is possible when the rule-bearing layer consists of files both tools read. That layer is `docs/schemas/wenzelsbibel.sch` with the vocabulary beside it, and its fixtures, check and bindings live in `editorial/`.
 
 | Layer file | teiCrafter binding | Oxygen binding |
 | --- | --- | --- |
 | RelaxNG (TEI All now, project ODD later) | Manifest schema set | Framework validation scenario or `xml-model` processing instruction |
-| `editorial/wenzelsbibel.sch`, XPath 1.0 | The same file, through its [published copy](architecture.md#build-and-deployment) in the workspace default schema set or a project manifest | The same file, through an `xml-model` processing instruction with an optional `phase` pseudo-attribute, or a validation scenario that fixes the phase |
+| `docs/schemas/wenzelsbibel.sch`, XPath 1.0 | The same file, as "Editionsregeln" in the workspace default schema set or declared in a project manifest | The same file at the same path, through an `xml-model` processing instruction with an optional `phase` pseudo-attribute, or a validation scenario that fixes the phase |
 | `xml-model` processing instructions (documented in `editorial/README.md`) | Inspected as schema evidence | Associates schemas on open; they change the edition files and belong in the team's working copies |
 
 The rules and the two phases, `editing` as the save gate and `review` as a report, are owned by the [editorial layer](../editorial/README.md#phases), which also records the exact processing instructions and the open point whether the Oxygen version in use honours the `phase` pseudo-attribute. Without touching the edition files, Oxygen would bind the layer through a framework: an `.exf` extension script, Author mode CSS and actions defined without Java, distributed as an add-on URL. XPath 1.0 keeps the Schematron runnable in the browser without SaxonJS. The interface, the inspector forms, autocomplete and the cross-file checks (register targets, image-to-codex pointers) are implemented separately in each tool; this duplication is unavoidable.
@@ -115,7 +116,7 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 - Register encoding: the written form and the pointer syntax of the decision in [specification](specification.md#key-decisions) await the edition team's ratification.
 - Working model: the [proposal](#working-model) needs the edition team's confirmation.
 - Which list element in the register file carries peoples. The handbook says only "Register".
-- Licence of the edition data for project storage. The public TEI header declares CC BY 4.0; the operator's vault records the question as unresolved, so the data are treated as local material.
+- Licence of the edition data for project storage. The public TEI header declares CC BY 4.0; the operator's vault records the question as unresolved, so working copies are treated as local material, and only a published and licensed excerpt with a NOTICE is tracked ([data](data.md#storage-and-rights)).
 - The original project Schematron `Bilderfassung.sch` referenced in `Bildannotationen.xml` is not available.
 - Roles of the users in the edition team, to be confirmed by the edition team.
 
@@ -125,7 +126,7 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 | --- | --- |
 | Technical access to the ONB IIIF service permits storing images | Access implies no permission to store, redistribute or publish images or edition data |
 | A valid file is a correct edition | Validity covers the formal rules only; readings and identifications need the edition team |
-| `docs/schemas/wenzelsbibel-editorial.sch` is the project's Schematron | It is a teiCrafter-authored draft for image annotations, still referenced by the workspace default schema set; the fork's rule layer is `editorial/wenzelsbibel.sch` |
+| `docs/schemas/wenzelsbibel-editorial.sch` is the project's Schematron | It is a teiCrafter-authored draft for image annotations that no schema set of this workspace references; the project Schematron is `docs/schemas/wenzelsbibel.sch` |
 | The project used ediarum | The handbook describes a Transkribus-only workflow; there is no evidence of ediarum use |
 
 ## Authoritative documents
@@ -135,7 +136,9 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 | Project status, coordination | Project Overview Wenzelsbibel | Operator's vault, `Projects/Wenzelsbibel/` |
 | Scholarly long form of the specification | TEI-Spezifikation Wenzelsbibel | Operator's vault, `Projects/Wenzelsbibel/` |
 | Handbook rules and divergence list | [editorial-guidelines](editorial-guidelines.md) | `knowledge/editorial-guidelines.md` |
-| Schematron rules, phases, Oxygen and teiCrafter binding | Editorial layer | `editorial/README.md`, `editorial/wenzelsbibel.sch` |
+| Schematron rules, phases, Oxygen and teiCrafter binding | Editorial layer | `editorial/README.md`, `docs/schemas/wenzelsbibel.sch` |
+| Controlled value lists | Project vocabulary | `docs/schemas/wenzelsbibel-vocabulary.json`, described in [data](data.md#controlled-vocabulary) |
+| Requirements of the fork on the base | Handoff written by the operator | `knowledge/handoff.md` in the base repository |
 | Findings on the public data | Dated snapshot | `snapshots/schematron-findings-2026-10-10.md` |
 | Formats | [data](data.md) | `knowledge/data.md` |
 | Generic editor contracts | teiCrafter knowledge base | `knowledge/integration.md` and `knowledge/data.md` in the base repository |

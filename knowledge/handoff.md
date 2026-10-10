@@ -23,14 +23,6 @@ This process inbox holds received deltas awaiting integration. Verify each sourc
 
 ## Open handoff items
 
-### Real fol. 1r excerpt in the repository
-
-- Received: 2026-10-10
-- Source: `prototypes/d-flow/fixture/fol1r.xml`, written by the spike and pushed with it; finding of the knowledge sync of the same day.
-- Target: [data.md](data.md) (fixtures and storage), [project.md](project.md) (rights boundary).
-- Context: The spike fixture is a verbatim excerpt of fol. 1r from the TEI that the Austrian National Library publishes on its edition server, whose header declares CC BY 4.0. The project rule says that only synthetic material enters the repository because the licence of a project storage is unresolved. The excerpt is public and attributed, but the rule was not followed.
-- Operator point: keep the excerpt under the CC BY 4.0 attribution, or replace it with the synthetic twin and rewrite the spike checks.
-
 ### Typing in the flow and clean-check feedback
 
 - Received: 2026-10-10

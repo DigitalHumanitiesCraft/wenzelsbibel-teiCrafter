@@ -31,7 +31,7 @@ This document states what the Wenzelsbibel editor guarantees, what it does not, 
 | Schema and contract checks | Inherited proofs for manifest, schema set, schema files, worker and cache | A manifest or schema set that loads wrongly, stale validation reused as authorisation |
 | Browser checks | Inherited `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites (import, project, references, register protection, schema, workspace) | Interaction, recovery, working copy, package and output gate failures in Chromium and Firefox |
 | Demo workflow tests (fork) | `test/e2e/wb-demo-*.spec.js`, one per workflow | A workflow that no longer runs end to end in the new interface |
-| Schematron fixtures (fork) | `editorial/fixtures/` with `editorial/check_fixtures.py` (Python, lxml), under the fixture rules of the [editorial layer](../editorial/README.md); a required run | A rule that fires on valid encoding or misses the error it names, a rule without both fixtures, a fixture whose phase or severity disagrees with the schema |
+| Schematron fixtures and vocabulary consistency (fork) | `editorial/fixtures/` with `editorial/check_fixtures.py` (Python, lxml) against `docs/schemas/wenzelsbibel.sch`, under the fixture rules of the [editorial layer](../editorial/README.md), and the comparison of the Schematron's value lists with `docs/schemas/wenzelsbibel-vocabulary.json` ([data](data.md#controlled-vocabulary)); a required run | A rule that fires on valid encoding or misses the error it names, a rule without both fixtures, a fixture whose phase or severity disagrees with the schema, a value list in the Schematron that differs from the vocabulary |
 | Review run (fork) | `editorial/check_fixtures.py --data` over local edition files; a report, never a gate, recorded as a dated snapshot under `snapshots/`, such as the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) | Data that violate the handbook rules or the editorial guidelines, as input for editorial decisions |
 | Flow spike checks (fork) | `prototypes/d-flow/check.mjs` (Node) and `prototypes/d-flow/browser-check.mjs` (Chromium against the prototype dev server) on the fol. 1r excerpt | Lost bytes in a round trip or edit of the flow view, typing that touches a tag, wrong `@orig` sync, broken selection snapping, a wrap that inserts more than two tags or cuts an element |
 | Real-file run (fork) | `snapshots/`, recorded on the operator's machine | Behaviour on the full codex, the real image annotations and registers |
@@ -44,10 +44,11 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 | Claim | Established by | Limit |
 | --- | --- | --- |
 | Opening and saving preserves every byte outside deliberate edits | Inherited engine proofs and browser round trips in `node test/verify.mjs` and the inherited `checks.yml`, rerun after each merge | The browser round trips drive the base shell |
-| Save is blocked unless TEI All and the project Schematron pass for the exact bytes | Inherited output-gate proofs and browser tests in the same runs | The workspace default schema set still holds the base draft Schematron; the editorial Schematron enters the gate with its published copy in phase 4 |
+| Save is blocked unless TEI All and the project Schematron pass for the exact bytes | Inherited output-gate proofs and browser tests in the same runs, with the workspace default schema set naming `docs/schemas/wenzelsbibel.sch` | The inherited tests prove the gate mechanism; a browser run of the project Schematron inside the gate is open until the demo test of workflow 5 |
 | The flow view keeps untouched bytes identical and edits word text and `@orig` without touching tags | `node prototypes/d-flow/check.mjs`, part of `npm run check:fork`, with LF and CRLF line endings | fol. 1r excerpt only; the full codex is open until phase 5a |
 | Each workflow runs end to end in the new interface | `npm run test:e2e:fork` over `wb-demo-*.spec.js` | No suite exists until phase 5b |
 | Each project Schematron rule accepts its positive and rejects its negative fixture | `python editorial/check_fixtures.py`, part of `npm run check:fork` | Runs in lxml; not yet in the browser runtime |
+| The Schematron's value lists equal the project vocabulary | The same run of `python editorial/check_fixtures.py` | Covers the attributes the vocabulary lists; the project modules' use of the JSON is checked by the demo tests of phase 5b |
 | The `editing` phase accepts the published codex and image annotations unchanged | The review run `check_fixtures.py --phase editing --data` over the public files, recorded under `snapshots/` | Holds for the data state of the recorded run |
 | The real codex, image annotations and registers open, edit and save through the gate | Real-file run recorded under `snapshots/` | Open until phase 6 |
 
@@ -72,7 +73,7 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 
 ## Known exceptions and limits
 
-The new interface will replace the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5b. Engine proofs remain fully inherited.
+The new interface will replace the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where base changes are accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5b. Engine proofs remain fully inherited.
 
 The fixture check runs the Schematron through lxml with the ISO skeleton for XSLT 1.0, while the editor runs raw Schematron on browser XPath; why both report the same findings is explained under [runtime limits](../editorial/README.md#runtime-limits), and a browser run of the fixtures against the teiCrafter runtime is still to be added.
 
@@ -94,6 +95,7 @@ npm run check:fork                                         # required: the fork'
 node test/verify.mjs                                       # required: inherited engine proofs, Python/lxml harness, typecheck, Biome, Vite build, asset contract
 npm run test:e2e:fork                                      # fork demo suites (wb-demo-*.spec.js) through playwright.fork.config.js
 python editorial/check_fixtures.py --data <codex> <images> # review run, report only
+python editorial/check_fixtures.py --vocabulary            # vocabulary comparison only; the plain run includes it
 node wireframe/checks/<name>.mjs                           # wireframe walkthroughs, need python -m http.server 8765 at the root
 ```
 

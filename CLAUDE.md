@@ -41,7 +41,7 @@ Read `knowledge/design.md` before generating or changing interface or interface 
 
 ## Scope
 
-The scope is the five workflows of `knowledge/specification.md` (Purpose and scope), the product core that grows until the edition team actually edits with the tool. The exclusions are decided in the same section. Edition data and images are never committed and never redistributed.
+The scope is the five workflows of `knowledge/specification.md` (Purpose and scope), the product core that grows until the edition team actually edits with the tool. The exclusions are decided in the same section. Working copies of the edition data and images are never committed and never redistributed; a publicly published and licensed excerpt may be tracked with a `NOTICE.md` beside it, see `knowledge/data.md` (Storage and rights).
 
 ## Tools
 
@@ -49,4 +49,5 @@ The scope is the five workflows of `knowledge/specification.md` (Purpose and sco
 - Required before a commit: `npm run check:fork`, whose steps `package.json` defines, plus the inherited gate `node test/verify.mjs`. After a change to `wireframe/`, run the walkthroughs `node wireframe/checks/<name>.mjs` against `python -m http.server 8765` at the root. The wireframe is frozen and gets no features or refactoring. `knowledge/testing.md` holds the full list.
 - Conventions: code, identifiers, comments, commit messages and knowledge documents in English; interface labels in German. No emojis. No em or en dashes as punctuation. Commit messages imperative, one line, body only where the diff does not explain itself.
 - Git: `upstream` is DigitalHumanitiesCraft/teiCrafter, `origin` is DigitalHumanitiesCraft/wenzelsbibel-teiCrafter. Merge the base with `git fetch upstream` and `git merge upstream/main`; on a conflict in the base's former `knowledge/` files keep the deletion. Push, tags and releases stay with the operator.
-- Data: `/data/` at the repository root is ignored, `docs/data/` is not affected. Never add edition files or images to the repository.
+- Data: `/data/` at the repository root is ignored, `docs/data/` is not affected. Never add working copies of edition files or images to the repository.
+- Rule files: the project Schematron `docs/schemas/wenzelsbibel.sch` and the vocabulary `docs/schemas/wenzelsbibel-vocabulary.json` are single sources; edit them in place and run the fixture check, which also compares their value lists.

@@ -27,7 +27,7 @@ related: [data, project, specification, architecture, design, testing, integrati
 
 # Editorial Guidelines
 
-This document states which scholarly rules govern the TEI encoding of the Wenzelsbibel edition (Codex 2759, Austrian National Library) and where the project's published handbook, the DHCraft specification and the teiCrafter implementation agree or diverge. It is the rule layer from which the project Schematron, the manifest vocabularies and the inspector forms are derived; the material itself is described in [data](data.md), the tool behaviour in [specification](specification.md).
+This document states which scholarly rules govern the TEI encoding of the Wenzelsbibel edition (Codex 2759, Austrian National Library) and where the project's published handbook, the DHCraft specification and the teiCrafter implementation agree or diverge. It is the rule layer from which the project Schematron, the project vocabulary and the inspector forms are derived; the material itself is described in [data](data.md), the tool behaviour in [specification](specification.md).
 
 ## Guideline layers and their authority
 
@@ -72,7 +72,7 @@ Only the header is encoded as `fw` in the data; every other region type is a `se
 
 | Phenomenon | Handbook encoding | Real data | teiCrafter | Divergence and open decision |
 |---|---|---|---|---|
-| Rubrication | `hi[@rend='rubrication']` (1.4.2) | Yes. fol. 1r: `<hi rend="rubrication">Rotlebín</hi>` | Manifest markup action `hi` without value list | Values must come from the manifest |
+| Rubrication | `hi[@rend='rubrication']` (1.4.2) | Yes. fol. 1r: `<hi rend="rubrication">Rotlebín</hi>` | Manifest markup action `hi` without value list | Values come from the project vocabulary |
 | Red ink | `hi[@rend='inkRed']` (1.4.3) | Yes. fol. 1r: `<hi rend="inkRed">` around the opening words "Hie hebt ſich an die voꝛ rede" | As above | Agree |
 | Gold script | Transkribus `inkGold`, TEI `hi[@rend='gold']` (1.4.4) | Yes (codex) | As above | Tag and attribute value differ by design |
 | Initial | `hi[@rend='initial']` (1.4.5) | Yes. fol. 1r: `<w orig="Reiche" norm="Reiche"><hi rend="initial">R</hi>eiche</w>` | As above | Agree |
@@ -181,23 +181,16 @@ The image annotations live in a separate file and are outside the handbook; thei
 
 ## Controlled vocabularies
 
-The following values are the input for `editorial/wenzelsbibel.sch` and for the markup value lists in the manifest. "Handbook" lists the ratified values, "Data only" the values found in the codex or image annotations without a handbook rule. The project Schematron accepts the union in its save gate and reports "Data only" values in its review run until the edition team decides ([editorial layer](../editorial/README.md#phases)).
+The value lists of `fw/@ana`, `seg/@ana`, `hi/@rend`, `num/@type`, `surplus/@reason`, `del/@type`, `supplied/@reason`, `note/@type`, `foreign/@xml:lang`, the register types and the apparatus types have one source, the project vocabulary [`docs/schemas/wenzelsbibel-vocabulary.json`](../docs/schemas/wenzelsbibel-vocabulary.json), which marks each value as coming from the handbook or from the data only and gives its German label ([data](data.md#controlled-vocabulary)). The project modules read these lists from the JSON, the Schematron writes them out in its rules, and the fixture check fails when the two differ. The project Schematron accepts the union of handbook and data values in its save gate and reports the data-only values in its review run until the edition team decides ([editorial layer](../editorial/README.md#phases)).
+
+The comparison behind these lists stands in the tables above. For the text regions the handbook names `fw/@ana` while the data uses `fw` only for the header and `seg/@ana` for every other region, with three spellings of border decoration. Several `hi/@rend` values occur without a handbook rule, and the handbook's `border_decoration` with `@style` does not occur. The data writes the deletion point as `erasure_point` where the handbook XPath names `redemption_point`, uses `additionalPunctuation` and a `supplied` without reason outside the handbook vocabulary, and types a register reference as `Person`. The apparatus types are absent from the handbook altogether, and their readings stand in the [apparatus](#apparatus) table.
+
+The following attributes have no list in the vocabulary. They are either named by the handbook without values or occur only in the data, and the Schematron leaves most of them unchecked ([editorial layer](../editorial/README.md#rules)).
 
 | Attribute | Handbook | Data only |
 |---|---|---|
-| `fw/@ana` | `header`, `instruction_note`, `marginalia`, `text_in_image`, `borderdecoration`, `scroll`, `painter_instruction` | none beyond `header` in use |
-| `seg/@ana` | none | `instruction_note`, `marginalia`, `text_in_image`, `border-decoration`, `border_decoration`, `scroll`, `painter_instruction` |
-| `hi/@rend` | `rubrication`, `inkRed`, `gold`, `initial`, `initial_historisiert`, `border_decoration` (with `@style`) | `ligature`, `textStyle`, `decoration`, `full_page`, `marginalia`, `italic` |
-| `num/@type` | `chapter` | none |
-| `surplus/@reason` | absent, `Diplography`, `decor`, `text_erasure`, `switch`, `instruction_note` | none |
-| `del/@type` | absent, `erasure`, `redemption_point` | `erasure_point` |
-| `supplied/@reason` | `text_intervention`, `switch`, `damage` | `additionalPunctuation`, absent |
 | `damage/@agent` | named, values unspecified | `water`, `stain` |
-| `note/@type` (codex body) | `instruction` | none |
-| `foreign/@xml:lang` | `lat`, `cze` | none |
 | `add/@place` | named, values unspecified | `marginal left` |
-| `ref/@type` (codex body) | `person`, `folk`, `place` | `Person` (variant) |
-| `app/@type` | none | `comment_edition`, `comment_understanding`, `comment_translation`, `comment_translation_ses`, `comment_translation_vev`, `comment_manuscript`, `comment_variant`; further values in the [apparatus](#apparatus) table |
 | `note/@xml:lang` in `app` | none | `de`, `en` |
 | `milestone/@unit` | none | `paragraph_beginning`, `paragraph-continued_beginning` |
 | `p/@ana` | none | `paragraph` |
@@ -222,7 +215,7 @@ The following values are the input for `editorial/wenzelsbibel.sch` and for the 
 | Text region element | Handbook `fw/@ana`, data `seg/@ana` except for the header; three spellings of border decoration | Schematron rule and inspector action for regions | Edition team |
 | Verse numbering | The codex carries chapters and verses as `div/@xml:id` and `l/@xml:id` (`Genesis.1.1`); the handbook names a verse-start character with reference to Vulgate and Einheitsübersetzung; teiCrafter offers a separate `spanGrp[@type='bible-verses']` | Whether verse IDs are authoritative and which reference edition they follow; the Bible-verse form is outside the current scope | Edition team |
 | Normalisation policy | `w/@norm` exists throughout; the handbook documents no normalisation rules | Field semantics in the inspector, review criteria | Edition team |
-| Values outside the handbook | See the "Data only" column above | Accept, rename or clean up | Edition team |
+| Values outside the handbook | The data-only values in the project vocabulary and in the table of [controlled vocabularies](#controlled-vocabularies) | Accept, rename or clean up | Edition team |
 | Apparatus types and responsibility | Seven established types, further values to be treated as typo or ratified ([apparatus](#apparatus)); sigle in the note text | Inspector type list; whether `@resp` is added | Edition team |
 | Language codes | `lat` and `cze` follow ISO 639-2; by our reading `xml:lang` in TEI expects BCP 47 tags, whose registry uses `la` and `cs` | Possibly a value change across the codex; to be checked against the TEI Guidelines before raising it | Edition team |
 | File topology for further books | The codex covers the prologue, paratexts and the books Genesis to Josua in one file; PAGE import creates independent drafts | Whether further books join the codex file or become book files with a shared apparatus | Edition team |
