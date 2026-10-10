@@ -80,7 +80,7 @@ This is the one list of what the base builds for the fork in phase 5a. The [plan
 - The removal of the base draft `wenzelsbibel-editorial.sch` from `docs/schemas/` and `public/schemas/`, together with what depends on it in the base: the default schema set and panel schema of the base's Wenzelsbibel module, the proof `test/proofs/wenzels_project_controls_check.mjs` and the suite `test/e2e/wenzelsbibel-schema.spec.js`.
 - The remaining flow packages of the [plan](plan.md#phase-5-notes), with the load test on the full codex.
 
-The contract form of this handoff, with the schema of the field table, the interfaces of popover and side panel and the message table, follows in a later step.
+The contract form of this handoff, with the mechanisms table, the schema of the field table, the interfaces of toolbar, popover, side panel and notice bar, the message table, the findings contract and the open decisions for the base, is the [handoff text of 2026-10-10](../snapshots/base-handoff-5a-contract-2026-10-10.md), which the operator carries into the base's `knowledge/handoff.md`; once the base has integrated it, the base's knowledge owns the living version and this list stays the fork's summary.
 
 The flow view and the XML view may consume `src/core` and `src/editor` through the vendored bundle, as the flow spike already does. This conflicts with the rule of the base's plan that the source-first rebuild under `src/` writes nothing into `docs/`, which is an open decision for the base: either that rule admits the vendored bundle, or both views work on the legacy offset tree.
 
