@@ -128,7 +128,8 @@
     max-inline-size: 44rem; padding-inline-start: 4.25rem; padding-block: var(--space-xs);
     overflow-wrap: anywhere; caret-color: var(--color-header); border-radius: var(--radius-sm);
   }
-  .flow ::selection { background: var(--color-selection-read); }
+  /* The flow itself too: the spaces between words are its own text nodes. */
+  .flow::selection, .flow ::selection { background: var(--color-selection-read); }
   /* Focus shows as a bar at the start edge instead of a box around the whole text. */
   .flow:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--color-header); }
   .ln {
