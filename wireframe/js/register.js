@@ -3,9 +3,9 @@
 import { $, chipFor, columns, el, refKey, state, TYPE_LABEL } from "./state.js";
 import { commit } from "./history.js";
 import { flowEvents, highlightSelection, renderFlow, selectedWords, setColumn, setWordRange } from "./flow.js";
-import { inspectorNote, openInspector, openPanel, sections } from "./inspector.js";
-import { actions } from "./menu.js";
-import { notify } from "./notice.js";
+import { isPopoverOpen, openPopover, popoverNote, sections } from "./popover.js";
+import { closePanel, narrow, openPanel, tabs } from "./panel.js";
+import { command, selectionReason } from "./toolbar.js";
 import { setView } from "./xml.js";
 
 const TYPES = Object.keys(TYPE_LABEL);
@@ -13,7 +13,7 @@ const PLURAL = { person: "Personen", place: "Orte", folk: "Völker" };
 
 // Counter for links written in this session; see link() for why a run carries an id.
 let runSeq = 0;
-// Set by the menu entry "Eintrag anlegen …" so the next register section opens as the form.
+// Set by the command "Neu anlegen …" so the next register section opens as the form.
 let pendingCreate = false;
 
 const fold = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -128,7 +128,7 @@ function redraw(from, to) {
   setWordRange(from, to);
   state.words[from].node.scrollIntoView({ block: "nearest" });
   highlightSelection();
-  openInspector();
+  openPopover();
 }
 
 // US3.1: one wrapper around the selected whole words in one commit. The wireframe has no
@@ -150,8 +150,8 @@ function link(entry, refuse, extra = null) {
     if (e) e.count += 1;
   });
   redraw(from, to);
-  inspectorNote(`Verknüpft mit ${label(entry)}.`);
-  $("#inspector-body .register .link-btn")?.focus();
+  popoverNote(`Verknüpft mit ${label(entry)}.`);
+  $("#popover-content .register .link-btn")?.focus();
   return true;
 }
 
@@ -164,8 +164,8 @@ function unlink(run) {
     if (e) e.count = Math.max(0, e.count - 1);
   });
   redraw(from, to);
-  inspectorNote(`Verknüpfung mit ${TYPE_LABEL[run.ref.type]}: ${run.ref.target} gelöst.`);
-  $("#inspector-body .register input")?.focus();
+  popoverNote(`Verknüpfung mit ${TYPE_LABEL[run.ref.type]}: ${run.ref.target} gelöst.`);
+  $("#popover-content .register input")?.focus();
 }
 
 function noteDisclosure() {
@@ -180,7 +180,8 @@ export function registerSection(words) {
   const linked = el("div", { class: "linked" });
   if (run) {
     linked.append(chipFor(run.key), el("span", { class: "ref-form", text: elementOf(run.ref) === "rs" ? "rs/@ref" : "ref/@target" }),
-      el("button", { class: "link-btn", type: "button", text: "Verknüpfung lösen", onclick: () => unlink(run) }));
+      el("button", { class: "link-btn", type: "button", text: "Verknüpfung lösen", onclick: () => unlink(run) }),
+      el("button", { class: "link-btn reg-show-refs", type: "button", text: "Verweise", onclick: () => refsPanel(run.ref.type, run.ref.target) }));
   } else {
     linked.append(el("span", { class: "empty-note", text: words.some((w) => w.tok.ref) ? "Teilweise verknüpft" : "Nicht verknüpft" }));
   }
@@ -280,7 +281,7 @@ function createForm(prefill, back) {
   const idInput = el("input", { type: "text", value: prefill.id, "aria-describedby": "reg-id-error", autocomplete: "off" });
   const nameInput = el("input", { type: "text", value: prefill.name, autocomplete: "off" });
   const error = el("span", { class: "field-error", id: "reg-id-error", role: "alert", hidden: "" });
-  // The reason stands at the ID field only; a second copy in the inspector note would repeat it.
+  // The reason stands at the ID field only; a second copy in the popover note would repeat it.
   // A wrap refusal concerns the selection, not the ID, so it leaves aria-invalid off.
   const fail = (msg, invalid = true) => {
     error.textContent = msg;
@@ -311,7 +312,7 @@ function createForm(prefill, back) {
       ...(prefill.searched && prefill.searched !== prefill.id ? [el("span", { class: "mixed", text: `Gesucht war „${prefill.searched}“.` })] : [])]),
     el("label", { class: "field" }, [el("span", { text: "Vorzugsname" }), nameInput]),
     el("div", { class: "field-actions" }, [
-      el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { back(); $("#inspector-body .register input")?.focus(); } }),
+      el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { back(); $("#popover-content .register input")?.focus(); } }),
       el("button", { type: "button", class: "act-btn is-primary", text: "Anwenden", onclick: apply }),
     ]),
   );
@@ -319,7 +320,7 @@ function createForm(prefill, back) {
   return form;
 }
 
-// The list is fixed to the viewport so the inspector's scroll edge cannot clip it.
+// The list is fixed to the viewport so the popover's scroll edge cannot clip it.
 // It opens below the field and flips above when there is more room there.
 function placeList(list) {
   const r = list.anchor.getBoundingClientRect();
@@ -339,11 +340,12 @@ function placeList(list) {
   });
 }
 
-// Jump: select the words in the flow; the inspector then follows the selection.
-// With `after`, the panel that jumped is rebuilt once the selection has arrived, so the
-// user can walk its list; the inspector's own select handler runs first and would
-// otherwise replace the panel with the word state.
+// Jump: select the words in the flow; the popover then follows the selection. With
+// `after`, the panel that jumped is rebuilt once the selection has arrived, so the user
+// can walk its list with the chosen entry marked. On a narrow screen the panel is a sheet
+// over the text, so it closes and the text with the popover shows the target.
 function jump(ws, after = null) {
+  if (narrow.matches) { closePanel(); after = null; }
   if (state.view !== "text") setView("text");
   if (ws[0].c !== state.column) setColumn(ws[0].c);
   const ks = ws.map((w) => state.words.findIndex((x) => x.tok === w.tok)).filter((k) => k >= 0);
@@ -406,8 +408,8 @@ function refsPanel(type, id, current = -1) {
     body.push(el("p", { class: "empty-note", text: `Kein Verweis auf fol. ${state.data.folio}.` }));
   }
   body.push(el("button", { type: "button", class: "link-btn", text: "Anderen Eintrag suchen", onclick: () => searchPanel() }));
-  openPanel(["Verweise auf ", el("q", { text: label(entry) })], body, () => refsPanel(type, id));
-  ($('#inspector-body .reg-jump[aria-current="true"]') || $("#inspector-body .reg-jump, #inspector-body .link-btn"))?.focus();
+  openPanel("refs", ["Verweise auf ", el("q", { text: label(entry) })], body, () => refsPanel(type, id));
+  ($('#side-refs .reg-jump[aria-current="true"]') || $("#side-refs .reg-jump, #side-refs .link-btn"))?.focus();
 }
 
 // Search panel (Verweise without a linked selection) and the lists Personen, Orte, Völker.
@@ -456,7 +458,7 @@ function listPanel(type, mode, message = "", query = "") {
   body.push(el("div", { class: "combo" }, mode === "search" ? [typeSel, input] : [input]), ul, more);
   const note = noteDisclosure();
   if (note) body.push(note);
-  openPanel(head, body, () => listPanel(typeSel.value, mode, "", input.value));
+  openPanel("refs", head, body, () => listPanel(typeSel.value, mode, "", input.value));
   input.focus();
 }
 
@@ -468,20 +470,31 @@ function showReferences() {
   else searchPanel(state.sel ? "Die Auswahl ist nicht verknüpft. Eintrag suchen:" : "");
 }
 
-function createFromMenu() {
-  if (!state.sel || !selectedWords().length) { notify("Eintrag anlegen braucht eine Auswahl im Text."); return; }
-  if (state.sel.line) state.sel = { ...state.sel, line: null }; // the form belongs to the word states
+// The word states carry the register field; a line selection continues as a word sequence.
+function wordState() {
+  if (state.sel.line) state.sel = { ...state.sel, line: null };
   state.quiet = false;
+}
+
+function createFromToolbar() {
+  wordState();
   pendingCreate = true;
-  openInspector();
+  openPopover();
   pendingCreate = false;
 }
 
-actions.set("Register/Personen", () => listPanel("person", "list"));
-actions.set("Register/Orte", () => listPanel("place", "list"));
-actions.set("Register/Völker", () => listPanel("folk", "list"));
-actions.set("Register/Eintrag anlegen …", createFromMenu);
-actions.set("Register/Verweise auf Eintrag anzeigen", showReferences);
+function linkFromToolbar() {
+  if (state.sel.line || !isPopoverOpen()) { wordState(); openPopover(); }
+  $("#popover-content .register input[role='combobox']")?.focus();
+}
+
+command("register:link", linkFromToolbar, selectionReason);
+command("register:create", createFromToolbar, selectionReason);
+command("register:refs", showReferences);
+command("register:person", () => listPanel("person", "list"));
+command("register:place", () => listPanel("place", "list"));
+command("register:folk", () => listPanel("folk", "list"));
+tabs.set("refs", { fresh: true, show: showReferences });
 
 document.addEventListener("click", (e) => { if (!e.target.closest(".register")) for (const l of document.querySelectorAll(".ac-list:not([hidden])")) l.closeList(); });
 // The autocomplete list is fixed to the viewport, so it follows its field on scroll and resize.

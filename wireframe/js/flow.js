@@ -1,8 +1,9 @@
 // Text flow: one editable run per column, manuscript lines as soft breaks,
 // structure (line numbers, punctuation, milestones, chips) as non-editable islands.
-// The inspector and the facsimile listen on flowEvents instead of being imported,
+// The popover, the toolbar and the facsimile listen on flowEvents instead of being imported,
 // so this module stays below them:
 //   "select" (detail.changed: the selected range or state differs from before),
+//   "refused" (detail: the reason a keystroke was refused),
 //   "edit" (a word changed in the flow), "column" (the column switched).
 import { $, chipFor, columns, el, island, refKey, state } from "./state.js";
 import { commit } from "./history.js";
@@ -73,7 +74,10 @@ export function wordNode(tok, k) {
 
 export function setColumn(i) {
   state.column = i;
-  for (const x of document.querySelectorAll("[data-column]")) x.classList.toggle("is-active", Number(x.dataset.column) === i);
+  for (const x of document.querySelectorAll("[data-column]")) {
+    x.classList.toggle("is-active", Number(x.dataset.column) === i);
+    x.setAttribute("aria-pressed", String(Number(x.dataset.column) === i));
+  }
   renderFlow();
   highlightSelection();
   flowEvents.dispatchEvent(new Event("column"));
@@ -83,7 +87,7 @@ export function setColumn(i) {
 
 // Selection reads are coalesced to one per frame, so the highlight follows the next paint.
 // While the mouse button is held in the flow only the highlight follows; the "select"
-// event, which rebuilds the inspector, waits for the release.
+// event, which rebuilds the popover, waits for the release.
 let frame = 0;
 let dragging = false;
 let dragBase; // state.sel before the drag's first read, undefined outside a drag
@@ -212,9 +216,9 @@ export function selectLine(lineId) {
 
 // Editing stays inside one word: every input is handled here, so the browser
 // never splits spans, deletes islands or inserts line breaks. Structural edits
-// (new words, deletions across words) belong to the inspector and the XML view.
+// (new words, deletions across words) belong to the XML view.
 // IME composition cannot be cancelled and is not covered by the wireframe.
-// Native history inputs are refused as well; Ctrl+Z reaches history.js through menu.js.
+// Native history inputs are refused as well; Ctrl+Z reaches history.js through toolbar.js.
 // A refused keystroke says why (design: a refused action states its reason), at most
 // once per second so that held keys do not flood the notice bar. The reason travels as
 // a "refused" event, because importing notice.js here would close a module cycle.
@@ -224,7 +228,7 @@ function refuse(reason) {
   if (now - lastRefusal > 1000) flowEvents.dispatchEvent(new CustomEvent("refused", { detail: reason }));
   lastRefusal = now;
 }
-const STRUCTURE = "Tippen ändert nur das Wort unter dem Caret. Wörter teilen, verbinden oder löschen geht über den Inspector oder im XML.";
+const STRUCTURE = "Tippen ändert nur das Wort unter dem Caret. Wörter teilen, verbinden oder löschen geht in der XML-Ansicht.";
 
 function onBeforeInput(e) {
   e.preventDefault();
@@ -241,14 +245,14 @@ function onBeforeInput(e) {
   if (e.inputType === "insertText" || e.inputType === "insertReplacementText" || e.inputType === "insertFromPaste") {
     const raw = e.data ?? (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
     insert = raw.replace(/\s+/g, "");
-    if (!insert) return refuse(raw ? "Ein Leerzeichen würde das Wort teilen; das geht über den Inspector." : STRUCTURE);
+    if (!insert) return refuse(raw ? "Ein Leerzeichen würde das Wort teilen; Wörter teilen geht in der XML-Ansicht." : STRUCTURE);
   } else if (e.inputType === "deleteContentBackward" || e.inputType === "deleteContentForward") {
     if (s === t && e.inputType === "deleteContentBackward") s = [...graphemes.segment(text)].map((g) => g.index).filter((i) => i < s).pop() ?? s;
     if (s === t && e.inputType === "deleteContentForward") { const g = [...graphemes.segment(text)].find((x) => x.index >= t); if (g) t = g.index + g.segment.length; }
     if (s === t) return refuse(STRUCTURE);
   } else return refuse(e.inputType.startsWith("insertParagraph") || e.inputType === "insertLineBreak" ? "Zeilen und Absätze sind Struktur und werden im XML bearbeitet." : STRUCTURE);
   const next = text.slice(0, s) + insert + text.slice(t);
-  if (!next) return refuse("Das ganze Wort zu löschen ist eine Strukturänderung; über den Inspector oder im XML."); // deleting a whole word is a structural edit
+  if (!next) return refuse("Das ganze Wort zu löschen ist eine Strukturänderung; sie geht in der XML-Ansicht."); // deleting a whole word is a structural edit
   const tok = state.words[Number(a.w.dataset.k)].tok;
   // F29: the diplomatic reading is the text and @orig together; a word without @orig keeps none.
   commit("Diplomatisch", () => { tok.text = next; if (tok.orig != null) tok.orig = next; });

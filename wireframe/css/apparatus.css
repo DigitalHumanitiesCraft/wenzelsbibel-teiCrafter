@@ -8,7 +8,7 @@
   }
   .apparatus { display: grid; gap: var(--space-sm); align-content: start; min-inline-size: 0; }
   .apparatus textarea { font: inherit; }
-  /* The long type labels must not widen the inspector column on narrow screens. */
+  /* The long type labels must not widen the popover on narrow screens. */
   .app-form, .app-form .field, .app-entry, .app-entry .field { min-inline-size: 0; }
   .app-form select { inline-size: 100%; min-inline-size: 0; }
   .app-list { display: grid; gap: var(--space-md); }

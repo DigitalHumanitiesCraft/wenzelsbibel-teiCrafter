@@ -3,6 +3,7 @@
 import { $, columns, el, state } from "./state.js";
 import { flowEvents, highlightSelection, selectLine, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
+import { closePanel, showTab, tabs } from "./panel.js";
 
 const OSD_IMAGES = "../docs/vendor/openseadragon/images/";
 const IIIF_WIDTH = 900;
@@ -12,6 +13,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export const zoneActions = new Map();
 
 flowEvents.addEventListener("column", () => fitColumn());
+
+// The facsimile is the first tab of the Seitenleiste; showing it opens the viewer once.
+tabs.set("facs", { fresh: true, show: () => { if (!$("#zones")) initFacsimile(); highlightSelection(); } });
 
 export function initFacsimile() {
   const { image } = state.data;
@@ -40,7 +44,7 @@ export function initFacsimile() {
     const z = document.elementsFromPoint(e.originalEvent.clientX, e.originalEvent.clientY).find((n) => n.classList && n.classList.contains("zone"));
     if (z) zoneClick(z);
   });
-  viewer.addHandler("open-failed", () => frame.replaceChildren(el("p", { class: "empty-note", text: "Das Faksimile konnte vom Bildserver der ÖNB nicht geladen werden. Text und Inspector bleiben nutzbar." })));
+  viewer.addHandler("open-failed", () => frame.replaceChildren(el("p", { class: "empty-note", text: "Das Faksimile konnte vom Bildserver der ÖNB nicht geladen werden. Text und Bearbeitung bleiben nutzbar." })));
   state.viewer = viewer;
 }
 
@@ -79,7 +83,7 @@ function zoneLayer() {
   svg.setAttribute("viewBox", `0 0 ${image.width} ${image.height}`);
   svg.setAttribute("preserveAspectRatio", "none");
   svg.setAttribute("aria-hidden", "true");
-  svg.toggleAttribute("hidden", !$("#zones-toggle").checked);
+  svg.toggleAttribute("hidden", !state.zones);
   for (const z of zones) {
     if (!z.points) continue;
     const p = document.createElementNS(SVG_NS, "polygon");
@@ -98,7 +102,7 @@ function zoneClick(p) {
   else zoneActions.get(p.dataset.subtype)?.(p.dataset.id);
 }
 
-export function toggleZones(on) { const svg = $("#zones"); if (svg) svg.toggleAttribute("hidden", !on); }
+export function toggleZones(on) { state.zones = on; const svg = $("#zones"); if (svg) svg.toggleAttribute("hidden", !on); }
 
 export function jumpToLine(zoneId) {
   const ci = columns().findIndex((c) => c.lines.some((l) => (l.facs || "").replace("#", "") === zoneId));
@@ -109,11 +113,8 @@ export function jumpToLine(zoneId) {
   if (line) selectLine(line.id);
 }
 
+// The Faksimile toggle shows the facsimile tab, or closes the column while it shows it.
 export function setFacs(on) {
-  state.facs = on;
-  $("#facs-pane").hidden = !on;
-  $("#work").classList.toggle("has-facs", on);
-  $("#toggle-facs").setAttribute("aria-pressed", String(on));
-  if (on && !$("#zones")) initFacsimile();
-  highlightSelection();
+  if (on) showTab("facs", true);
+  else if (state.side === "facs") closePanel();
 }

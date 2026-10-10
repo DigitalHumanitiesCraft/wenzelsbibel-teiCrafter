@@ -22,13 +22,23 @@ async function main() {
   const S = () => page.evaluate(async () => { const { state } = await import("/wireframe/js/state.js"); return JSON.stringify(state.data); });
   const tok = (id) => page.evaluate(async (id) => { const { state } = await import("/wireframe/js/state.js"); for (const c of state.data.columns) for (const l of c.lines) for (const t of l.tokens) if (t.id === id) return t; return null; }, id);
   const gotTok = () => page.evaluate(async () => { const { state } = await import("/wireframe/js/state.js"); for (const l of state.data.columns[0].lines) for (const t of l.tokens) if (t.text === "Got") return t; return null; });
-  const clickWord = async (id) => { await page.click(`#flow .w[data-id="${id}"]`); await page.waitForTimeout(250); };
+  // A word under the open popover is reached as a user reaches it: Escape closes the
+  // popover (the selection stays), then the click lands on the word.
+  const click = async (sel) => {
+    const covered = await page.$eval(sel, (n) => { n.scrollIntoView({ block: "center" }); const r = n.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !(hit === n || n.contains(hit)); });
+    if (covered) await page.keyboard.press("Escape");
+    await page.click(sel);
+    await page.waitForTimeout(250);
+  };
+  const clickWord = (id) => click(`#flow .w[data-id="${id}"]`);
   const column = async (c) => { await page.click(`[data-column="${c}"]`); await page.waitForTimeout(100); };
   const unsaved = () => page.isVisible("#status-unsaved");
-  const note = () => page.textContent("#inspector-note");
+  const note = () => page.textContent("#popover-note");
   const bar = () => page.evaluate(() => (document.querySelector("#notice").hidden ? "" : document.querySelector("#notice").textContent));
   const undoKey = async () => { await page.focus("#flow"); await page.keyboard.press("Control+z"); await page.waitForTimeout(150); };
-  const menu = async (m, item) => { await page.click(`.menu-btn:text-is("${m}")`); await page.click(`.menu-item:has-text("${item}")`); await page.waitForTimeout(100); };
+  const CHECK = { Wohlgeformtheit: "check:wf", "TEI All": "check:tei", "Schematron editing": "check:sch-editing", "Schematron review": "check:sch-review", Befundliste: "findings" };
+  const menu = async (m, item) => { await page.click(`.act[data-action="${m}"] > button`); await page.click(`[data-cmd="${CHECK[item]}"]`); await page.waitForTimeout(100); };
+  const findings = "#side-findings .panel-body";
   const select = (from, to) => page.evaluate(async ([a, b]) => {
     const { state } = await import("/wireframe/js/state.js"); const { setWordRange } = await import("/wireframe/js/flow.js");
     const k = (id) => state.words.findIndex((w) => w.tok.id === id);
@@ -39,7 +49,7 @@ async function main() {
 
   // US1.2 criterion 3: norm of ſich
   await clickWord(ID.sich);
-  ok("C3 inspector shows Wort ſich", (await page.textContent("#inspector-title")).includes("ſich"));
+  ok("C3 popover shows Wort ſich", (await page.textContent("#popover-title")).includes("ſich"));
   const before = await tok(ID.sich);
   const normInput = page.locator(".field:has(span:text-is('Normalisiert')) input");
   await normInput.fill("sych");
@@ -86,7 +96,7 @@ async function main() {
   await column(0);
 
   // US1.2 criterion 6: Got gets @norm only
-  await page.click('#flow .w:text-is("Got")'); await page.waitForTimeout(250);
+  await click('#flow .w:text-is("Got")');
   const g0 = await gotTok();
   const ng = page.locator(".field:has(span:text-is('Normalisiert')) input");
   await ng.fill("Gott"); await ng.press("Enter");
@@ -162,8 +172,8 @@ async function main() {
   ok("P1 well-formed again after undo", (await bar()).includes("wohlgeformt"));
   await menu("Prüfen", "TEI All");
   ok("P2 TEI All running with cancel", (await bar()).includes("TEI All läuft") && await page.isVisible("#notice button:text-is('Abbrechen')"));
-  await page.click("#flow .w[data-id='" + ID.sich + "']"); await page.waitForTimeout(250);
-  ok("P2 interface usable while running", (await page.textContent("#inspector-title")).includes("ſich"));
+  await clickWord(ID.sich);
+  ok("P2 interface usable while running", (await page.textContent("#popover-title")).includes("ſich"));
   await page.click("#notice button:text-is('Abbrechen')");
   ok("P2 cancel", (await bar()).includes("abgebrochen"), await bar());
   await menu("Prüfen", "TEI All");
@@ -178,7 +188,7 @@ async function main() {
   const rb = await bar();
   ok("P3 Schematron review findings in bar", /Schematron review: \d+ Befunde/.test(rb) && rb.includes("xml:id") && rb.includes("Befunde anzeigen"), rb.slice(0, 160));
   await page.click("#notice button:text-is('Befunde anzeigen')");
-  const list = await page.textContent("#inspector-body");
+  const list = await page.textContent(findings);
   ok("P4 list grouped per check", ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"].every((c) => list.includes(c)));
   ok("P4 finding names doc, rule, location", list.includes("codex-2759.xml") && list.includes("w-id") && list.includes("fol. 1r a Z. 5") && list.includes("hi-rend-data-only"));
   const wid = page.locator(".finding:has(code:text-is('w-id')) button");
@@ -190,11 +200,11 @@ async function main() {
   await n2.fill("sich2"); await n2.press("Enter");
   ok("P5 bar says outdated", (await bar()).includes("Ergebnis veraltet, Prüfung erneut ausführen"), await bar());
   await menu("Prüfen", "Befundliste");
-  ok("P5 list says outdated at top", (await page.textContent("#inspector-body p.findings-stale")).includes("Ergebnis veraltet"));
+  ok("P5 list says outdated at top", (await page.textContent(`${findings} p.findings-stale`)).includes("Ergebnis veraltet"));
   await page.screenshot({ path: `${SCRATCH}/wireframe-checks-2.png` });
-  await page.focus("#inspector-body .findings button");
+  await page.focus(`${findings} .findings button`);
   await page.keyboard.press("Control+z"); await page.waitForTimeout(200);
-  ok("P5 list survives undo (reopen)", await page.isVisible("#inspector-body .findings-group"));
+  ok("P5 list survives undo (reopen)", await page.isVisible(`${findings} .findings-group`));
 
   // Save, failing: no UI path creates an editing-phase finding, so the test commits a
   // register type outside the handbook through history.commit.
@@ -210,14 +220,16 @@ async function main() {
   ok("S1 failed save names schema and count", fb.includes("Nicht gespeichert: Schematron editing mit 1 Befund") && fb.includes("Befunde anzeigen"), fb);
   ok("S1 unsaved dot stays", await unsaved());
   await page.click("#notice button:text-is('Befunde anzeigen')");
-  ok("S1 list shows register-type", (await page.textContent("#inspector-body")).includes("register-type"));
+  ok("S1 list shows register-type", (await page.textContent(findings)).includes("register-type"));
+  ok("S1 Herunterladen disabled with its reason while unsaved", (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "true" && /Speichern/.test(await page.getAttribute('[data-cmd="download"]', "title")));
   await page.screenshot({ path: `${SCRATCH}/wireframe-checks-3.png` });
   await undoKey();
   await page.keyboard.press("Control+s");
   await page.waitForTimeout(2400);
   const sb = await bar();
-  ok("S2 save passes", sb.startsWith("Gespeichert.") && sb.includes("Herunterladen") && !(await unsaved()), sb);
-  const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#notice a[download]")]);
+  await page.waitForTimeout(50);
+  ok("S2 save passes, Herunterladen enabled", sb.startsWith("Gespeichert.") && (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "false" && !(await unsaved()), sb);
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-cmd="download"]')]);
   const dlPath = `${SCRATCH}/dl-auszug.xml`;
   await dl.saveAs(dlPath);
   const excerpt = await page.evaluate(async () => (await import("/wireframe/js/state.js")).state.data.xmlExcerpt);
@@ -234,11 +246,14 @@ async function main() {
   await narrow.click('#flow .w:text-is("Got")'); await narrow.waitForTimeout(250);
   const n3 = narrow.locator(".field:has(span:text-is('Normalisiert')) input");
   await n3.fill("Gott"); await n3.press("Enter");
-  await narrow.keyboard.press("Escape"); // the word sheet covers the menu bar at this width
-  await narrow.click(`.menu-btn:text-is("Prüfen")`); await narrow.click(`.menu-item:has-text("Schematron review")`);
+  ok("N0 the bottom sheet leaves the Arbeitsleiste free", await narrow.evaluate(() => document.querySelector("#popover").getBoundingClientRect().top >= document.querySelector(".arbeitsleiste").getBoundingClientRect().bottom));
+  await narrow.click('.act[data-action="Prüfen"] > button'); await narrow.click('[data-cmd="check:sch-review"]');
   await narrow.click("#notice button:text-is('Befunde anzeigen')");
   await narrow.waitForTimeout(150);
-  ok("N1 findings sheet at 390 px without horizontal scroll", await narrow.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.querySelector("#inspector").getBoundingClientRect().width <= innerWidth));
+  ok("N1 findings sheet at 390 px without horizontal scroll", await narrow.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.querySelector("#side").getBoundingClientRect().width <= innerWidth && document.querySelector("#text-pane").inert));
+  await narrow.click("#side-findings .finding .link-btn >> nth=0");
+  await narrow.waitForTimeout(250);
+  ok("N2 a finding jump closes the sheet and shows the word", await narrow.isHidden("#side") && await narrow.isVisible("#flow .w.is-current"));
   await narrow.screenshot({ path: `${SCRATCH}/wireframe-checks-narrow.png` });
 
   ok("no console errors", errors.length === 0, errors.join(" | "));

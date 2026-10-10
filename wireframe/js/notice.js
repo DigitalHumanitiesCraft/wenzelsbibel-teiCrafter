@@ -2,7 +2,7 @@
 // short-lived message or a standing content (such as check findings) that a feature
 // sets with setStanding, and disappears when neither exists.
 import { $, el } from "./state.js";
-import { inspectorNote } from "./inspector.js";
+import { isPopoverOpen, popoverNote } from "./popover.js";
 
 let noticeTimer = 0;
 let standing = null; // () => Node[] for the bar's standing content, or null
@@ -12,10 +12,10 @@ function restore() {
   if (standing) { bar.replaceChildren(...standing()); bar.hidden = false; } else bar.hidden = true;
 }
 
-// A message for a control inside the inspector goes under its head when it is open,
+// A message about the selection goes under the popover head while the popover is open,
 // otherwise to the notice bar, which returns to its standing content after a while.
-export function notify(text, inInspector = false) {
-  if (inInspector && !$("#inspector").hidden) { inspectorNote(text); return; }
+export function notify(text, atSelection = false) {
+  if (atSelection && isPopoverOpen()) { popoverNote(text); return; }
   const bar = $("#notice");
   bar.replaceChildren(el("span", { text }));
   bar.hidden = false;

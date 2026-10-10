@@ -1,11 +1,13 @@
 // Apparatus (phase 2 owner: apparatus): the index of anchored ranges, the comments
 // covering a selection with editable notes (US2.2, F42) and the comment form (US2.1, F41).
+// The form opens in the popover, beside the range it comments: it is four fields, and the
+// editor keeps the selected words in view while writing (the side panel would hide the
+// facsimile and move the eye away from the range).
 import { $, el, state } from "./state.js";
 import { commit } from "./history.js";
 import { selectedWords, wordDecorators } from "./flow.js";
-import { hideNote, inspectorNote, openInspector, sections } from "./inspector.js";
-import { actions } from "./menu.js";
-import { notify } from "./notice.js";
+import { hideNote, isPopoverOpen, openPopover, popoverNote, sections } from "./popover.js";
+import { command, selectionReason } from "./toolbar.js";
 
 // The two types the form offers (specification US2.1); other types in the data are shown as they are.
 const TYPES = [["comment_edition", "Editionskommentar"], ["comment_understanding", "Verständniskommentar"]];
@@ -152,40 +154,40 @@ function insertAnchors(words, startId, endId) {
 }
 
 // Comment form state: the open form belongs to one selection and keeps its draft
-// across inspector rebuilds (undo, redo, view switch) while that selection holds.
+// across popover rebuilds (undo, redo, view switch) while that selection holds.
 let form = null;
 let lastSigle = "";
 const selKey = () => (state.sel ? `${state.column}:${state.sel.from}-${state.sel.to}` : null);
 
 export function openCommentForm() {
-  if (!state.sel || !selectedWords().length) { notify(refusal([])); return; }
   // The state "Zeile" has no sections; the same words continue as a word sequence.
   if (state.sel.line) state.sel = { ...state.sel, line: null };
+  state.quiet = false;
   if (!form || form.key !== selKey()) form = { key: selKey(), type: TYPES[0][0], de: "", en: "", sigle: lastSigle };
   showSection();
-  $("#inspector-body .app-form select")?.focus();
+  $("#popover-content .app-form select")?.focus();
 }
 
 function closeForm() {
   form = null;
   showSection();
-  $("#inspector-body .app-add")?.focus();
+  $("#popover-content .app-add")?.focus();
 }
 
 // Replaces only the apparatus section, so unapplied input in other sections survives.
 function showSection() {
-  const current = $("#inspector").hidden ? null : $("#inspector-body .apparatus");
+  const current = isPopoverOpen() ? $("#popover-content .apparatus") : null;
   if (current) current.replaceWith(apparatusSection(selectedWords()));
-  else openInspector();
+  else openPopover();
 }
 
 function applyForm(words, fields) {
   const reason = refusal(words);
-  if (reason) { inspectorNote(reason); return; }
+  if (reason) { popoverNote(reason); return; }
   const sigle = form.sigle.trim().replace(/^\(|\)$/g, "").trim();
   const missing = [["de", "Die deutsche Anmerkung fehlt."], ["en", "Die englische Anmerkung fehlt."]].find(([k]) => !form[k].trim());
-  if (missing) { inspectorNote(missing[1]); fields[missing[0]].focus(); return; }
-  if (!sigle || /[()]/.test(sigle)) { inspectorNote("Die Sigle fehlt, etwa MK."); fields.sigle.focus(); return; }
+  if (missing) { popoverNote(missing[1]); fields[missing[0]].focus(); return; }
+  if (!sigle || /[()]/.test(sigle)) { popoverNote("Die Sigle fehlt, etwa MK."); fields.sigle.focus(); return; }
   const signed = (text) => { const t = text.trim(); return t.endsWith(`(${sigle})`) ? t : `${t} (${sigle})`; };
   let ids = null;
   const done = commit("Apparatkommentar", (data) => {
@@ -200,9 +202,9 @@ function applyForm(words, fields) {
   form = null;
   indexApparatus();
   refreshMarks();
-  openInspector();
-  inspectorNote(`Apparatkommentar ${ids[0]} bis ${ids[1]} angelegt.`);
-  $(`#inspector-body .app-entry[data-from="${ids[0]}"] textarea`)?.focus();
+  openPopover();
+  popoverNote(`Apparatkommentar ${ids[0]} bis ${ids[1]} angelegt.`);
+  $(`#popover-content .app-entry[data-from="${ids[0]}"] textarea`)?.focus();
 }
 
 function commentForm(words) {
@@ -260,11 +262,11 @@ function commentEntry(app) {
   }
   const apply = () => {
     const next = { de: areas.de.value.trim(), en: areas.en.value.trim() };
-    if (!next.de) { inspectorNote("Die deutsche Anmerkung darf nicht leer sein."); areas.de.focus(); return; }
-    if (next.de === (notes.de ?? "") && next.en === (notes.en ?? "")) { inspectorNote("Keine Änderung am Kommentar."); return; }
+    if (!next.de) { popoverNote("Die deutsche Anmerkung darf nicht leer sein."); areas.de.focus(); return; }
+    if (next.de === (notes.de ?? "") && next.en === (notes.en ?? "")) { popoverNote("Keine Änderung am Kommentar."); return; }
     commit("Apparatkommentar bearbeiten", () => { app.notes = { ...app.notes, ...next }; });
     for (const [lang, ta] of Object.entries(areas)) { ta.value = next[lang]; ta.defaultValue = next[lang]; }
-    inspectorNote("Kommentar übernommen, die Anker bleiben unverändert.");
+    popoverNote("Kommentar übernommen, die Anker bleiben unverändert.");
   };
   entry.append(el("div", { class: "field-actions" }, [
     el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { for (const [lang, ta] of Object.entries(areas)) ta.value = app.notes?.[lang] ?? ""; hideNote(); } }),
@@ -280,9 +282,9 @@ export function apparatusSection(words) {
   if (apps.length) sec.append(el("div", { class: "app-list" }, apps.map(commentEntry)));
   else sec.append(el("p", { class: "empty-note", text: "Kein Kommentar zu dieser Stelle." }));
   if (form && form.key === selKey()) sec.append(commentForm(words));
-  else sec.append(el("button", { class: "link-btn app-add", type: "button", text: "+ Kommentar zur Auswahl", onclick: openCommentForm }));
+  else sec.append(el("button", { class: "link-btn app-add", type: "button", text: "+ Kommentar", onclick: openCommentForm }));
   return sec;
 }
 
 sections.push((words) => apparatusSection(words));
-actions.set("Bearbeiten/Apparatkommentar zur Auswahl", openCommentForm);
+command("comment", openCommentForm, selectionReason);

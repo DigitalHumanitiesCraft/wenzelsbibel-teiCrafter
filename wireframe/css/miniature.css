@@ -16,7 +16,9 @@
   .item-meta { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin: 0; }
   .item-meta code { font-family: var(--font-mono); }
   .mini-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
-  @media (width >= 48rem) {
+  /* The form lives in the side panel, so its columns follow the panel width. */
+  #side-image .panel-body { container-type: inline-size; }
+  @container (width >= 34rem) {
     .mini-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .mini-wide { grid-column: 1 / -1; }
   }
@@ -49,13 +51,14 @@
   .tag-remove:hover { background: var(--color-secondary); color: var(--color-text); }
   .tag-note { font-size: var(--font-size-sm); font-style: italic; color: var(--color-text-secondary); }
   .tag-add { display: flex; gap: var(--space-sm); }
-  .tag-add input { flex: 1; min-inline-size: 0; }
+  /* A zero basis, so the input adds no intrinsic width to the narrow form column. */
+  .tag-add input { flex: 1 1 0; inline-size: 0; min-inline-size: 0; }
 
   .ic-entries { display: grid; gap: var(--space-sm); }
   .ic-entry { border-inline-start: 3px solid var(--color-workName); padding-inline-start: var(--space-sm); display: grid; gap: var(--space-xs); }
   .ic-entry-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-sm); }
   .ic-fields { display: grid; grid-template-columns: minmax(7rem, 10rem) repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
-  @media (width < 48rem) { .ic-fields { grid-template-columns: minmax(0, 1fr); } }
+  @container (width < 34rem) { .ic-fields { grid-template-columns: minmax(0, 1fr); } }
   .ic-variants { margin: 0; font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-sm); background: var(--color-review-tint); border-inline-start: 3px solid var(--color-problem); }
   .ic-search { display: grid; gap: var(--space-xs); }
   .ic-scope, .ic-count { margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); }

@@ -8,13 +8,19 @@ export const TYPE_LABEL = { person: "Person", place: "Ort", folk: "Volk" };
 // state.data is replaced wholesale by undo and redo (history.js), so modules read it
 // through state.data on every use and never keep a reference to it or its tokens.
 export const state = {
-  data: null, column: 0, view: "text", facs: false,
+  data: null, column: 0, view: "text",
+  side: null,         // tab shown in the Seitenleiste ("facs", "findings", "refs", "image") or null when it is closed
+  zones: true,        // zone overlay of the facsimile
   words: [],          // rendered words of the current column: { tok, line, lineNo, node }
   sel: null,          // { from, to, line } indices into state.words; line is set in the state "Zeile"
   pendingLine: null,  // line chosen by line number or zone, confirmed once the selection arrives
-  quiet: false,       // inspector closed by the user; caret moves do not reopen it until the next click or key
+  quiet: false,       // popover closed by the user; caret moves do not reopen it until the next click or key
   appsByWord: new Map(), findings: null, viewer: null, diplo: null,
 };
+
+// Shell events for modules that must not import each other: "view" (Text or XML
+// switched) and "side" (the Seitenleiste opened, closed or changed its tab).
+export const shell = new EventTarget();
 
 export const $ = (sel) => document.querySelector(sel);
 

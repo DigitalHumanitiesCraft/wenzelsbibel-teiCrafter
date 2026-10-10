@@ -1,13 +1,15 @@
 // Image annotations (Epic 4): the document Bildannotationen with its item list, the
 // miniature form (US4.1), the ICONCLASS lookup in the local catalogue (US4.2) and the
 // text relation in the codex (US4.3). The form edits a draft of item.fields; Anwenden
-// writes only the fields whose draft differs, as one history step.
-import { $, el, state } from "./state.js";
+// writes only the fields whose draft differs, as one history step. The form is the tab
+// Bild of the Seitenleiste; without a chosen item the tab lists the folio's items.
+import { $, el, shell, state } from "./state.js";
 import { commit, documentChanged, onChange } from "./history.js";
 import { flowEvents, placeCaret, renderFlow, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
 import { zoneActions } from "./facsimile.js";
-import { closeInspector, holdForPendingInput, inspectorNote, openPanel, refreshInspector, sections } from "./inspector.js";
+import { closePopover, holdForPendingInput, sections } from "./popover.js";
+import { narrow, openPanel, panelBody, panelNote, tabs } from "./panel.js";
 import { notify } from "./notice.js";
 
 const FIELD_LABEL = {
@@ -17,7 +19,6 @@ const FIELD_LABEL = {
 };
 const ADDRESS_PREFIX = "#bild";
 const CODEX_PREFIX = "#codex";
-const narrow = matchMedia("(width < 48rem)");
 
 let current = null;     // id of the item shown in the form
 let draft = null;       // working copy of the current item's fields
@@ -40,12 +41,7 @@ export function initMiniatures() {
   flowEvents.addEventListener("column", () => { markRange(); if (!docIsImages()) setAddress(codexHash()); });
   // app.js re-renders the flow after this listener runs, so mark on the next frame.
   onChange(() => requestAnimationFrame(markRange));
-  $("#toggle-facs").addEventListener("click", outlineZone);
-  new MutationObserver(() => {
-    if ($("#inspector").hidden && docIsImages() && !$("#inspector").contains(document.activeElement) && document.activeElement === document.body) {
-      $(`#minis [data-item="${CSS.escape(current || "")}"]`)?.focus();
-    }
-  }).observe($("#inspector"), { attributes: true, attributeFilter: ["hidden"] });
+  shell.addEventListener("side", outlineZone);
   applyAddress(true);
   if (!location.hash) history.replaceState(null, "", codexHash());
   shownHash = location.hash;
@@ -86,7 +82,7 @@ function applyAddress(initial) {
     if (!docIsImages()) switchDocument("images", false);
     if (!id && current) {
       current = null;
-      closeInspector();
+      showImageTabIfOpen();
       syncList();
       outlineZone();
     } else if (id && id !== current) {
@@ -103,10 +99,10 @@ function applyAddress(initial) {
   if (state.column !== i) setColumn(i);
 }
 
-// The second document of the document bar holds the image annotations of the folio.
+// The second document of the document chooser holds the image annotations of the folio.
 // Every switch, from the select, an address, a zone or a jump, routes through here.
-// Returns false and keeps the current document while the inspector holds input that is
-// neither applied nor cancelled (F36).
+// Returns false and keeps the current document while the popover or a side panel holds
+// input that is neither applied nor cancelled (F36).
 export function switchDocument(which, address = true) {
   const isImages = which === "images";
   if (docIsImages() !== isImages && holdForPendingInput()) {
@@ -117,8 +113,9 @@ export function switchDocument(which, address = true) {
   shownDoc = which;
   $("#doc-select").title = $("#doc-select").selectedOptions[0].title;
   $("#pager").hidden = isImages;
-  closeInspector();
+  closePopover();
   current = null;
+  showImageTabIfOpen();
   outlineZone();
   if (isImages) {
     renderList();
@@ -171,7 +168,7 @@ function outlineZone() {
   if (!m) return;
   const zoneId = m.item.corresp?.replace("#", "") || m.zone;
   const poly = document.querySelector(`.zone[data-id="${CSS.escape(zoneId)}"]`);
-  if (!poly) { if (state.facs && state.viewer && !state.viewer.world.getItemCount()) state.viewer.addOnceHandler("open", outlineZone); return; }
+  if (!poly) { if (state.side === "facs" && state.viewer && !state.viewer.world.getItemCount()) state.viewer.addOnceHandler("open", outlineZone); return; }
   poly.classList.add("is-chosen");
   const v = state.viewer;
   const z = state.data.zones.find((x) => x.id === zoneId);
@@ -205,12 +202,37 @@ export function selectMiniature(id, address = true) {
   const f = m.fields.folio;
   const where = f ? `fol. ${f.target}${f.n ? ` Z. ${f.n}` : ""}` : "";
   openPanel(
+    "image",
     [m.item.list === "miniatures" ? "Miniatur " : "Randbild ", el("span", { class: "context", text: [m.id, where].filter(Boolean).join(", ") })],
     m.item.sameAs && !m.fields.title ? emptyItem(m) : formNodes(m),
-    () => { if (itemById(current)) selectMiniature(current, false); else closeInspector(); },
+    showImageTab,
   );
-  if (narrow.matches) $("#inspector-body").querySelector("input, textarea, button")?.focus();
+  if (narrow.matches) panelBody("image").querySelector("input, textarea, button")?.focus();
 }
+
+// Default content of the tab Bild: the chosen item's form, otherwise the folio's items,
+// each of which opens its form (and with it the document Bildannotationen).
+function showImageTab() {
+  if (current && itemById(current)) { selectMiniature(current, false); return; }
+  current = null;
+  const list = el("ul", { class: "mini-list", "aria-label": `Bildannotationen auf fol. ${state.data.folio}` });
+  for (const m of items()) list.append(el("li", {}, [el("button", { type: "button", class: "mini-item", "data-item": m.id, onclick: () => selectMiniature(m.id) }, [
+    el("code", { text: m.id }), el("span", { text: itemTitle(m) || `verweist auf ${(m.item.sameAs || "").replace("#", "")}` }),
+  ])]));
+  openPanel("image", ["Bildannotationen ", el("span", { class: "context", text: `fol. ${state.data.folio}` })], [list], showImageTab);
+}
+
+const showImageTabIfOpen = () => { if (state.side === "image") showImageTab(); };
+
+// After the panel closes, the focus goes back to the chosen entry of the item list.
+tabs.set("image", {
+  show: showImageTab,
+  returnFocus: () => {
+    const b = docIsImages() && $(`#minis [data-item="${CSS.escape(current || "")}"]`);
+    if (b) b.focus();
+    return Boolean(b);
+  },
+});
 
 function emptyItem(m) {
   const target = m.item.sameAs.replace("#", "");
@@ -332,7 +354,7 @@ function artistFields() {
       type: "button", class: "link-btn", text: "+ Künstler",
       onclick: () => {
         const free = known.find(([s]) => !draft.artists.entries.some((a) => a.sigle === s));
-        if (!free) { inspectorNote("Alle Künstler der Kopfdaten sind schon eingetragen."); return; }
+        if (!free) { panelNote("Alle Künstler der Kopfdaten sind schon eingetragen."); return; }
         draft.artists.entries.push({ sigle: free[0], corresp: `#${free[0]}`, name: free[1] });
         render();
         [...wrap.querySelectorAll("select")].pop().focus();
@@ -361,8 +383,8 @@ function tagList(label, key, register, registerName) {
     const add = () => {
       const id = input.value.trim();
       if (!id) return;
-      if (!register.includes(id)) { inspectorNote(`${label}: „${id}“ steht nicht im ${registerName}.`); return; }
-      if (draft[key].some((p) => p.id === id)) { inspectorNote(`${label}: „${id}“ ist schon eingetragen.`); return; }
+      if (!register.includes(id)) { panelNote(`${label}: „${id}“ steht nicht im ${registerName}.`); return; }
+      if (draft[key].some((p) => p.id === id)) { panelNote(`${label}: „${id}“ ist schon eingetragen.`); return; }
       // A desc-only entry ("kein eindeutiger Bezug") no longer holds once an ID is added.
       draft[key] = draft[key].filter((p) => p.id);
       draft[key].push({ id, corresp: `#${id}`, desc: null });
@@ -448,7 +470,7 @@ function iconclassSection() {
     if (!draft.iconclass.length) rows.append(el("li", { class: "empty-note", text: "Keine ICONCLASS-Einträge." }));
     const open = el("button", { type: "button", class: "link-btn ic-search-open", "aria-expanded": "false", text: "ICONCLASS suchen …" });
     const search = searchPanel((hit) => {
-      if (draft.iconclass.some((e) => e.notation === hit.notation)) { inspectorNote(`ICONCLASS ${hit.notation} ist schon eingetragen.`); return; }
+      if (draft.iconclass.some((e) => e.notation === hit.notation)) { panelNote(`ICONCLASS ${hit.notation} ist schon eingetragen.`); return; }
       draft.iconclass.push({ notation: hit.notation, uri: hit.uri, corresp: hit.uri, resp: "#ICONCLASS", de: hit.de, en: hit.en });
       render(draft.iconclass.length - 1);
     });
@@ -599,7 +621,7 @@ function markRange() {
   for (const w of state.words) if (toks.has(w.tok)) w.node.classList.add("in-mini-range");
 }
 
-// Inspector section of the word states: the images whose text range covers a selected word.
+// Popover section of the word states: the images whose text range covers a selected word.
 sections.push((words) => {
   if (!state.data.miniatures) return null;
   const hits = items().map((m) => ({ m, cov: coverage(m) })).filter(({ cov }) => words.some((w) => cov.toks.has(w.tok)));
@@ -622,8 +644,8 @@ sections.push((words) => {
 // Anwenden and Abbrechen of the form
 
 function cancel() {
-  refreshInspector();
-  inspectorNote("Eingaben verworfen, die gespeicherten Werte sind wiederhergestellt.");
+  showImageTab();
+  panelNote("Eingaben verworfen, die gespeicherten Werte sind wiederhergestellt.");
 }
 
 function apply() {
@@ -634,7 +656,7 @@ function apply() {
   if (clean.height && !clean.height.unit) clean.height.unit = "line";
   if (!m.fields.artists && !clean.artists.entries.length) clean.artists = null;
   const changed = Object.keys(FIELD_LABEL).filter((k) => JSON.stringify(clean[k] ?? null) !== JSON.stringify(m.fields[k] ?? null));
-  if (!changed.length) { inspectorNote("Keine Änderung."); return; }
+  if (!changed.length) { panelNote("Keine Änderung."); return; }
   const h = clean.height?.value?.trim();
   if (changed.includes("height") && h && !/^\d+$/.test(h)) { refuse("height", "Höhe in Zeilen muss eine ganze Zahl sein."); return; }
   if (changed.includes("iconclass") && clean.iconclass.some((e) => !e.notation.trim())) { refuse("iconclass", "Jeder ICONCLASS-Eintrag braucht eine Notation."); return; }
@@ -643,14 +665,14 @@ function apply() {
     const target = data.miniatures.find((x) => x.id === current);
     for (const k of changed) target.fields[k] = clean[k];
   }, "images");
-  refreshInspector();
+  showImageTab();
   syncTitleInList();
-  inspectorNote(`Übernommen: ${labels}.`);
+  panelNote(`Übernommen: ${labels}.`);
 }
 
 function refuse(key, reason) {
-  inspectorNote(`${reason} Nichts geändert.`);
-  $(`#inspector-body [data-key="${key}"]`)?.focus();
+  panelNote(`${reason} Nichts geändert.`);
+  panelBody("image").querySelector(`[data-key="${key}"]`)?.focus();
 }
 
 function syncTitleInList() { if (docIsImages()) renderList(); }
@@ -658,8 +680,8 @@ function syncTitleInList() { if (docIsImages()) renderList(); }
 onChange((kind) => { if ((kind === "undo" || kind === "redo") && docIsImages() && $("#minis").hidden === false) renderList(); });
 
 // The hit list is the topmost Escape layer while open (design.md, Escape order). The
-// window capture phase runs before menu.js's document listener, which would otherwise
-// close the whole inspector.
+// window capture phase runs before toolbar.js's document listener, which would otherwise
+// close the whole side panel.
 addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   const hits = document.querySelector(".ic-hits:not([hidden])");

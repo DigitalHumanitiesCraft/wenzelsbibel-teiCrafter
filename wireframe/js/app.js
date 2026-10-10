@@ -1,16 +1,19 @@
 // Static wireframe of the Wenzelsbibel editor on real fol. 1r data. Edits live in
 // memory with undo and are never persisted. Data: ../data/wireframe/fol-1r.json
 // (ignored by Git, extracted from the public ONB TEI by wireframe/extract_data.py).
+// Shell: the Arbeitsleiste (toolbar.js), the popover at the selection (popover.js), the
+// Seitenleiste (panel.js) and the notice bar (notice.js).
 import { $, el, state } from "./state.js";
-import { onChange } from "./history.js";
+import { activeDoc, onChange } from "./history.js";
 import { flowEvents, highlightSelection, placeCaret, renderFlow, setColumn, setWordRange, wireFlow } from "./flow.js";
 import { formatXml, renderXml, setView } from "./xml.js";
 import { setFacs, toggleZones } from "./facsimile.js";
-import { closeInspector, openInspector, refreshInspector } from "./inspector.js";
-import { actions, buildMenus } from "./menu.js";
+import { closePopover, refreshPopover } from "./popover.js";
+import { initPanel, refreshPanel } from "./panel.js";
+import { command, initToolbar } from "./toolbar.js";
 import { notify } from "./notice.js";
-// Feature modules register their inspector sections on import, so this order is the
-// visible order in the word states: markup, register, apparatus.
+// Feature modules register their popover sections and commands on import, so this order
+// is the visible order in the word states: markup, register, apparatus.
 import "./markup.js";
 import "./register.js";
 import { indexApparatus } from "./apparatus.js";
@@ -26,13 +29,14 @@ async function main() {
     return;
   }
   state.data = await res.json();
-  buildMenus();
   indexApparatus();
   renderFlow();
   renderXml();
   wireFlow();
   flowEvents.addEventListener("refused", (e) => notify(e.detail));
   wireControls();
+  initPanel();
+  initToolbar();
   onChange(rerender);
   initMiniatures();
 }
@@ -40,18 +44,13 @@ async function main() {
 function wireControls() {
   for (const b of document.querySelectorAll("[data-view]")) b.addEventListener("click", () => setView(b.dataset.view));
   for (const b of document.querySelectorAll("[data-column]")) b.addEventListener("click", () => setColumn(Number(b.dataset.column)));
-  $("#toggle-facs").addEventListener("click", () => setFacs(!state.facs));
-  $("#zones-toggle").addEventListener("change", (e) => toggleZones(e.target.checked));
-  $("#inspector-close").addEventListener("click", closeInspector);
-  $("#inspector-xml").addEventListener("click", () => setView(state.view === "xml" ? "text" : "xml"));
+  $("#popover-close").addEventListener("click", closePopover);
+  $("#popover-xml").addEventListener("click", () => setView(state.view === "xml" ? "text" : "xml"));
   $("#doc-select").addEventListener("change", (e) => switchDocument(e.target.value));
 
-  actions.set("Ansicht/Text", () => setView("text"));
-  actions.set("Ansicht/XML", () => setView("xml"));
-  actions.set("Ansicht/Faksimile", () => setFacs(!state.facs));
-  actions.set("Ansicht/Zonen", () => { const t = $("#zones-toggle"); t.checked = !t.checked; toggleZones(t.checked); });
-  actions.set("Ansicht/Auswahl", () => { if ($("#inspector").hidden) { if (state.sel) openInspector(); } else closeInspector(); });
-  actions.set("Bearbeiten/XML formatieren", formatXml);
+  command("facs", () => setFacs(state.side !== "facs"));
+  command("zones", () => toggleZones(!state.zones), () => (state.side === "facs" ? null : "Erst das Faksimile einblenden."));
+  command("format", formatXml, () => (activeDoc() === "images" ? "XML formatieren gilt für den Codex; die Bildannotationen haben hier kein XML." : null));
 }
 
 // After undo or redo every view is rebuilt from state.data, whose tokens are new
@@ -75,7 +74,8 @@ function rerender(kind) {
     }
   }
   highlightSelection();
-  refreshInspector();
+  refreshPopover();
+  refreshPanel();
 }
 
 main();

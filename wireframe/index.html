@@ -13,15 +13,12 @@
   <link rel="stylesheet" href="css/checks.css">
 </head>
 <body>
-  <header class="menubar">
-    <nav aria-label="Hauptmenü">
-      <ul class="menus" role="menubar" id="menus"></ul>
-    </nav>
-    <span class="wireframe-badge" title="Entwurf im Speicher auf fol. 1r; schreibt keine Datei.">Wireframe<span class="visually-hidden">: Entwurf im Speicher auf fol. 1r; schreibt keine Datei.</span></span>
-  </header>
-
-  <div class="docbar">
-    <div class="docbar-left">
+  <!-- Arbeitsleiste: two WAI-ARIA toolbars, document and views above, actions on the
+       selection below. Controls carry data-cmd (a command in toolbar.js) or data-guard
+       (a dropdown that opens only when its command is allowed); toolbar.js disables them
+       with the reason as title instead of hiding them. -->
+  <header class="arbeitsleiste">
+    <div class="toolbar" role="toolbar" aria-label="Dokument und Ansicht" id="tb-document">
       <label class="visually-hidden" for="doc-select">Dokument</label>
       <!-- Each option's title is its file name; switchDocument copies it to the select. -->
       <select id="doc-select" title="codex-2759.xml">
@@ -33,49 +30,108 @@
         <!-- The wireframe holds one folio, so the folio pager of F12 is left out. -->
         <span class="folio" id="folio-label">fol. 1r</span>
         <div class="segmented" role="group" aria-label="Spalte" id="column-switch">
-          <button type="button" class="seg-btn is-active" data-column="0">a</button>
-          <button type="button" class="seg-btn" data-column="1">b</button>
+          <button type="button" class="seg-btn is-active" data-column="0" aria-pressed="true" aria-label="Spalte a">a</button>
+          <button type="button" class="seg-btn" data-column="1" aria-pressed="false" aria-label="Spalte b">b</button>
         </div>
       </div>
-    </div>
-    <div class="docbar-right">
+      <span class="tb-sep" aria-hidden="true"></span>
       <div class="segmented" role="group" aria-label="Ansicht">
-        <button type="button" class="seg-btn is-active" data-view="text">Text</button>
-        <button type="button" class="seg-btn" data-view="xml">XML</button>
+        <button type="button" class="seg-btn is-active" data-view="text" aria-pressed="true">Text</button>
+        <button type="button" class="seg-btn" data-view="xml" aria-pressed="false">XML</button>
       </div>
-      <button type="button" class="toggle" id="toggle-facs" aria-pressed="false">Faksimile</button>
+      <button type="button" class="toggle" id="toggle-facs" data-cmd="facs" aria-pressed="false">Faksimile</button>
+      <button type="button" class="toggle" id="toggle-zones" data-cmd="zones" aria-pressed="true">Zonen</button>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button type="button" class="tb-btn" data-cmd="undo" data-title="Rückgängig (Strg+Z)">Rückgängig</button>
+      <button type="button" class="tb-btn" data-cmd="redo" data-title="Wiederholen (Strg+Y)">Wiederholen</button>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button type="button" class="tb-btn is-primary" data-cmd="save" data-title="Speichern (Strg+S): prüft und schreibt nur bei bestandenem Schemasatz">Speichern</button>
+      <button type="button" class="tb-btn" data-cmd="download" data-title="Die zuletzt gespeicherten Bytes herunterladen">Herunterladen</button>
+      <span class="wireframe-badge" title="Entwurf im Speicher auf fol. 1r; schreibt keine Datei.">Wireframe<span class="visually-hidden">: Entwurf im Speicher auf fol. 1r; schreibt keine Datei.</span></span>
     </div>
-  </div>
+
+    <div class="toolbar" role="toolbar" aria-label="Auswahl bearbeiten" id="tb-selection">
+      <!-- The five markup dropdowns, built by markup.js from its vocabulary. -->
+      <div class="tb-group" role="group" aria-label="Markup" id="tb-markup"></div>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <div class="act" data-action="Register">
+        <button type="button" aria-haspopup="menu" aria-expanded="false">Register <span aria-hidden="true">▾</span></button>
+        <ul class="menu-list" role="menu" aria-label="Register" hidden>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:link">Verknüpfen</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:create">Neu anlegen …</button></li>
+          <li class="menu-sep" role="separator"></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:refs">Verweise auf Eintrag</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:person">Personen</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:place">Orte</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="register:folk">Völker</button></li>
+        </ul>
+      </div>
+      <button type="button" class="tb-btn" data-cmd="comment" data-title="Apparatkommentar zur Auswahl anlegen">Apparatkommentar</button>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button type="button" class="tb-btn" data-cmd="format" data-title="Das ganze Dokument formatieren; wird erst beim Speichern wirksam">XML formatieren</button>
+      <div class="act" data-action="Prüfen">
+        <button type="button" aria-haspopup="menu" aria-expanded="false">Prüfen <span aria-hidden="true">▾</span></button>
+        <ul class="menu-list" role="menu" aria-label="Prüfen" hidden>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:wf">Wohlgeformtheit</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:tei">TEI All</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-editing">Schematron editing</button></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="check:sch-review">Schematron review</button></li>
+          <li class="menu-sep" role="separator"></li>
+          <li role="none"><button type="button" class="menu-item" role="menuitem" tabindex="-1" data-cmd="findings">Befundliste</button></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="notice-bar" id="notice" aria-live="polite" hidden></section>
+  <p class="visually-hidden" id="announce" aria-live="polite"></p>
 
   <main class="work" id="work">
     <section class="text-pane" id="text-pane" aria-label="Text">
       <div class="flow" id="flow" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="false" aria-label="Text"></div>
+      <!-- Right after the flow, so Tab reaches the popover's controls from the text. -->
+      <section class="popover" id="popover" aria-labelledby="popover-title" hidden>
+        <div class="popover-head">
+          <h2 id="popover-title">Wort</h2>
+          <button type="button" class="link-btn" id="popover-xml">XML-Stelle</button>
+          <button type="button" class="icon-btn" id="popover-close" aria-label="Zum Text"><span aria-hidden="true">✕</span><span class="sheet-only" aria-hidden="true">Zum Text</span></button>
+        </div>
+        <p class="surface-note" id="popover-note" role="status" hidden></p>
+        <div class="popover-body" id="popover-body"><div class="popover-content" id="popover-content"></div></div>
+      </section>
       <div class="minis" id="minis" hidden></div>
       <div id="xml-view" hidden>
         <pre class="xml" id="xml" data-doc="codex"></pre>
         <p class="empty-note" data-doc="images" hidden>Kein XML geladen.</p>
       </div>
     </section>
-    <aside class="facs-pane" id="facs-pane" aria-label="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759" hidden>
-      <div class="facs-frame" id="facs-frame"></div>
-      <div class="facs-controls">
-        <label><input type="checkbox" id="zones-toggle" checked> Zonen</label>
+
+    <!-- Seitenleiste: facsimile and the side panels share the right column. -->
+    <aside class="side" id="side" aria-label="Seitenleiste" hidden>
+      <div class="side-head">
+        <div class="side-tabs" role="tablist" aria-label="Seitenleiste">
+          <button type="button" role="tab" class="seg-btn" id="tab-facs" data-tab="facs" aria-controls="side-facs" aria-selected="false">Faksimile</button>
+          <button type="button" role="tab" class="seg-btn" id="tab-findings" data-tab="findings" aria-controls="side-findings" aria-selected="false" tabindex="-1">Befunde</button>
+          <button type="button" role="tab" class="seg-btn" id="tab-refs" data-tab="refs" aria-controls="side-refs" aria-selected="false" tabindex="-1">Verweise</button>
+          <button type="button" role="tab" class="seg-btn" id="tab-image" data-tab="image" aria-controls="side-image" aria-selected="false" tabindex="-1">Bild</button>
+        </div>
+        <button type="button" class="icon-btn" id="side-close" aria-label="Seitenleiste schließen"><span aria-hidden="true">✕</span><span class="sheet-only" aria-hidden="true">Zum Text</span></button>
       </div>
+      <p class="surface-note" id="panel-note" role="status" hidden></p>
+      <section class="facs-pane" id="side-facs" data-tab="facs" role="tabpanel" aria-label="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759" hidden>
+        <div class="facs-frame" id="facs-frame"></div>
+      </section>
+      <section class="panel" id="side-findings" data-tab="findings" role="tabpanel" aria-labelledby="tab-findings" hidden>
+        <h2 class="panel-title"></h2><div class="panel-body"></div>
+      </section>
+      <section class="panel" id="side-refs" data-tab="refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
+        <h2 class="panel-title"></h2><div class="panel-body"></div>
+      </section>
+      <section class="panel" id="side-image" data-tab="image" role="tabpanel" aria-labelledby="tab-image" hidden>
+        <h2 class="panel-title"></h2><div class="panel-body"></div>
+      </section>
     </aside>
   </main>
-
-  <section class="notice-bar" id="notice" aria-live="polite" hidden></section>
-  <p class="visually-hidden" id="announce" aria-live="polite"></p>
-
-  <section class="inspector" id="inspector" aria-labelledby="inspector-title" hidden>
-    <div class="inspector-head">
-      <h2 id="inspector-title">Wort</h2>
-      <button type="button" class="link-btn" id="inspector-xml">XML-Stelle</button>
-      <button type="button" class="icon-btn" id="inspector-close" aria-label="Inspector schließen"><span aria-hidden="true">✕</span><span class="sheet-only" aria-hidden="true">Zum Text</span></button>
-    </div>
-    <p class="inspector-note" id="inspector-note" role="status" hidden></p>
-    <div class="inspector-body" id="inspector-body"></div>
-  </section>
 
   <!-- Vendored viewer, classic script so the module below finds window.OpenSeadragon. -->
   <script src="../docs/vendor/openseadragon/openseadragon.min.js"></script>

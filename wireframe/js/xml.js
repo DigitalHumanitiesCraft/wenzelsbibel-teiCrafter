@@ -1,5 +1,5 @@
 // XML view over state.data.xmlExcerpt, and the switch between Text and XML.
-import { $, escapeHtml, state } from "./state.js";
+import { $, escapeHtml, shell, state } from "./state.js";
 import { commit } from "./history.js";
 import { highlightSelection, setWordRange } from "./flow.js";
 import { notify } from "./notice.js";
@@ -75,8 +75,10 @@ export function setView(view) {
   $("#xml-view").hidden = view !== "xml";
   for (const n of document.querySelectorAll("#xml-view [data-doc]")) n.hidden = n.dataset.doc !== (images ? "images" : "codex");
   $("#column-switch").hidden = view === "xml"; // the excerpt is the whole page
-  $("#inspector-xml").textContent = view === "xml" ? "Im Text zeigen" : "XML-Stelle";
+  for (const b of document.querySelectorAll("[data-view]")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+  $("#popover-xml").textContent = view === "xml" ? "Im Text zeigen" : "XML-Stelle";
   state.sel = keep;
   highlightSelection();
   if (view === "text" && keep && !images) setWordRange(keep.from, keep.to);
+  shell.dispatchEvent(new Event("view"));
 }

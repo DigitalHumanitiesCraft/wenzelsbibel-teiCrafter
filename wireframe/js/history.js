@@ -16,7 +16,7 @@ const histories = Object.fromEntries(DOCS.map((d) => [d, { undo: [], redo: [], r
 const listeners = [];
 let nextRevision = 1;
 
-// The active document is the one chosen in the document bar.
+// The active document is the one chosen in the document chooser of the Arbeitsleiste.
 export const activeDoc = () => ($("#doc-select").value === "images" ? "images" : "codex");
 const active = () => histories[activeDoc()];
 
@@ -26,7 +26,7 @@ export const canRedo = () => active().redo.length > 0;
 export function onChange(fn) { listeners.push(fn); }
 
 // Kinds: commit, restore, undo, redo, saved, and document (the active document changed,
-// so the marker and the menu entries follow; nothing in the data changed).
+// so the marker and the toolbar follow; nothing in the data changed).
 function emit(kind, label) {
   const h = active();
   $("#status-unsaved").hidden = h.revision === h.saved;
@@ -74,6 +74,9 @@ function swap(from, to, kind) {
 export const undo = () => swap("undo", "redo", "undo");
 export const redo = () => swap("redo", "undo", "redo");
 
+// The revision a document is at now, for the save flow's download gate (checks.js).
+export const revision = (doc = activeDoc()) => histories[doc].revision;
+
 // For the save flow: the current revision of the document becomes the saved one.
 export function markSaved(doc = activeDoc()) {
   const h = histories[doc];
@@ -81,5 +84,5 @@ export function markSaved(doc = activeDoc()) {
   emit("saved", "");
 }
 
-// Called after the document bar switched documents.
+// Called after the document chooser switched documents.
 export const documentChanged = () => emit("document", "");

@@ -1,10 +1,10 @@
-// Word editing: the applicable Diplomatisch field (F29), the markup actions of the
-// word states (F32, F33) and the element list behind Strg+E (F21).
+// Word editing: the applicable Diplomatisch field (F29), the markup dropdowns of the
+// Arbeitsleiste (F32, F33) and the element list behind Strg+E (F21).
 import { $, el, refKey, state, STUB } from "./state.js";
 import { commit } from "./history.js";
 import { flowEvents, highlightSelection, renderFlow, selectedWords, setWordRange, wordDecorators } from "./flow.js";
-import { field, hideNote, inspectorNote, openInspector, sections, wordFields } from "./inspector.js";
-import { actions, closeMenus } from "./menu.js";
+import { field, hideNote, isPopoverOpen, openPopover, popoverNote, sections, wordFields } from "./popover.js";
+import { closeMenus, command, openMenu, selectionReason } from "./toolbar.js";
 import { notify } from "./notice.js";
 import { setView } from "./xml.js";
 
@@ -41,8 +41,8 @@ function wordContent(id) {
 
 // A word is simple when its content is text, or text wrapped whole in one hi (rend
 // is a token attribute in the model). Anything else (an inner lb, a partial hi such
-// as a ligature, choice, anchors, damage) is edited in the XML view. The inspector's
-// former test (ligature rend, a line break in the text) misses merteín, whose inner
+// as a ligature, choice, anchors, damage) is edited in the XML view. The
+// earlier test (ligature rend, a line break in the text) misses merteín, whose inner
 // lb the model does not carry, so the excerpt decides where it holds the word.
 export function hasInnerMarkup(tok) {
   if ((tok.rend || []).includes("ligature") || /\n/.test(tok.text || "")) return true;
@@ -53,15 +53,16 @@ export function hasInnerMarkup(tok) {
 }
 
 // Re-render after a commit that changed what the flow shows; app.js re-renders only
-// after undo and redo. The selection and the inspector return to the same words.
+// after undo and redo. The selection and an open popover return to the same words, and
+// the focus to the toolbar control that applied the change.
 function rerenderWords(focusSelector) {
   const sel = state.sel;
   renderFlow();
   state.sel = sel;
   if (sel && state.view === "text") setWordRange(sel.from, sel.to);
   highlightSelection();
-  openInspector();
-  if (focusSelector) $("#inspector-body").querySelector(focusSelector)?.focus();
+  if (isPopoverOpen()) openPopover();
+  if (focusSelector) $(focusSelector)?.focus();
 }
 
 // Diplomatisch (F29)
@@ -78,9 +79,9 @@ function diplomaticField(tok) {
   const input = f.querySelector("input");
   const apply = () => {
     const value = input.value.trim();
-    if (value === shown) { inspectorNote("Keine Änderung an der diplomatischen Lesung."); return; }
-    if (!value) { inspectorNote("Ein Wort braucht Text. Wörter löschen geht über die XML-Ansicht."); return; }
-    if (/\s/.test(value)) { inspectorNote("Ein Leerzeichen würde das Wort teilen. Wörter teilen geht über die XML-Ansicht."); return; }
+    if (value === shown) { popoverNote("Keine Änderung an der diplomatischen Lesung."); return; }
+    if (!value) { popoverNote("Ein Wort braucht Text. Wörter löschen geht über die XML-Ansicht."); return; }
+    if (/\s/.test(value)) { popoverNote("Ein Leerzeichen würde das Wort teilen. Wörter teilen geht über die XML-Ansicht."); return; }
     // Text and @orig change together; a word without @orig (Got) keeps none.
     commit("Diplomatisch", () => { tok.text = value; if (tok.orig != null) tok.orig = value; });
     const w = state.words.find((x) => x.tok === tok);
@@ -88,7 +89,7 @@ function diplomaticField(tok) {
     input.value = value;
     input.defaultValue = value;
     flowEvents.dispatchEvent(new Event("edit"));
-    inspectorNote(`Diplomatische Lesung „${value}“ übernommen.`);
+    popoverNote(`Diplomatische Lesung „${value}“ übernommen.`);
   };
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } });
   const buttons = el("div", { class: "field-actions" }, [
@@ -101,7 +102,7 @@ function diplomaticField(tok) {
 function openInXml(tok) {
   setView("xml");
   const x = tok.id && document.querySelector(`.xml .xw[data-id="${CSS.escape(tok.id)}"]`);
-  if (x) { x.classList.add("is-selected"); x.scrollIntoView({ block: "center" }); } else inspectorNote("Das Wort steht nicht im XML.");
+  if (x) { x.classList.add("is-selected"); x.scrollIntoView({ block: "center" }); } else popoverNote("Das Wort steht nicht im XML.");
 }
 
 wordFields.diplomatic = diplomaticField;
@@ -168,7 +169,7 @@ export function applyMarkup(group, value) {
     const ok = commit(`Hervorhebung ${value}`, () => {
       for (const w of words) w.tok.rend = [...(w.tok.rend || []).filter((r) => !HI_VALUES.includes(r)), value];
     });
-    if (ok) { rerenderWords('.act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" auf ${scope} angewendet.${replacedNote(old, value)}`, true); }
+    if (ok) { rerenderWords('#tb-markup .act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" auf ${scope} angewendet.${replacedNote(old, value)}`, true); }
     return;
   }
   const reason = refusal(element, from, to);
@@ -184,11 +185,12 @@ export function applyMarkup(group, value) {
   // in history.js keeps shared references, so the run survives undo).
   const mk = { element, attr, value };
   commit(`${element} ${value}`, () => { for (const w of words) w.tok.markup = mk; });
-  rerenderWords(`.act[data-action="${actionOf(element).label}"] > button`);
+  rerenderWords(`#tb-markup .act[data-action="${actionOf(element).label}"] > button`);
   notify(`<${element} ${attr}="${value}"> um ${scope} gelegt.${replacedNote(old, value)}`, true);
 }
 
-function menuKeys(list) {
+// Up and Down move inside the element list of Strg+E.
+function listKeys(list) {
   list.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     e.preventDefault();
@@ -198,50 +200,53 @@ function menuKeys(list) {
   });
 }
 
-// The value the selection carries now is a checked radio item with a visible "aktuell",
-// so the user sees what a choice would replace.
-export function markupAction(m, words = []) {
+// One dropdown of the Arbeitsleiste per action. Its entries are rebuilt each time it
+// opens (toolbar.js calls wrap.fill), so the value the selection carries now is a checked
+// radio item with a visible "aktuell", and the user sees what a choice would replace.
+function markupAction(m) {
   const wrap = el("div", { class: "act", "data-action": m.label });
-  const btn = el("button", { type: "button", "aria-haspopup": "true", "aria-expanded": "false", text: `${m.label} ▾` });
-  const list = el("ul", { class: "menu-list", role: "menu", hidden: "" });
-  for (const [group, values] of m.groups) {
-    const current = currentValues(words, group);
-    list.append(el("li", { class: "menu-caption", role: "presentation", text: group }));
-    for (const v of values) {
-      const on = current.includes(v);
-      const item = el("button", { class: "menu-item", type: "button", role: "menuitemradio", "aria-checked": String(on), onclick: () => { closeMenus(); applyMarkup(group, v); } }, [v]);
-      if (on) item.append(el("span", { class: "menu-current", text: "aktuell" }));
-      list.append(el("li", { role: "none" }, [item]));
+  const btn = el("button", { type: "button", "aria-haspopup": "menu", "aria-expanded": "false", "data-guard": "markup" }, [m.label, " ", el("span", { "aria-hidden": "true", text: "▾" })]);
+  const list = el("ul", { class: "menu-list", role: "menu", "aria-label": m.label, hidden: "" });
+  wrap.fill = () => {
+    const words = selectedWords();
+    list.replaceChildren();
+    for (const [group, values] of m.groups) {
+      const current = currentValues(words, group);
+      list.append(el("li", { class: "menu-caption", role: "presentation", text: group }));
+      for (const v of values) {
+        const on = current.includes(v);
+        const item = el("button", { class: "menu-item", type: "button", role: "menuitemradio", tabindex: "-1", "aria-checked": String(on), onclick: () => { closeMenus(); applyMarkup(group, v); } }, [v]);
+        if (on) item.append(el("span", { class: "menu-current", text: "aktuell" }));
+        list.append(el("li", { role: "none" }, [item]));
+      }
     }
-  }
-  menuKeys(list);
-  btn.addEventListener("click", () => { const open = btn.getAttribute("aria-expanded") === "true"; closeMenus(); if (!open) { btn.setAttribute("aria-expanded", "true"); list.hidden = false; } });
+  };
   wrap.append(btn, list);
   return wrap;
 }
 
+$("#tb-markup").append(...MARKUP.map(markupAction));
+command("markup", () => {}, selectionReason);
+
 function openAction(label) {
-  const btn = $(`#inspector-body .act[data-action="${label}"] > button`);
-  if (!btn) return;
-  btn.click();
-  btn.nextElementSibling.querySelector("button")?.focus();
+  const btn = $(`#tb-markup .act[data-action="${label}"] > button`);
+  if (btn) openMenu(btn, "first");
 }
 
-export function markupSection(words) {
-  const row = el("div", { class: "actions" }, [el("span", { text: "Markup" })]);
+// The elements the selection carries, named with their attribute, so the popover shows
+// what a markup dropdown would replace.
+sections.push((words) => {
   const present = [...new Set(words.map((w) => w.tok.markup).filter(Boolean))];
-  if (present.length) {
-    row.append(el("p", { class: "markup-present" }, present.map((mk) => el("code", { text: `<${mk.element} ${mk.attr}="${mk.value}">` }))));
-  }
-  for (const m of MARKUP) row.append(markupAction(m, words));
-  return row;
-}
-
-sections.push(markupSection);
+  if (!present.length) return null;
+  return el("div", { class: "markup-row" }, [
+    el("span", { class: "group-title", text: "Markup" }),
+    el("p", { class: "markup-present" }, present.map((mk) => el("code", { text: `<${mk.element} ${mk.attr}="${mk.value}">` }))),
+  ]);
+});
 
 // Mark in the flow: a dotted underline and the element name as a short label on the
 // first word of the run, so the element does not rest on colour alone. The title stays
-// with the apparatus marks (apparatus.js sets and clears it); the inspector names the
+// with the apparatus marks (apparatus.js sets and clears it); the popover names the
 // element with its attribute.
 wordDecorators.push((tok, node, k) => {
   const mk = tok.markup;
@@ -265,36 +270,36 @@ const ELEMENTS = [
 ];
 
 export function elementList() {
-  if (!state.sel) { notify("Erst Wörter im Text auswählen, dann Strg+E."); return; }
-  // The line state carries no markup actions, so the line becomes a word sequence.
+  // The line state carries no register field, so the line becomes a word sequence.
   if (state.sel.line) state.sel = { ...state.sel, line: null };
-  openInspector();
+  state.quiet = false;
+  openPopover();
   const list = el("ul", { class: "element-list", "aria-label": "Elemente für die Auswahl" });
   const box = el("div", { class: "element-choice" }, [
     el("div", { class: "group-title", text: "Element für Auswahl" }),
     list,
   ]);
   for (const e of ELEMENTS) {
-    // The click must not reach menu.js's document handler, which would close the
+    // The click must not reach toolbar.js's document handler, which would close the
     // value menu this choice opens.
     list.append(el("li", {}, [el("button", { type: "button", class: "element-item", onclick: (ev) => { ev.stopPropagation(); chooseElement(e, box); } }, [
       el("code", { text: `<${e.name}>` }), el("span", { text: e.label }),
     ])]));
   }
-  menuKeys(list);
-  $("#inspector-body").prepend(box);
+  listKeys(list);
+  $("#popover-content").prepend(box);
   list.querySelector("button").focus();
 }
 
 function chooseElement(e, box) {
   box.remove();
   if (e.route === "register") {
-    const input = $("#inspector-body .register input[role='combobox'], #inspector-body .register input");
-    if (input) input.focus(); else inspectorNote("Kein Registerfeld für diese Auswahl.");
+    const input = $("#popover-content .register input[role='combobox'], #popover-content .register input");
+    if (input) input.focus(); else popoverNote("Kein Registerfeld für diese Auswahl.");
     return;
   }
-  if (!e.route) { inspectorNote(STUB); return; }
+  if (!e.route) { popoverNote(STUB); return; }
   openAction(e.route);
 }
 
-actions.set("Bearbeiten/Element für Auswahl …", elementList);
+command("element", elementList, selectionReason);

@@ -1,6 +1,7 @@
 // Checks, findings bar and list, and the save flow (US5.1, US5.2, F44 to F52).
 // No permanent status line: the bar shows a running check, a result with findings or
-// a save outcome; a clean result is announced and, by CONFIRM_CLEAN, confirmed briefly.
+// a failed save; a clean result and a save are announced and, by CONFIRM_CLEAN,
+// confirmed briefly. The findings list is the tab Befunde of the Seitenleiste.
 //
 // What is simulated: the XML view renders the excerpt read-only, so well-formedness
 // parses that excerpt once on request. TEI All is a timed stand-in for the worker run
@@ -8,12 +9,12 @@
 // editorial/wenzelsbibel.sch that can be stated on the in-memory model of this page,
 // with the rule ids, phases, severities and message texts of the .sch.
 import { $, columns, el, refKey, state } from "./state.js";
-import { markSaved, onChange } from "./history.js";
+import { markSaved, onChange, revision } from "./history.js";
 import { placeCaret, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
-import { closeInspector, openPanel } from "./inspector.js";
+import { closePanel, narrow, openPanel, panelBody, tabs } from "./panel.js";
 import { switchDocument } from "./miniature.js";
-import { actions } from "./menu.js";
+import { command } from "./toolbar.js";
 import { announce, notify, setStanding } from "./notice.js";
 
 const DOC = "codex-2759.xml";
@@ -33,8 +34,8 @@ const SAVE_SET = ["Wohlgeformtheit", "TEI All", "Schematron editing"];
 // so they stay valid across undo and redo.
 const results = new Map();
 let running = null;   // { label, cancel }
-let barState = null;  // what the standing bar shows: { kind: "check" | "save-ok" | "save-failed", checks }
-let downloadUrl = null;
+let barState = null;  // what the standing bar shows: { kind: "check" | "save-failed", checks }
+let savedRevision = null; // codex revision of the last save that passed, the gate of Herunterladen
 
 const errors = (fs) => fs.filter((f) => f.role === "error");
 const plural = (n) => `${n} ${n === 1 ? "Befund" : "Befunde"}`;
@@ -246,17 +247,23 @@ export async function save() {
   const failed = SAVE_SET.filter((c) => errors(results.get(c).findings).length);
   if (failed.length) { barState = { kind: "save-failed", checks: failed }; renderBar(); return; }
   markSaved("codex");
-  barState = { kind: "save-ok", checks: SAVE_SET };
+  savedRevision = revision("codex");
+  barState = null;
   renderBar();
+  if (CONFIRM_CLEAN) notify("Gespeichert."); else announce("Gespeichert.");
 }
 
 // The wireframe does not serialise the model edits to XML, so the download carries the
 // excerpt as loaded (or as formatted), not the edited words. The real build writes the
 // edited bytes, in place with a native handle or as this download in Firefox (F50).
-function downloadLink() {
-  if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-  downloadUrl = URL.createObjectURL(new Blob([state.data.xmlExcerpt], { type: "application/xml" }));
-  return el("a", { class: "act-btn", href: downloadUrl, download: DOWNLOAD_NAME, text: "Herunterladen" });
+// Only bytes that passed the save set are offered, so the toolbar gates it on the revision.
+function download() {
+  const url = URL.createObjectURL(new Blob([state.data.xmlExcerpt], { type: "application/xml" }));
+  const a = el("a", { href: url, download: DOWNLOAD_NAME, hidden: "" });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // Notice bar
@@ -274,13 +281,6 @@ function barContent() {
     ];
   }
   const show = el("button", { type: "button", class: "act-btn", text: "Befunde anzeigen", onclick: showFindings });
-  if (barState.kind === "save-ok") {
-    return [
-      el("strong", { text: "Gespeichert." }),
-      downloadLink(),
-      el("button", { type: "button", class: "act-btn", text: "Schließen", onclick: () => { barState = null; renderBar(); } }),
-    ];
-  }
   const stale = barState.checks.some((c) => results.get(c)?.stale);
   const nodes = stale ? [el("strong", { class: "is-stale", text: "Ergebnis veraltet, Prüfung erneut ausführen." })] : [];
   if (barState.kind === "save-failed") {
@@ -298,7 +298,10 @@ function barContent() {
 // XML path and message; choosing its location selects it in the text.
 
 export function showFindings() {
-  if (!results.size) { notify("Noch keine Prüfung gelaufen."); return; }
+  if (!results.size) {
+    openPanel("findings", ["Befunde"], [el("p", { class: "empty-note", text: "Noch keine Prüfung gelaufen. Prüfen in der Arbeitsleiste startet eine." })]);
+    return;
+  }
   const body = [];
   if ([...results.values()].some((r) => r.stale)) body.push(el("p", { class: "findings-stale", role: "status", text: "Ergebnis veraltet, Prüfung erneut ausführen." }));
   for (const check of CHECKS) {
@@ -323,8 +326,8 @@ export function showFindings() {
     }
     body.push(group);
   }
-  openPanel(["Befunde ", el("span", { class: "context", text: DOC })], body, showFindings);
-  $("#inspector-body").querySelector("button")?.focus();
+  openPanel("findings", ["Befunde ", el("span", { class: "context", text: DOC })], body, showFindings);
+  panelBody("findings").querySelector("button")?.focus();
 }
 
 // Selects the finding's word. A word with an xml:id is found by it wherever it moved; a
@@ -352,7 +355,7 @@ export function jumpToFinding(f) {
     k = word ? state.words.indexOf(word) : -1;
     if (k < 0) { notify(`Die Zeile ${f.at.lineNo} enthält kein Wort, an dem der Befund gezeigt werden kann.`); return; }
   }
-  closeInspector(); // on narrow screens the findings sheet covers the text it jumps to
+  if (narrow.matches) closePanel(); // the findings sheet covers the text it jumps to
   placeCaret(k);
 }
 
@@ -363,15 +366,16 @@ onChange((kind) => {
   if (kind === "saved" || kind === "document" || !results.size) return;
   let changed = false;
   for (const r of results.values()) if (!r.stale) { r.stale = true; changed = true; }
-  if (barState && barState.kind === "save-ok") barState = null;
   if (!changed) return;
   renderBar();
-  if ($("#inspector-body .findings-group")) showFindings();
+  if (panelBody("findings").querySelector(".findings-group")) showFindings();
 });
 
-actions.set("Prüfen/Wohlgeformtheit", () => runCheck("Wohlgeformtheit"));
-actions.set("Prüfen/TEI All", () => runCheck("TEI All"));
-actions.set("Prüfen/Schematron editing", () => runCheck("Schematron editing"));
-actions.set("Prüfen/Schematron review", () => runCheck("Schematron review"));
-actions.set("Prüfen/Befundliste", showFindings);
-actions.set("Datei/Speichern", save);
+command("check:wf", () => runCheck("Wohlgeformtheit"));
+command("check:tei", () => runCheck("TEI All"));
+command("check:sch-editing", () => runCheck("Schematron editing"));
+command("check:sch-review", () => runCheck("Schematron review"));
+command("findings", showFindings, () => (results.size ? null : "Noch keine Prüfung gelaufen."));
+command("save", save);
+command("download", download, () => (savedRevision !== null && savedRevision === revision("codex") ? null : "Erst Speichern; heruntergeladen werden nur Bytes, die den Schemasatz bestanden haben."));
+tabs.set("findings", { show: showFindings });

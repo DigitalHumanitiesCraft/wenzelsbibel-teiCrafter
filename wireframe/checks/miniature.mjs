@@ -13,9 +13,11 @@ const errors = [];
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 page.on("pageerror", (e) => errors.push(String(e)));
 const val = (sel) => page.locator(sel).inputValue();
-const body = "#inspector-body";
-const title = () => page.locator("#inspector-title").innerText();
-const note = () => page.locator("#inspector-note").innerText();
+// The image-annotation form is the tab Bild of the Seitenleiste; the word states are the popover.
+const body = "#side-image .panel-body";
+const title = () => page.locator("#side-image .panel-title").innerText();
+const note = () => page.locator("#panel-note").innerText();
+const pop = "#popover-content";
 const apply = () => page.click(`${body} .mini-actions >> text=Anwenden`);
 const cancel = () => page.click(`${body} .mini-actions >> text=Abbrechen`);
 const titleInput = () => page.locator(`${body} input[data-key="title"]`);
@@ -40,6 +42,8 @@ if (zoneClicked) {
   check("US4.1.1 title in form", (await titleInput().inputValue()) === "Anfangs-Initiale (O) zum Prolog: Gott auf dem Thron");
   check("F25 zone click activates Bildannotationen", (await val("#doc-select")) === "images");
   check("chosen zone outlined", (await page.locator('.zone.is-chosen[data-id="Image_1676476154286_76"]').count()) === 1);
+  check("the form takes the tab Bild of the shared column", (await page.getAttribute("#tab-image", "aria-selected")) === "true" && await page.isHidden("#side-facs"));
+  await page.click("#tab-facs"); // back to the facsimile for the next zone
   await page.waitForTimeout(1200);
   const mb = await page.locator('.zone[data-id="Image_1678370825437_16"]').boundingBox();
   if (mb) {
@@ -47,7 +51,7 @@ if (zoneClicked) {
     await page.waitForTimeout(500);
     check("img_marginalia zone Image_1678370825437_16 opens margins_01", (await title()).includes("margins_01"), await title());
   } else check("margin zone visible", false);
-  await page.click("#toggle-facs");
+  await page.click("#side-close");
 }
 
 // Bildannotationen list
@@ -174,7 +178,7 @@ await page.click(`${body} .ic-search-open`);
 await q().fill("11");
 await q().press("ArrowDown");
 await page.keyboard.press("Escape");
-check("Escape closes the hit list first", (await page.locator("#ic-hits").isHidden()) && !(await page.locator("#inspector").isHidden()));
+check("Escape closes the hit list first", (await page.locator("#ic-hits").isHidden()) && !(await page.locator("#side").isHidden()));
 await cancel();
 
 // US4.3
@@ -190,31 +194,31 @@ check("US4.3.2 caret on region_1639399488602_10l3_0", caret === "region_16393994
 const marked = await page.evaluate(() => [...document.querySelectorAll(".w.in-mini-range")].map((n) => n.dataset.id));
 const total = await page.evaluate(() => document.querySelectorAll("#flow .w").length);
 check("US4.3.2 range marked from the first word to the column end (running head excluded)", marked[0] === "region_1639399488602_10l3_0" && marked.length === total - 1, `${marked.length}/${total}`);
-const insp = await page.locator(body).innerText();
+const insp = await page.locator(pop).innerText();
 check("US4.3.3 Bilder zu diesem Wort on the first word", insp.includes("Bilder zu diesem Wort") && insp.includes("miniatures_01"));
-check("inspector says the range ends on fol. 2r", insp.includes("endet auf fol. 2r"));
+check("popover says the range ends on fol. 2r", insp.includes("endet auf fol. 2r"));
 check("address names the codex column", (await page.evaluate(() => location.hash)).startsWith("#codex/1r/"));
 await page.click('[data-column="1"]');
 await page.waitForTimeout(200);
 check("column b marked to the page end", await page.evaluate(() => document.querySelectorAll(".w.in-mini-range").length === document.querySelectorAll("#flow .w").length - 1));
 await page.locator("#flow .w").nth(20).click();
 await page.waitForTimeout(500);
-check("US4.3.3 word inside the range in column b lists miniatures_01", (await page.locator(body).innerText()).includes("miniatures_01"));
+check("US4.3.3 word inside the range in column b lists miniatures_01", (await page.locator(pop).innerText()).includes("miniatures_01"));
 await page.screenshot({ path: `${SHOTS}wireframe-miniature-3.png` });
-await page.click(`${body} .mini-refs .link-btn >> nth=0`);
+await page.click(`${pop} .mini-refs .link-btn >> nth=0`);
 await page.waitForTimeout(300);
 check("jump back to the form", (await title()).includes("miniatures_01") && (await page.evaluate(() => location.hash)) === "#bild/miniatures_01");
 await page.click('[data-column="0"]').catch(() => {});
 
 // F12 reload and browser history
 await page.reload();
-await page.waitForSelector("#inspector:not([hidden])");
+await page.waitForSelector("#side-image .mini-form");
 check("F12 reload restores miniatures_01", (await val("#doc-select")) === "images" && (await title()).includes("miniatures_01"));
 await page.goBack();
 await page.waitForTimeout(400);
 check("browser back follows the address", (await val("#doc-select")) === "codex", await page.evaluate(() => location.hash));
 await page.goto(`${URL}#bild/margins_02`);
-await page.waitForSelector("#inspector:not([hidden])");
+await page.waitForSelector("#side-image:not([hidden])");
 check("empty item points to margins_01", (await page.locator(body).innerText()).includes("margins_01"));
 await page.keyboard.press("Escape");
 check("Escape closes the form, focus returns to the list entry", (await page.evaluate(() => document.activeElement.dataset.item)) === "margins_02");
@@ -224,14 +228,16 @@ const small = await browser.newPage({ viewport: { width: 390, height: 844 } });
 small.on("pageerror", (e) => errors.push(String(e)));
 small.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 await small.goto(`${URL}#bild/miniatures_01`);
-await small.waitForSelector("#inspector:not([hidden])");
+await small.waitForSelector("#side-image .mini-form");
 const sheet = await small.evaluate(() => {
-  const r = document.querySelector("#inspector").getBoundingClientRect();
-  const bar = document.querySelector(".docbar").getBoundingClientRect();
-  return { top: Math.round(r.top), barBottom: Math.round(bar.bottom), bottom: Math.round(r.bottom), vh: innerHeight, cols: getComputedStyle(document.querySelector(".mini-form")).gridTemplateColumns.split(" ").length, h: Math.round(r.height), scroll: document.documentElement.scrollWidth, bodyScroll: document.querySelector("#inspector-body").scrollWidth, bodyW: document.querySelector("#inspector-body").clientWidth };
+  const r = document.querySelector("#side").getBoundingClientRect();
+  const bar = document.querySelector(".arbeitsleiste").getBoundingClientRect();
+  const b = document.querySelector("#side-image .panel-body");
+  return { top: Math.round(r.top), barBottom: Math.round(bar.bottom), bottom: Math.round(r.bottom), vh: innerHeight, cols: getComputedStyle(document.querySelector(".mini-form")).gridTemplateColumns.split(" ").length, h: Math.round(r.height), scroll: document.documentElement.scrollWidth, bodyScroll: b.scrollWidth, bodyW: b.clientWidth };
 });
-check("390: sheet from document bar to bottom, one column, no horizontal scroll", sheet.cols === 1 && sheet.top >= sheet.barBottom && sheet.bottom >= sheet.vh - 2 && sheet.scroll <= 390 && sheet.bodyScroll <= sheet.bodyW, JSON.stringify(sheet));
+check("390: side sheet from the Arbeitsleiste to the bottom, one column, no horizontal scroll", sheet.cols === 1 && sheet.top >= sheet.barBottom && sheet.bottom >= sheet.vh - 2 && sheet.scroll <= 390 && sheet.bodyScroll <= sheet.bodyW, JSON.stringify(sheet));
 await small.screenshot({ path: `${SHOTS}wireframe-miniature-sheet.png` });
+check("390: the text under the side sheet is inert", await small.evaluate(() => document.querySelector("#text-pane").inert === true));
 
 check("no console errors", errors.length === 0, errors.join(" | ").slice(0, 500));
 console.log(results.join("\n"));
