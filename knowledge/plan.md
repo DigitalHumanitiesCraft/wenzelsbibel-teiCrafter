@@ -84,20 +84,19 @@ The panel files are base-owned files in the project folder, so a later base chan
 
 The order of the remaining work after the operator's feedback rounds and the audit of 2026-10-10, as the living list of what is still to do. An item leaves this list when its phase row records it as done.
 
-1. The second feedback round on the wireframe, covering word commands in the flow with undo and an `xml:id` for a new word, the folding of `xml:id` and `facs` with "IDs anzeigen", the findings-list texts that still name the page excerpt, the facsimile following a line selection when the line lies outside the visible image, the notice bar overlaying the work area without layout shift, a word containing an `lb` on the line on which it begins, and the Prüfen labels "Editionsregeln" and "Editionsregeln, Bericht".
-2. The third feedback round on the wireframe, once the second is committed, covering the popover rows, the single-field rule and the markup search field ([design](design.md#popover-at-the-selection)), the one-row toolbar with view-dependent controls and switches drawn distinct from actions ([design](design.md#arbeitsleiste)), the facsimile on by default and remembered, the draggable column width and pane divider ([design](design.md#editor-frame)), the right column without tabs and its lower pane ([design](design.md#seitenleiste)), and the viewer reduced to "Seite einpassen" with the page fitted on open ([design](design.md#facsimile-pane)), and every folio of the codex with the folio pager, the extraction writing one file per folio and an index ([data](data.md#fixtures), F12).
-3. The start page and help requirements ([specification](specification.md#start-page-and-help), [design](design.md#start-page)), reviewed by the operator together with the proposed purpose sentence.
-4. The vault session on the [UI practice delta](../snapshots/ui-practice-delta-2026-10-10.md), which carries the interface lessons of the three feedback rounds into the UI practice document and its Abnahmecheck ([handoff](handoff.md)).
-5. The contract handoff of phase 5a to the base, written as the [handoff text of 2026-10-10](../snapshots/base-handoff-5a-contract-2026-10-10.md), brought to the one-row toolbar, the popover rows, the lower pane and the draggable handles of the third feedback round, and carried by the operator into the base's `knowledge/handoff.md` ([integration](integration.md#phase-5a-mechanisms)).
-6. Phase 5b, then 6, 7 and 8 as the phase table orders them.
-7. Operator points in [handoff](handoff.md): review and install the design skills, and inform the edition team about the tracked excerpt.
+1. The third feedback round on the wireframe, once the second is committed, covering the popover rows, the single-field rule and the markup search field ([design](design.md#popover-at-the-selection)), the one-row toolbar with view-dependent controls and switches drawn distinct from actions ([design](design.md#arbeitsleiste)), the facsimile on by default and remembered, the draggable column width and pane divider ([design](design.md#editor-frame)), the right column without tabs and its lower pane ([design](design.md#seitenleiste)), and the viewer reduced to "Seite einpassen" with the page fitted on open ([design](design.md#facsimile-pane)), and every folio of the codex with the folio pager, the extraction writing one file per folio and an index ([data](data.md#fixtures), F12).
+2. The start page and help requirements ([specification](specification.md#start-page-and-help), [design](design.md#start-page)), reviewed by the operator together with the proposed purpose sentence.
+3. The vault session on the [UI practice delta](../snapshots/ui-practice-delta-2026-10-10.md), which carries the interface lessons of the three feedback rounds into the UI practice document and its Abnahmecheck ([handoff](handoff.md)).
+4. The contract handoff of phase 5a to the base, written as the [handoff text of 2026-10-10](../snapshots/base-handoff-5a-contract-2026-10-10.md), brought to the one-row toolbar, the popover rows, the lower pane and the draggable handles of the third feedback round, and carried by the operator into the base's `knowledge/handoff.md` ([integration](integration.md#phase-5a-mechanisms)).
+5. Phase 5b, then 6, 7 and 8 as the phase table orders them.
+6. Operator points in [handoff](handoff.md): review and install the design skills, and inform the edition team about the tracked excerpt.
 
 ## Status tracker
 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | 1 Knowledge base | in progress | Operator review pending |
-| 2 Static wireframe | in progress | Shell pivot to toolbar, popover and side panel and the correction package of the audit done and verified by the walkthroughs; second and third feedback rounds listed under [next steps](#next-steps); deleted in phase 5b |
+| 2 Static wireframe | in progress | Shell pivot, the correction package of the audit and the second feedback round built and verified by the walkthroughs; the third feedback round listed under [next steps](#next-steps); deleted in phase 5b |
 | 3 Base refactor and merge | completed | Merged with the base knowledge deletions kept |
 | 4 Editorial layer | in progress | Move to `docs/schemas/`, vocabulary and its consistency check to be verified |
 | 5a Base mechanisms in teiCrafter | pending | Flow spike done in `prototypes/d-flow` |

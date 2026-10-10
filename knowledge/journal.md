@@ -21,6 +21,12 @@ related: [project, specification, plan, handoff]
 
 ## Entries
 
+### 2026-10-10 integrated Second feedback round built in the wireframe
+
+- Source: the decisions of the second feedback round ([specification](specification.md) F18, F24, F28, F44, F57, the line rule in [data](data.md)) and the build of the same day in `wireframe/`, verified by the walkthroughs, the new `round-2.mjs` among them, and by two runs of the latency harness.
+- Target: `wireframe/` (flow, markup, popover, xml, facsimile, toolbar, checks, extraction), [specification.md](specification.md) (F18, F24, F44, F57), [design.md](design.md) (notice bar, Arbeitsleiste, findings list), [data.md](data.md) (line rule), [plan.md](plan.md).
+- Result: The flow splits, joins and deletes words as F18 now states in detail, with the id pattern of a new word, the join across one line break and the refusals with their reasons. The XML view folds `xml:id` and `facs` behind a marker and shows them on the selected word, on the anchors of its comments and through "IDs anzeigen". The facsimile follows every selection with the smallest pan. The notice bar overlays the work area, and the unsaved dot keeps its place, so the measured layout shifts of the first baseline are gone. The extraction assigns a word containing an `lb` to the line on which it begins and removes the register note. The Prüfen entries carry the working labels of the project Schematron. Because the overlaying bar covered the first text line while a standing notice stayed, F44 now distinguishes transient notices, which overlay, from standing notices, which take a row of their own. The one Anwenden per popover that this round built is superseded by the single-field rule of the third round.
+
 ### 2026-10-10 integrated Third operator feedback round on the wireframe
 
 - Source: the operator's screenshots of the wireframe with the real fol. 1r data and the operator's questions on them of 2026-10-10, which asked where the interface was still inconsistent, and the decisions taken on them with the reasons the operator accepted.
