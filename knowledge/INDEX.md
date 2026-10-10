@@ -41,9 +41,11 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 ## Storage zones
 
 - `knowledge/` holds the maintained documents above, including `handoff.md` as the process inbox.
-- `editorial/` holds the tool-neutral project layer, the guideline as Markdown, the project Schematron, the processing instructions and the Schematron fixtures. Oxygen and this tool are meant to read the same files from here.
+- `editorial/` holds the tool-neutral project layer: the project Schematron `wenzelsbibel.sch`, its fixtures, the fixture check, the dated findings snapshot and a README with the rule table and the tool bindings. Oxygen and this tool are meant to read the same files from here.
 - `docs/` holds the published application, inherited from the base, with the start page and editor shell of this repository.
-- `snapshots/` holds dated reports such as the demo protocol and test runs with the real files.
+- `wireframe/` holds the static wireframe with fol. 1r, served locally and not published.
+- `prototypes/d-flow/` holds the spike of the flow view with its Node and browser checks.
+- `snapshots/` is planned for dated reports such as the demo protocol and test runs with the real files; it does not exist yet.
 - `data/` is ignored by Git and holds the edition files on a machine that has them.
 
 ## Reading paths

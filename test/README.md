@@ -14,7 +14,7 @@ npm run evaluate:editorial
 
 `evaluate:editorial` is the reproducible completion gate used locally and in CI. It runs the offline checks and the complete browser suite with one worker, zero retries and explicit omission rules. Missing results, unexpected skips, flaky cases or changed captured inputs fail the run. It writes revision, toolchain, input fingerprints and structured results under `node_modules/.tmp/evaluation/`.
 
-Set `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` to the permitted local sources, then run `npm run evaluate:editorial -- --real` for the real Wenzelsbibel path. `UFBAS_TEI` separately enables the whole-book source. `--editorial-only` narrows browser coverage and must be reported as such; `--repeat=2` repeats scenarios rather than retrying failures. The [completion report](../reports/editorial-completion-2026-09-11.md) records the executed full local and CI runs.
+Set `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` to the permitted local sources, then run `npm run evaluate:editorial -- --real` for the real Wenzelsbibel path. `UFBAS_TEI` separately enables the whole-book source. `--editorial-only` narrows browser coverage and must be reported as such; `--repeat=2` repeats scenarios rather than retrying failures. The [completion report](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/editorial-completion-2026-09-11.md) records the executed full local and CI runs.
 
 `verify` runs required Node proofs, the Python/lxml harness and its negative self-test, the curated JavaScript typecheck, Biome, the Vite build and the deployment-asset contract. It requires the exact Node/npm versions and working native compiler/build packages. The offline type proof never downloads a compiler or substitutes a global one.
 
@@ -59,7 +59,7 @@ The negative self-test deliberately corrupts fixtures so that an ineffective val
 | [harness/](harness/) | Node orchestration and Python/lxml validation. |
 | [generators/](generators/) | Reproducible synthetic data and local corpus extraction. |
 | `reports/` | Ignored generated harness output. |
-| [../reports/](../reports/) | Maintained dated project assessments and implementation evidence. |
+| [reports in the base](https://github.com/DigitalHumanitiesCraft/teiCrafter/tree/main/reports) | Dated assessments of the base; this repository keeps its own under `snapshots/`. |
 
 ## Local Wenzelsbibel extraction
 

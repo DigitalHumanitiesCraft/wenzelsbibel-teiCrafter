@@ -1,9 +1,14 @@
 {
   "@context": "https://w3id.org/codemeta/3.0",
   "@type": "SoftwareSourceCode",
-  "name": "teiCrafter",
-  "description": "Browser-based, client-only, lossless editor for arbitrary TEI-XML with an optional LLM on-ramp from plaintext.",
-  "codeRepository": "https://github.com/DigitalHumanitiesCraft/teiCrafter",
+  "name": "wenzelsbibel-teiCrafter",
+  "description": "Editing environment for the Wenzelsbibel edition (Codex 2759), derived from teiCrafter",
+  "codeRepository": "https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter",
+  "isBasedOn": {
+    "@type": "SoftwareSourceCode",
+    "name": "teiCrafter",
+    "codeRepository": "https://github.com/DigitalHumanitiesCraft/teiCrafter"
+  },
   "author": [
     {
       "@type": "Person",
@@ -18,5 +23,5 @@
     }
   ],
   "license": "https://spdx.org/licenses/MIT",
-  "dateModified": "2026-07-23"
+  "dateModified": "2026-10-10"
 }

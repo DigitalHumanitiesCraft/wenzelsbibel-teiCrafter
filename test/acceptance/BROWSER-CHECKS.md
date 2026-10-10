@@ -570,7 +570,7 @@ unobserved.
 The observations below retain the behavior and expectations of their recorded
 versions, including superseded proposal-provenance and schema UI behavior.
 They do not certify the current working tree. Add new run outcomes in a dated
-report and link them from [reports/README.md](../../reports/README.md). The current
+report and link them from the base repository reports (https://github.com/DigitalHumanitiesCraft/teiCrafter/tree/main/reports). The current
 manual catalogue above describes expected behavior, not a completed operator pass.
 
 | Run | Result |

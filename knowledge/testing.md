@@ -66,19 +66,24 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 
 - Scholarly correctness of readings, normalisations, register identifications and apparatus text. Only the edition team can establish it.
 - User acceptance. The meeting demo shows the workflows; acceptance requires the team's decision.
-- Performance on the full codex beyond the limits the base documents in its [editorial completion report](../reports/editorial-completion-2026-09-11.md). The first full validation of a changed codex is expensive, particularly in Firefox.
+- Performance on the full codex beyond the limits the base documents in its [editorial completion report](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/editorial-completion-2026-09-11.md). The first full validation of a changed codex is expensive, particularly in Firefox.
 - Real-file evidence in CI. Edition files and images are not redistributable, so CI runs synthetic twins only; a real-file claim needs a run that actually supplied the files.
 - Image rendering from the ONB server in CI. Browser tests stub the IIIF responses; the real-file run covers the live service.
 
 ## Known exceptions and limits
 
-The new interface replaces the shell of `docs/editor.html`. Inherited browser tests that drive the base shell, including the `wenzelsbibel-*.spec.js` suites, then no longer apply to the fork's editor page. They stay valid in the base, where the refactor is accepted against them. In the fork they are excluded through a fork-only Playwright configuration with an ignore list, so that `playwright.config.js` and the test files remain identical to the base and merge without conflicts. Engine proofs remain fully inherited. This exclusion is a planned decision for phase 5 and is open until the new shell exists.
+The new interface replaces the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5. Engine proofs remain fully inherited.
 
 The fixture check runs the Schematron through lxml with the ISO skeleton for XSLT 1.0, while the editor runs raw Schematron on browser XPath. The XSLT path applies the first matching rule per pattern and the raw runtime evaluates every rule independently. The schema keeps the rules of one pattern on disjoint contexts so that both report the same findings, and a browser run of the fixtures against the teiCrafter runtime is still to be added.
 
 The review run is slow on the full codex, mostly in the anchor rules ([data](data.md#schema-set)), so it runs on request and in the planned GitLab pipeline of the [working model](specification.md#working-model), and never on each edit.
 
-The fork inherits the base's checks workflow `.github/workflows/checks.yml`, which runs `npm run evaluate:editorial` (proofs, harness, types, build and the browser workflows in Chromium and Firefox) on every push and pull request, and it passed on the fork on GitHub on 2026-10-10. The workflow covers neither the fixture check nor the flow spike checks. Adding them to the shared workflow would change a base file and is therefore a question for the base or for a fork-only workflow.
+Two workflows run on GitHub.
+
+- `.github/workflows/checks.yml` is inherited and stays identical to the base. It runs `npm run evaluate:editorial` (proofs, harness, types, build and the inherited browser workflows in Chromium and Firefox) on every push and pull request, and it passed on the fork on GitHub on 2026-10-10. Because `test/evaluate-editorial.mjs` expects the base suites, it keeps testing the base shell.
+- `.github/workflows/fork-checks.yml` is fork-only and runs on push and pull request to `main`. It adds the fork's required runs: the flow spike check `node prototypes/d-flow/check.mjs`, `npm run typecheck:src`, the typecheck of `docs/js` with `npx tsc --noEmit -p jsconfig.json`, the fixture check `python editorial/check_fixtures.py` and `python -m ruff check editorial`. It uploads no Pages artifact.
+
+The flow spike browser check needs the prototype dev server and runs locally only.
 
 ## How to run
 
@@ -87,11 +92,14 @@ Use the Node and npm versions pinned in `package.json`, then `npm ci` and `npx p
 ```text
 node test/verify.mjs           # engine proofs, Python/lxml harness, typecheck, Biome, Vite build, asset contract
 npm run check:biome            # Biome over docs/js, test/e2e and the configs
-npm run test:e2e               # Playwright, Chromium and Firefox
+npm run test:e2e               # inherited Playwright suites, Chromium and Firefox; meaningful in the base
+npm run test:e2e:fork          # fork demo suites (wb-demo-*.spec.js) only
 python editorial/check_fixtures.py                                   # required: fixture check
+python -m ruff check editorial                                       # required: lint of the editorial layer
+node prototypes/d-flow/check.mjs                                     # required: flow spike, Node
+npm run typecheck:src                                                # required: typecheck of src/ and the spike
 python editorial/check_fixtures.py --data <codex> <images>           # review run, report only
-node prototypes/d-flow/check.mjs                                     # flow spike, Node
 node prototypes/d-flow/browser-check.mjs                             # flow spike, needs npm run dev:prototypes
 ```
 
-`npm run test:e2e` uses the inherited `playwright.config.js`: it runs `npm run build`, serves `dist/` with `vite preview` at `http://127.0.0.1:4173` and opens `index.html`. The published form is `docs/` served directly; `reports/source-browser-check.config.mjs` runs the same tests in Chromium against a server on port 4199 that serves `docs/` and must be started separately. The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.
+`npm run test:e2e` uses the inherited `playwright.config.js`: it runs `npm run build`, serves `dist/` with `vite preview` at `http://127.0.0.1:4173` and opens `index.html`. The published form is `docs/` served directly; the base's [`reports/source-browser-check.config.mjs`](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/source-browser-check.config.mjs) runs the same tests in Chromium against a server on port 4199 that serves `docs/` and must be started separately. The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.

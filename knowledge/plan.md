@@ -47,6 +47,8 @@ This plan orders the work from the knowledge base to a published prototype that 
 
 The wireframe sits at `wireframe/` outside `docs/`, so Pages does not publish it. Only its HTML, CSS and JavaScript are versioned. It reads the fol. 1r extraction from the ignored `data/wireframe/` folder, loads OpenSeadragon from `docs/vendor/` and the image from the ONB IIIF service at runtime, and is served by a local static server at the repository root. Its menu still lists the retired Ansicht entries Zeilenweise and Fließtext, which [design](design.md#menu-bar) no longer carries.
 
+Note of 2026-10-10: the wireframe shows the layout and the flow of the interface, not its complete behaviour. The usability review of 2026-10-10 found three deviations from the specification: the inspector shows no line state ([US1.2](specification.md#us12-select-a-line-and-edit-its-words), [design](design.md#inspector)), input is neither applied nor cancelled explicitly (Anwenden and Abbrechen, [design](design.md#inspector)), and the menu still offers the retired switch between Zeilenweise and Fließtext ([design](design.md#menu-bar)). A follow-up revision of the wireframe fixes them; phase 2 counts as completed for the layout.
+
 ### Phase 4 notes
 
 The rule table, the phase model and the bindings for teiCrafter and Oxygen are documented in `editorial/README.md`, the findings on the public data in `editorial/data-findings.md`. The remaining item is the published copy under `docs/` with its equality check, after which the default schema set in `docs/js/projects/wenzelsbibel/index.js` points to it instead of the base draft.
@@ -68,7 +70,7 @@ The inherited browser suites that drive the base shell are excluded in the fork 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | 1 Knowledge base | in progress | `data/` is ignored; operator review pending |
-| 2 Static wireframe | completed | Flowing text with caret, OpenSeadragon facsimile with SVG zones, notice bar, "XML formatieren" |
+| 2 Static wireframe | completed | Layout: flowing text with caret, OpenSeadragon facsimile with SVG zones, notice bar, "XML formatieren"; three specification deviations from the review of 2026-10-10 open ([phase 2 notes](#phase-2-notes)) |
 | 3 Base refactor and merge | completed | Steps a to e completed in the base; merged with the base knowledge deletions kept ([architecture](architecture.md#derivation-model)); the inherited checks workflow passed on the fork on 2026-10-10 |
 | 4 Editorial layer | in progress | Schematron, fixtures, fixture check and findings snapshot done; published copy under `docs/` outstanding |
 | 5 Interface rebuild | pending | Flow spike done in `prototypes/d-flow` |

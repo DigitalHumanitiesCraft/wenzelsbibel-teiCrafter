@@ -42,7 +42,7 @@ The fork changes three zones.
 | Project folder: `docs/js/projects/wenzelsbibel/` | The Wenzelsbibel specialisation after the base refactor | The base owns the folder's existence; the fork changes its content, so conflicts are local to this folder |
 | Editorial layer: `editorial/` | Tool-neutral rules: `wenzelsbibel.sch`, `fixtures/` with `index.json`, `check_fixtures.py`, the dated snapshot `data-findings.md`, and `README.md` with the rule table and the Oxygen and teiCrafter bindings | Fork-only, no conflicts |
 
-Everything else stays as merged from the base: `docs/js/editor/`, `docs/css/style.css` with the design tokens, `docs/schemas/` including the vendored TEI All RelaxNG, `docs/vendor/`, `src/`, `prototypes/`, `pipeline/`, the build and test configuration. New fork-only files (new shell components, fork browser tests, `wireframe/`, the flow spike `prototypes/d-flow/`) avoid conflicts because the base never writes them.
+Everything else stays as merged from the base: `docs/js/editor/`, `docs/css/style.css` with the design tokens, `docs/schemas/` including the vendored TEI All RelaxNG, `docs/vendor/`, `src/`, `pipeline/`, the build and test configuration. Of `prototypes/` only `d-flow/` and `index.html` remain; the base's viewer prototypes were removed from this repository. New fork-only files (new shell components, fork browser tests, `wireframe/`, the flow spike `prototypes/d-flow/`) avoid conflicts because the base never writes them.
 
 ## Current state
 
@@ -160,11 +160,15 @@ The base's automated Axe floor and keyboard paths apply to inherited views. The 
 | `editorial/` | Tool-neutral project layer: `wenzelsbibel.sch`, `fixtures/`, `check_fixtures.py`, `data-findings.md`, `README.md` |
 | `docs/` | Published application; `index.html` start page, `editor.html` new interface, `js/editor/` generic editor, `js/projects/wenzelsbibel/` specialisation |
 | `test/` | Inherited proofs and browser tests plus the fork's demo workflow tests |
-| `snapshots/` | Demo protocol and test runs with real files |
+| `snapshots/` | Demo protocol and test runs with real files (planned) |
 | `wireframe/` | Static wireframe with fol. 1r, not published |
 | `data/` | Local edition files and extractions, ignored by git |
 | `prototypes/d-flow/` | Fork-only spike of the flow view (CodeMirror decorations over raw TEI on fol. 1r) with its Node and browser checks |
-| `src/`, `prototypes/` (other than `d-flow`), `pipeline/`, `reports/` | Inherited from the base, unchanged |
+| `prototypes/` | `d-flow/` only, with the inherited dev server configuration and an index page that lists it |
+| `.github/workflows/` | The inherited `checks.yml`, unchanged, and the fork-only `fork-checks.yml` |
+| `src/`, `pipeline/`, `public/` | Inherited from the base, unchanged; `src/` and `public/` serve the spike, the typecheck and the inherited checks |
+
+The fork removed the base's `reports/` folder and the prototypes `a-code`, `b-focus` and `c-hybrid`. A base merge that changes them produces a modify/delete conflict, resolved by keeping the deletion as for the base knowledge files.
 
 ## Build and deployment
 

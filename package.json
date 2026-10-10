@@ -1,5 +1,10 @@
 {
-  "name": "teicrafter",
+  "name": "wenzelsbibel-teicrafter",
+  "description": "Editing environment for the Wenzelsbibel edition (Codex 2759), derived from teiCrafter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter.git"
+  },
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -23,7 +28,8 @@
     "test:e2e": "playwright test",
     "evaluate:editorial": "node test/evaluate-editorial.mjs",
     "dev:prototypes": "vite --config prototypes/vite.config.js",
-    "typecheck:src": "tsc --noEmit -p tsconfig.json"
+    "typecheck:src": "tsc --noEmit -p tsconfig.json",
+    "test:e2e:fork": "playwright test --config playwright.fork.config.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

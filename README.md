@@ -12,7 +12,7 @@ The repository is a Git clone of teiCrafter with the base as `upstream`. Generic
 
 ## Status
 
-The project knowledge base under [knowledge/](knowledge/INDEX.md) is written; the derived application is being built from the base's legacy editor, see [knowledge/plan.md](knowledge/plan.md). Nothing in this repository has been accepted by the edition team.
+The project knowledge base under [knowledge/](knowledge/INDEX.md) is written. The base refactor is merged, the static wireframe shows the layout, a spike in `prototypes/d-flow/` tests the flowing text view, and `editorial/` holds the project Schematron with its fixtures, which the published editor does not use yet. The new interface is not built; the order of the remaining work is in [knowledge/plan.md](knowledge/plan.md). Nothing in this repository has been accepted by the edition team.
 
 ## Run locally
 

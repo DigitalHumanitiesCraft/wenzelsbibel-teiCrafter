@@ -1,36 +1,33 @@
-# preferred-citation points to the ZfdG article that references teiCrafter; it is
-# a field survey rather than a paper solely about this software, used here per
-# the maintainer's stated citation preference.
+# preferred-citation points to the ZfdG article that references teiCrafter, the
+# base of this tool; it is a field survey rather than a paper solely about this
+# software, used here per the maintainer's stated citation preference.
 cff-version: 1.2.0
 message: >-
-  If you use teiCrafter in academic work, please cite the preferred-citation
-  (the ZfdG article). To cite the software itself, use the metadata below.
-title: teiCrafter
+  If you use wenzelsbibel-teiCrafter in academic work, please cite the
+  preferred-citation (the ZfdG article). To cite the software itself, use the
+  metadata below.
+title: wenzelsbibel-teiCrafter
 abstract: >-
-  A browser-based, client-only, lossless editor for arbitrary TEI-XML. The raw
-  TEI string is canonical, edits are offset splices, and serialization is
-  byte-identical outside the edit. An optional LLM on-ramp drafts initial TEI
-  from plaintext; the model assists and the human decides.
+  Editing environment for the Wenzelsbibel edition (Codex 2759), derived from
+  teiCrafter. It keeps the raw TEI string canonical, edits by offset splices
+  and writes byte-identical output outside the edit, and adds the project's
+  editorial layer, registers, image annotations and IIIF facsimiles.
 type: software
 authors:
   - given-names: Christopher
     family-names: Pollin
     orcid: "https://orcid.org/0000-0002-4879-129X"
     affiliation: "Digital Humanities Craft OG"
-repository-code: "https://github.com/DigitalHumanitiesCraft/teiCrafter"
-url: "https://digitalhumanitiescraft.github.io/teiCrafter/"
+repository-code: "https://github.com/DigitalHumanitiesCraft/wenzelsbibel-teiCrafter"
 license: MIT
 keywords:
   - TEI
   - TEI-XML
   - digital scholarly editing
   - text encoding
-  - lossless editing
-  - human-in-the-loop
-# Filled in once a release is tagged and Zenodo mints the concept DOI:
-# version: 0.1.0
-# date-released: "2026-07-10"
-# doi: 10.5281/zenodo.XXXXXXX
+  - Wenzelsbibel
+  - Codex 2759
+# No release is tagged yet; version and date-released follow the first release.
 preferred-citation:
   type: article
   title: "When it was 2024 - Generative AI in the Field of Digital Scholarly Editions"
@@ -56,6 +53,15 @@ preferred-citation:
   doi: 10.17175/2025_008
   url: "https://zfdg.de/2025_008"
 references:
+  - type: software
+    title: teiCrafter
+    abstract: The base editor this tool is derived from.
+    authors:
+      - given-names: Christopher
+        family-names: Pollin
+        orcid: "https://orcid.org/0000-0002-4879-129X"
+    repository-code: "https://github.com/DigitalHumanitiesCraft/teiCrafter"
+    license: MIT
   - type: conference-paper
     title: >-
       New Ways of Creating Research Data: Conversion of Unstructured Text to
