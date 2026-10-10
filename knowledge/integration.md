@@ -27,7 +27,7 @@ This repository exchanges code with the base teiCrafter, files and decisions wit
 
 ```text
 teiCrafter (upstream) --(git merge: generic editor, registry, manifest contract, schema set, tokens)--> fork
-fork --(pull requests to upstream: generic components, bug fixes)--> teiCrafter
+fork --(requirements for generic mechanisms, bug fixes)--> teiCrafter
 
 edition team --(edition XML, Transkribus exports, handbook, ratification decisions)--> operator's machine (data/, not versioned)
 fork (browser) --(edited XML per file)--> edition team
@@ -51,9 +51,9 @@ editorial/ (TEI All now, project ODD later, wenzelsbibel.sch)
 | --- | --- |
 | Consumed | Generic editor under `docs/js/editor/`, the workspace registry, the manifest contract (`teicrafter.project.json` with `workspace`, `imageResolver`, `markup`, `indices`, `views` and the schema set), the vendored TEI All RelaxNG, the Schematron runtime, the design tokens in `docs/css/style.css` |
 | Not changed in the fork | Generic editor modules, the manifest validator, the token sheet, `src/`, the build and test configuration files. A needed change goes to the base first and arrives by merge |
-| Contributed back | The bottom inspector rendering forms from a field table, the autocomplete over register lists, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, and bug fixes found here, as pull requests to the base |
+| Built in the base for the fork | The bottom inspector rendering forms from a field table, the autocomplete over register lists, the notice bar and findings list, the CodeMirror flow view with its vendored bundle, the `tei-document` seam between the legacy offset tree and `src/core`, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, and fixes for bugs found here |
 
-Whether the base accepts inspector and autocomplete as generic components is the base's decision. Until then they live in the fork as new files ([architecture](architecture.md#components)).
+The fork stays a derivation of teiCrafter permanently. Every generic mechanism is built in the base and arrives by merge, and the fork keeps only its vocabularies, Schematron, field tables, German labels and the shell composition ([architecture](architecture.md#components)). Whether the fork's requirements reach the base as a written handoff is open with the operator ([plan](plan.md#open-decisions-and-dependencies)).
 
 Two base tokens in `docs/css/style.css` fall below the text contrast minimum of [design](design.md#accessibility-minima) against white: `--color-review` (about 2.9:1, computed from the token value), which the base uses for the unsaved marker, and `--color-orgName` (about 4.3:1), which the wireframe uses for XML attribute names. The point for the base is to darken both or to add text variants. Until the base changes them, the fork uses `--color-problem` or `--color-link` for the unsaved dot and `--color-text-secondary` for XML attribute names.
 
@@ -117,7 +117,7 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 - Which list element in the register file carries peoples. The handbook says only "Register".
 - Licence of the edition data for project storage. The public TEI header declares CC BY 4.0; the operator's vault records the question as unresolved, so the data are treated as local material.
 - The original project Schematron `Bilderfassung.sch` referenced in `Bildannotationen.xml` is not available.
-- Roles of the users in the edition team, to be confirmed in the first meeting.
+- Roles of the users in the edition team, to be confirmed by the edition team.
 
 ## Pitfalls
 
@@ -136,7 +136,7 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 | Scholarly long form of the specification | TEI-Spezifikation Wenzelsbibel | Operator's vault, `Projects/Wenzelsbibel/` |
 | Handbook rules and divergence list | [editorial-guidelines](editorial-guidelines.md) | `knowledge/editorial-guidelines.md` |
 | Schematron rules, phases, Oxygen and teiCrafter binding | Editorial layer | `editorial/README.md`, `editorial/wenzelsbibel.sch` |
-| Findings on the public data | Dated snapshot | `editorial/data-findings.md` |
+| Findings on the public data | Dated snapshot | `snapshots/schematron-findings-2026-10-10.md` |
 | Formats | [data](data.md) | `knowledge/data.md` |
 | Generic editor contracts | teiCrafter knowledge base | `knowledge/integration.md` and `knowledge/data.md` in the base repository |
 | Base refactor | teiCrafter plan | `knowledge/plan.md` in the base repository |

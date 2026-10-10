@@ -68,7 +68,7 @@ The zone mapping borrows two entity tokens (`workName`, `eventName`) that no chi
 
 ### Menu bar
 
-The menu bar is the single entry point for commands. Its entries are fixed for the prototype.
+The menu bar is the single entry point for commands. Its entries are fixed for the five workflows.
 
 | Menu | Entries |
 | --- | --- |
@@ -113,25 +113,9 @@ The XML view shows the complete source in the same area as the text view, with t
 
 ### Notice bar
 
-The notice bar sits directly above the inspector across the full width of the editor, with the message first and its action at the end. It takes its colours from the state tokens above, states check and result in words as the second channel, and is a live region for assistive technology. When it appears and what it shows and offers is defined in [Specification](specification.md#validation-and-notice-bar). The last wireframe below shows it above an open findings list.
+The notice bar sits directly above the inspector across the full width of the editor, with the message first and its action at the end. It takes its colours from the state tokens above, states check and result in words as the second channel, and is a live region for assistive technology. When it appears and what it shows and offers is defined in [Specification](specification.md#validation-and-notice-bar). The wireframe under `wireframe/` shows it above an open findings list.
 
 ### Wireframes
-
-Text only, after opening fol. 1r, column a. The flow wraps at the pane width, and the line numbers mark the manuscript lines.
-
-```
-+-----------------------------------------------------------------------------+
-| Datei  Bearbeiten  Ansicht  Register  Prüfen  Hilfe                         |
-+-----------------------------------------------------------------------------+
-| [Codex v] codex-2759.xml  < fol. 1r >  Spalte (a) b    [Text|XML] [Faks.]   |
-+-----------------------------------------------------------------------------+
-|  Kopfzeile  PROLOGUS                                                        |
-|          1  Hie hebt ſich an die voꝛ rede vnd •                             |
-|          2  der pꝛologus vber das buch , daz do ...                         |
-|          3  ...                                                             |
-|                                                                             |
-+-----------------------------------------------------------------------------+
-```
 
 Word selected, facsimile on, inspector open, an unsaved edit. Column b of 1r, caret in `Rotlebín`. The register chip follows the run of three words it spans, which crosses the line break inside `merteín`.
 
@@ -156,45 +140,9 @@ Word selected, facsimile on, inspector open, an unsaved edit. Column b of 1r, ca
 +-----------------------------------------------------------------------------+
 ```
 
-XML view, same selection, inspector in element state. The column switch is hidden.
+The text-only frame, the XML view and the notice bar above an open findings list are rendered by the frozen wireframe under `wireframe/` ([plan](plan.md)).
 
-```
-+-----------------------------------------------------------------------------+
-| Datei  Bearbeiten  Ansicht  Register  Prüfen  Hilfe                         |
-+-----------------------------------------------------------------------------+
-| [Codex v] codex-2759.xml ●  < fol. 1r >                [Text|XML] [Faks.]   |
-+-----------------------------------------------------------------------------+
-| [XML formatieren]                                                           |
-|  <ref target="Martin" type="person">                                        |
-|    <w norm="Rotlebin" orig="Rotlebín" xml:id="region_..._19l6_1">            |
-|      <hi rend="rubrication">Rotlebín</hi>          <- selection              |
-|    </w>                                                                     |
-|    <w norm="herren" orig="herren" ...>herren</w>                             |
-+-----------------------------------------------------------------------------+
-| Element  w  region_1639399535558_19l6_1            [Abbrechen] [Anwenden]   |
-| Diplomatisch [Rotlebín]   Normalisiert [Rotlebin]   Register [Person Martin] |
-+-----------------------------------------------------------------------------+
-```
-
-Notice bar after Prüfen, Schematron review with findings, above the findings list opened by "Befunde anzeigen".
-
-```
-+-----------------------------------------------------------------------------+
-| [Codex v] codex-2759.xml  < fol. 1r >  Spalte (a) b    [Text|XML] [Faks.]   |
-+-----------------------------------------------------------------------------+
-|          1  Hie hebt ſich an die voꝛ rede vnd •                             |
-|          2  ...                                                             |
-+-----------------------------------------------------------------------------+
-| Schematron review: 2 Befunde   Wort „...“ ohne @xml:id, fol. 1r a Z. 4      |
-|                                                       [Befunde anzeigen]    |
-+-----------------------------------------------------------------------------+
-| Befunde  Schematron review                                                x |
-| Wort „...“ ohne @xml:id                               fol. 1r a Z. 4        |
-| Wort „...“ ohne @xml:id                               fol. 1r b Z. 12       |
-+-----------------------------------------------------------------------------+
-```
-
-Labels beyond the agreed menu entries, such as Diplomatisch, Normalisiert, Anwenden, XML-Stelle and the notice texts, are working labels until the meeting confirms them. The finding shown in the last wireframe is the wireframe's stand-in, and the real messages come from the project Schematron.
+Labels beyond the agreed menu entries, such as Diplomatisch, Normalisiert, Anwenden, XML-Stelle and the notice texts, are working labels until the edition team confirms them. The findings the wireframe shows are stand-ins, and the real messages come from the project Schematron.
 
 ## Content and interaction hierarchy
 

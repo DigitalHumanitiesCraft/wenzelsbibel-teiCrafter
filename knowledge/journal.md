@@ -8,7 +8,7 @@ method:
   url: https://lisa.gerda-henkel-stiftung.de/digitale_geschichte_pollin
 template:
   name: Vorlage Journal
-  version: 0.4
+  version: 0.5
   url: https://dhcraft.org/Promptotyping/promptotyping-document/journal
 status: active
 created: 2026-10-10
@@ -19,9 +19,13 @@ related: [project, specification, plan, handoff]
 
 # Journal
 
-This journal is the curated backward-looking provenance index of the project. Current facts and rules stand in the responsible declarative or action documents, accepted future work in [plan.md](plan.md), open inputs in [handoff.md](handoff.md).
-
 ## Entries
+
+### 2026-10-10 integrated Permanent derivation, scope without the meeting, frozen wireframe
+
+- Source: operator decisions in the session of 2026-10-10 with the repository analysis, and the restructuring of the same day that moved the findings snapshot to `snapshots/schematron-findings-2026-10-10.md` and the extraction script to `wireframe/extract_data.py` and bundled the fork's checks in `npm run check:fork`.
+- Target: the action layer, the README, [plan.md](plan.md), [architecture.md](architecture.md), [integration.md](integration.md), [project.md](project.md), [specification.md](specification.md), [data.md](data.md), [editorial-guidelines.md](editorial-guidelines.md), [testing.md](testing.md), [design.md](design.md), [INDEX.md](INDEX.md), [handoff.md](handoff.md) and the audience of the two wireframe review snapshots.
+- Result: The fork stays a derivation of teiCrafter permanently. Every generic mechanism, namely inspector, register autocomplete, notice bar and findings list, the CodeMirror flow view with its vendored bundle and the `tei-document` seam, is built in the base, which reverses the plan to build inspector and autocomplete as fork files, so phase 5 is split into base work and the fork's composition. The first meeting is no longer the fixed point of the scope, and the five workflows are the product core, finished enough when the edition team edits with the tool. The wireframe is frozen and deleted once the demo workflow tests pass, and model proposals stay off permanently, with the base's proposal modules named as unused. Repository structure, data findings and the fol. 1r rights point each kept one owner. The handoff item on repository actions was removed because the blockers of phases 6 and 7 carry it. The plan holds the four points left open with the operator, namely the Schematron source under `docs/`, a JSON source for the vocabularies, the fol. 1r excerpt and a handoff to the base.
 
 ### 2026-10-10 integrated Wireframe extended to every workflow before the operator test
 

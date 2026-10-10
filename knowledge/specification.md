@@ -21,13 +21,13 @@ related: [project, editorial-guidelines, data, design, architecture, testing, in
 
 # Specification
 
-wenzelsbibel-teiCrafter is the teiCrafter editor derived for the edition of the Wenzelsbibel (Codex 2759, Austrian National Library), reduced to one workspace in which the edition team at the Paris Lodron University Salzburg (PLUS) transcribes, comments, links registers, describes miniatures and validates against the project rules. This document states what the tool must do for that edition and why. Its first target is a prototype for the first meeting with the edition team, which shows five workflows on real data of fol. 1r. The editorial rules come from the project's own Transkriptionshandbuch (version February 2025), distilled in [Editorial guidelines](editorial-guidelines.md). The interface that carries these requirements is defined in [Design](design.md).
+wenzelsbibel-teiCrafter is the teiCrafter editor derived for the edition of the Wenzelsbibel (Codex 2759, Austrian National Library), reduced to one workspace in which the edition team at the Paris Lodron University Salzburg (PLUS) transcribes, comments, links registers, describes miniatures and validates against the project rules. This document states what the tool must do for that edition and why. Its core is five workflows, specified and tested on real data of fol. 1r. The editorial rules come from the project's own Transkriptionshandbuch (version February 2025), distilled in [Editorial guidelines](editorial-guidelines.md). The interface that carries these requirements is defined in [Design](design.md).
 
 ## Purpose and scope
 
-The prototype lets the edition team judge whether a browser-based open-source tool can replace the expected ediarum adaptation for Oxygen XML. It therefore has to work on the real codex and image-annotation files, follow the handbook encodings, and keep the source fidelity of the base. PLUS decides on the scholarly data model, project-specific schema rules, rights and acceptance, so every editorial convention below that the handbook does not settle is marked open.
+The tool is meant to let the edition team edit the Wenzelsbibel in a browser-based open-source tool instead of the expected ediarum adaptation for Oxygen XML. It therefore has to work on the real codex and image-annotation files, follow the handbook encodings, and keep the source fidelity of the base. It is finished enough when the edition team actually edits with it. PLUS decides on the scholarly data model, project-specific schema rules, rights and acceptance, so every editorial convention below that the handbook does not settle is marked open.
 
-The meeting prototype covers the five workflows in [Epics and user stories](#epics-and-user-stories). The following are outside the prototype and get no interface surface in it:
+The scope is the five workflows in [Epics and user stories](#epics-and-user-stories), the product core that grows from here. The following are outside the scope and get no interface surface:
 
 - ODD customisation and generation
 - project ZIP package (export and restore of the linked collection as one archive)
@@ -60,7 +60,7 @@ LLM assistance is switched off for this project, so the model-provenance require
 
 ## Epics and user stories
 
-Two roles use the tool, the project lead (Germanistik, PLUS) and the student assistant. Both roles are assumptions until the first meeting confirms them. Each story names its role, the acceptance criteria a browser test can check on fol. 1r, and the encoding it reads or writes. Every story is a hypothesis whose validation is the meeting demo and the edition team's assessment there.
+Two roles use the tool, the project lead (Germanistik, PLUS) and the student assistant. Both roles are assumptions until the edition team confirms them. Each story names its role, the acceptance criteria a browser test can check on fol. 1r, and the encoding it reads or writes. Every story is a hypothesis whose validation is the edition team's assessment of the running workflow.
 
 ### Epic 1: Transcribe a page against the facsimile
 
@@ -292,13 +292,13 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 | Base of the fork | 2026-10-10 | The fork derives from the legacy application under `docs/`, and the source-first core under `src/` stays a parallel line upstream. | The legacy app already implements the Wenzelsbibel forms, the facsimile, the schema set and the save gate, while the new core has no application shell yet. |
 | Fork mechanism | 2026-10-10 | A Git fork with the upstream remote, merging base changes, with no npm package for now. | Generic mechanisms are refactored in the base and reach the fork by merge without a packaging step. |
 | Rule source | 2026-10-10 | The project's Transkriptionshandbuch is the rule source, and the DHCraft TEI specification is a derived draft. | The handbook is the edition team's published and practised rule set, and the real data follows it. |
-| Register encoding | 2026-10-10 | Register links are inline on the words, as the handbook rules, and the base's stand-off `spanGrp[@type='register-links']` is not used for this project. The tool reads the handbook form `ref[@type][@target]` with bare IDs and the `#ID` form of the image annotations. The written form is proposed to the edition team as `rs[@type='person' or 'place' or 'folk'][@ref]`, because `@ref` of att.canonical is the TEI attribute for pointing a name at its canonical entry, while `ref` is a hyperlink element whose `@target` serves another purpose. Until the team decides, the prototype writes the proposed form and reads both; the pointer form (`#ID` or `register.xml#ID`) is decided with the team. | The codex already carries thousands of handbook-form references. The proposal changes only the element and attribute name, keeps every value, and can be applied to the existing data in one deterministic run. |
+| Register encoding | 2026-10-10 | Register links are inline on the words, as the handbook rules, and the base's stand-off `spanGrp[@type='register-links']` is not used for this project. The tool reads the handbook form `ref[@type][@target]` with bare IDs and the `#ID` form of the image annotations. The written form is proposed to the edition team as `rs[@type='person' or 'place' or 'folk'][@ref]`, because `@ref` of att.canonical is the TEI attribute for pointing a name at its canonical entry, while `ref` is a hyperlink element whose `@target` serves another purpose. Until the team decides, the tool writes the proposed form and reads both; the pointer form (`#ID` or `register.xml#ID`) is decided with the team. | The codex already carries thousands of handbook-form references. The proposal changes only the element and attribute name, keeps every value, and can be applied to the existing data in one deterministic run. |
 | Shortcut scheme | 2026-10-10 | No shortcut scheme beyond browser and editor defaults (Ctrl+Z, Ctrl+Y, Ctrl+F, Ctrl+S), Escape and Ctrl+E. | A scheme the team has to learn is a cost before the workflows are accepted. |
 | Interface language | 2026-10-10 | German interface labels. | The edition team and the handbook work in German. |
 | Inspector position | 2026-10-10 | A bottom inspector instead of a third column. | Text and facsimile need the width, and the inspector serves both views as one component. |
 | Check feedback | 2026-10-10 | No permanent status line. The unsaved marker is a dot next to the file name, and a notice bar above the inspector appears only when well-formedness is broken or an explicit check returned findings, with "Befunde anzeigen" opening the findings list. No check line per field. | A permanent status line and per-field lines add standing noise, while a notice that appears only when something needs action keeps the attention on the text. |
 | Text view | 2026-10-10 | One continuous editable flow per column with a real caret, built in the product as a CodeMirror 6 view with replace decorations over the raw XML. Line numbers replace the switch between line-by-line and running text. | The spike in `prototypes/d-flow` showed on fol. 1r that such a view keeps untouched bytes identical and edits word text without touching tags, and one rendering keeps line reference and reading flow together. |
-| Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. Rules and phase assignment are listed in the [editorial layer](../editorial/README.md#phases). | The team must be able to save the existing data, while the review findings on the data (`editorial/data-findings.md`) need editorial decisions first. |
+| Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. Rules and phase assignment are listed in the [editorial layer](../editorial/README.md#phases). | The team must be able to save the existing data, while the review findings on the data ([findings snapshot](../snapshots/schematron-findings-2026-10-10.md)) need editorial decisions first. |
 
 ## Open questions
 
@@ -317,7 +317,7 @@ Questions for the edition team:
 2. Whether codex `ref` targets and image-annotation `person/@corresp` resolve against one shared register file.
 3. Which roles use the tool and with which permissions (project lead, student assistants, others).
 4. Whether the comment sigle stays as trailing text such as `(MK)` or moves to `@resp`.
-5. Whether linking needs unlinking and relinking in the prototype, since the agreed scope names linking and entry creation only.
+5. Whether linking needs unlinking and relinking, since the agreed scope names linking and entry creation only.
 6. Whether the team adopts the [working model](integration.md#working-model), including the split of the codex into book files.
 
 ## Working model
@@ -330,7 +330,7 @@ The operator's proposal for how the edition team works with the tool, with the e
 
 ## Acceptance scenarios
 
-Each scenario is one narrative for the meeting demo on fol. 1r, run with the local edition files.
+Each scenario is one narrative of a workflow on fol. 1r, run with the local edition files, and the basis of one demo workflow test.
 
 | Workflow | Narrative and observable outcome |
 | --- | --- |
@@ -342,4 +342,4 @@ Each scenario is one narrative for the meeting demo on fol. 1r, run with the loc
 
 ## Related
 
-[Project](project.md) states purpose, partners and responsibilities. [Editorial guidelines](editorial-guidelines.md) distil the handbook vocabularies that the markup actions and Schematron use. [Data](data.md) defines the files, their encodings and their local handling. [Design](design.md) defines the interface that carries these requirements, [Architecture](architecture.md) the fork's modules, the base refactor and the external services ONB IIIF and ICONCLASS, [Testing](testing.md) the browser tests for the acceptance criteria, [Integration](integration.md) the exchange with the base, the edition team and Oxygen, and [Plan](plan.md) the order of work toward the meeting.
+[Project](project.md) states purpose, partners and responsibilities. [Editorial guidelines](editorial-guidelines.md) distil the handbook vocabularies that the markup actions and Schematron use. [Data](data.md) defines the files, their encodings and their local handling. [Design](design.md) defines the interface that carries these requirements, [Architecture](architecture.md) the fork's modules, the base refactor and the external services ONB IIIF and ICONCLASS, [Testing](testing.md) the browser tests for the acceptance criteria, [Integration](integration.md) the exchange with the base, the edition team and Oxygen, and [Plan](plan.md) the order of the remaining work.

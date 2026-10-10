@@ -41,7 +41,7 @@ Where the layers conflict, the handbook prevails, and the real data shows how th
 
 The handbook describes a Transkribus workflow: text regions with structure types, first transcription by the PyLaia HTR model WB-DEA, transcription "so genau wie möglich" without normalisation in Transkribus, and tags with properties that an export maps to TEI. The rendering columns of the handbook govern the ONB reading views; the tool's text view can reuse them as display conventions (for example red underline for rubrication, bold for initials), which [design](design.md) decides.
 
-Observations in the tables below come from the public TEI of the codex and the image annotations, downloaded from edition.onb.ac.at on 2026-10-10, and from the review run of the project Schematron over the same files, whose counts stand in `editorial/data-findings.md`. "fol. 1r" marks an example from the first page; "codex" marks a value found elsewhere in the body.
+Observations in the tables below come from the public TEI of the codex and the image annotations, downloaded from edition.onb.ac.at on 2026-10-10, and from the review run of the project Schematron over the same files, whose counts stand in the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md). "fol. 1r" marks an example from the first page; "codex" marks a value found elsewhere in the body.
 
 ## Transcription layer
 
@@ -174,6 +174,7 @@ The image annotations live in a separate file and are outside the handbook; thei
 | Feature | Encoding in the codex | Open decision |
 |---|---|---|
 | Book and paratext divisions | `div[@type='book'][@xml:id='Genesis']`, `div[@type='paratext'][@xml:id='Transition1']`, `div[@type='prologus'][@xml:id='Prologus']`; one `div[@type='Transition2.1']` | The irregular type value needs cleanup |
+| Header loci | `msItem/locus/@target` points to the divisions (`#Transition0`, `#GenLat`); the targets `#Prologue`, `#Gen` and `#Transition2` match no `div/@xml:id`, whose values are `Prologus`, `Genesis` and `Transition2.1` | The unmatched targets need correction |
 | Chapters and verses | `div[@xml:id='Genesis.1']` and `l[@xml:id='Genesis.1.1']` | See verse numbering below |
 | Paragraphs | `p[@ana='paragraph']`; `milestone/@unit` = `paragraph_beginning` or `paragraph-continued_beginning` | Agree with Transkribus export |
 | Page, column, line | `pb[@n='1r'][@facs='#page_32494516']`, empty `cb`, `lb[@facs='#region_…']` or `lb[@facs='#line_…']` | Stable |
@@ -219,7 +220,7 @@ The following values are the input for `editorial/wenzelsbibel.sch` and for the 
 | `Bilderfassung.sch` | Referenced by the image annotations according to the DHCraft specification, found neither in the material nor on the ONB server | The project Schematron is a new draft, not a reconstruction | Edition team, if the file can be recovered |
 | Rules marked "Noch nicht umgesetzt" | `del[@type='erasure']`, `damage/@agent`, `add/@place` already occur in the data | Ratify as implemented and fix their value lists | Edition team |
 | Text region element | Handbook `fw/@ana`, data `seg/@ana` except for the header; three spellings of border decoration | Schematron rule and inspector action for regions | Edition team |
-| Verse numbering | The codex carries chapters and verses as `div/@xml:id` and `l/@xml:id` (`Genesis.1.1`); the handbook names a verse-start character with reference to Vulgate and Einheitsübersetzung; teiCrafter offers a separate `spanGrp[@type='bible-verses']` | Whether verse IDs are authoritative and which reference edition they follow; the Bible-verse form is out of the meeting prototype | Edition team |
+| Verse numbering | The codex carries chapters and verses as `div/@xml:id` and `l/@xml:id` (`Genesis.1.1`); the handbook names a verse-start character with reference to Vulgate and Einheitsübersetzung; teiCrafter offers a separate `spanGrp[@type='bible-verses']` | Whether verse IDs are authoritative and which reference edition they follow; the Bible-verse form is outside the current scope | Edition team |
 | Normalisation policy | `w/@norm` exists throughout; the handbook documents no normalisation rules | Field semantics in the inspector, review criteria | Edition team |
 | Values outside the handbook | See the "Data only" column above | Accept, rename or clean up | Edition team |
 | Apparatus types and responsibility | Seven established types, further values to be treated as typo or ratified ([apparatus](#apparatus)); sigle in the note text | Inspector type list; whether `@resp` is added | Edition team |
@@ -232,5 +233,5 @@ The following values are the input for `editorial/wenzelsbibel.sch` and for the 
 - Public TEI of `o:wen.codex-2759` and `o:wen.bildannotationen--codex-2759` from edition.onb.ac.at, downloaded 2026-10-10. Element and attribute values were inventoried over the full files; examples are quoted from them.
 - DHCraft vault document "TEI-Spezifikation Wenzelsbibel" (status draft, updated 2026-10-08), read in full.
 - teiCrafter upstream knowledge documents `knowledge/wenzelsbibel.md` and `knowledge/data.md` in https://github.com/DigitalHumanitiesCraft/teiCrafter, read in full; the register and apparatus behaviour was cross-checked in `docs/js/projects/wenzelsbibel/wenzels-register-model.js` and `wenzels-text-model.js`.
-- `editorial/data-findings.md`, the dated review run of the project Schematron over the public files of 2026-10-10, read in full.
+- `snapshots/schematron-findings-2026-10-10.md`, the dated review run of the project Schematron over the public files of 2026-10-10, read in full.
 - The TEI P5 Guidelines are named as the governing standard; no rule in this document is derived from a reading of them in this session.

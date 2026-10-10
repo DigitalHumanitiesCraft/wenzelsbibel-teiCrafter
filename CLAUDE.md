@@ -41,12 +41,12 @@ Read `knowledge/design.md` before generating or changing interface or interface 
 
 ## Scope
 
-The prototype for the first meeting shows five workflows and nothing else; its scope and exclusions are decided in `knowledge/specification.md` (Purpose and scope). Edition data and images are never committed and never redistributed.
+The scope is the five workflows of `knowledge/specification.md` (Purpose and scope), the product core that grows until the edition team actually edits with the tool. The exclusions are decided in the same section. Edition data and images are never committed and never redistributed.
 
 ## Tools
 
-- Commands: `npm install`, `npm run dev` (serves `docs/`), `npm run test:e2e` (the inherited Playwright suites against the Vite build in `dist/`, per `playwright.config.js`), `npm run test:e2e:fork` (the fork's `wb-demo-` suites through the allow-list in `playwright.fork.config.js`), `node test/verify.mjs` (proofs and contract checks), `npm run check:biome`.
-- Required before a commit: `python editorial/check_fixtures.py` (fixture check), `node prototypes/d-flow/check.mjs` (spike check), `npm run typecheck:src`, `python -m ruff check editorial`, plus the inherited gate `node test/verify.mjs`. After a change to `wireframe/`, run the walkthroughs `node wireframe/checks/<name>.mjs` against `python -m http.server 8765` at the root. `fork-checks.yml` runs the first four on GitHub; `knowledge/testing.md` holds the full list.
+- Commands: `npm install`, `npm run dev` (serves `docs/`), `npm run test:e2e` (the inherited Playwright suites against the Vite build in `dist/`, per `playwright.config.js`), `npm run test:e2e:fork` (the fork's `wb-demo-` suites through the allow-list in `playwright.fork.config.js`), `node test/verify.mjs` (proofs and contract checks).
+- Required before a commit: `npm run check:fork`, whose steps `package.json` defines, plus the inherited gate `node test/verify.mjs`. After a change to `wireframe/`, run the walkthroughs `node wireframe/checks/<name>.mjs` against `python -m http.server 8765` at the root. The wireframe is frozen and gets no features or refactoring. `knowledge/testing.md` holds the full list.
 - Conventions: code, identifiers, comments, commit messages and knowledge documents in English; interface labels in German. No emojis. No em or en dashes as punctuation. Commit messages imperative, one line, body only where the diff does not explain itself.
 - Git: `upstream` is DigitalHumanitiesCraft/teiCrafter, `origin` is DigitalHumanitiesCraft/wenzelsbibel-teiCrafter. Merge the base with `git fetch upstream` and `git merge upstream/main`; on a conflict in the base's former `knowledge/` files keep the deletion. Push, tags and releases stay with the operator.
 - Data: `/data/` at the repository root is ignored, `docs/data/` is not affected. Never add edition files or images to the repository.

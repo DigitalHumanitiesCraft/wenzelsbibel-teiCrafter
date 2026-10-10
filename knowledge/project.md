@@ -24,13 +24,13 @@ related: [editorial-guidelines, data, specification, design, architecture, testi
 
 wenzelsbibel-teiCrafter is the editing environment for the digital edition of Codex 2759, the Wenzelsbibel held by the Austrian National Library in Vienna. It is a derived version of [teiCrafter](https://github.com/DigitalHumanitiesCraft/teiCrafter), the browser-based TEI editor of Digital Humanities Craft, specialised for the word-level TEI of the codex, its image annotations and its registers. The repository holds the tool and its project layer. The edition itself, meaning the TEI files, the Transkribus exports and the images, belongs to the edition team at the Paris Lodron University Salzburg (PLUS) and stays outside this repository.
 
-The derivation follows one principle. Everything the Wenzelsbibel needs that another edition could need as well is built in the teiCrafter base and merged into this repository. Everything that encodes the rules of this edition, its vocabularies, its field tables, its schema set and its German interface labels, lives here. The [architecture](architecture.md) describes the merge path and the three zones this repository changes.
+The derivation is permanent and follows one principle. teiCrafter is the product, and everything the Wenzelsbibel needs that another edition could need as well is built in the teiCrafter base and merged into this repository. Everything that encodes the rules of this edition, its vocabularies, its field tables, its schema set and its German interface labels, lives here. The [architecture](architecture.md) describes the merge path and the three zones this repository changes.
 
 ## Purpose and users
 
-The tool lets the edition team continue the existing word edition in the browser without an Oxygen licence or a server. Its first purpose is a prototype for the first meeting with the edition team, in which the team decides whether it moves from the expected Oxygen workflow to this tool. The [specification](specification.md) names the five workflows the prototype must show and what is deliberately left out.
+The tool lets the edition team continue the existing word edition in the browser without an Oxygen licence or a server. The edition team decides whether it moves from the expected Oxygen workflow to this tool, and the tool is finished enough when the team actually edits with it. The [specification](specification.md) names the five workflows that form its core and what is deliberately left out.
 
-Users are the project lead at the department of German studies at PLUS and the student assistants who transcribe and annotate. The exact roles and their division of labour are confirmed in the meeting.
+Users are the project lead at the department of German studies at PLUS and the student assistants who transcribe and annotate. The exact roles and their division of labour are confirmed by the edition team.
 
 ## Rule source
 
@@ -42,7 +42,7 @@ PLUS decides the scholarly data model, the project-specific schema rules, the ri
 
 ## Rights boundary
 
-The codex and the image annotations are accessible on the edition server of the Austrian National Library, and the images resolve through its IIIF image service. Technical access implies no permission to store, redistribute or publish the data or the images. The repository therefore carries no edition data; a local `data/` folder is ignored by Git, and test material consists of synthetic twins and hand-built fixtures, with an extraction of fol. 1r for the wireframe kept local, see [data.md](data.md#storage-and-rights). The one exception is the tracked excerpt `prototypes/d-flow/fixture/fol1r.xml` of the flow spike, which stays pending the operator's decision ([handoff](handoff.md)).
+The codex and the image annotations are accessible on the edition server of the Austrian National Library, and the images resolve through its IIIF image service. Technical access implies no permission to store, redistribute or publish the data or the images. The repository therefore carries no edition data; a local `data/` folder is ignored by Git, and test material consists of synthetic twins and hand-built fixtures, with an extraction of fol. 1r for the wireframe kept local, see [data.md](data.md#storage-and-rights). The tracked excerpt `prototypes/d-flow/fixture/fol1r.xml` of the flow spike departs from this rule ([handoff](handoff.md)).
 
 ## Relation to the base
 

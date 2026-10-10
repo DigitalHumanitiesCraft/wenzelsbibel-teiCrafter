@@ -31,7 +31,7 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 | [data.md](data.md) | Material | Which files and formats does the tool process? | a file, the manifest or the schema set changes |
 | [specification.md](specification.md) | Specification | What must the tool do and why? | a requirement, a decision or an acceptance scenario changes |
 | [design.md](design.md) | Design | How does the interface look and behave? | the interface or its interaction rules change |
-| [architecture.md](architecture.md) | Architecture | How is the derived tool built and kept mergeable with the base? | a module, the merge path or the deployment changes |
+| [architecture.md](architecture.md) | Architecture | How is the derived tool composed from the base and kept mergeable with it? | a module, the merge path or the deployment changes |
 | [testing.md](testing.md) | Quality Assurance | What is guaranteed, what is not, how is it checked? | a test layer or a claim changes |
 | [integration.md](integration.md) | Integration | What does this repository exchange with the base, the edition team and Oxygen, and under which working model? | a contract changes |
 | [plan.md](plan.md) | Planning | What comes next and in which order? | a phase is accepted, finished or dropped |
@@ -41,12 +41,9 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 ## Storage zones
 
 - `knowledge/` holds the maintained documents above, including `handoff.md` as the process inbox.
-- `editorial/` holds the tool-neutral project layer: the project Schematron `wenzelsbibel.sch`, its fixtures, the fixture check, the dated findings snapshot and a README with the rule table and the tool bindings. Oxygen and this tool are meant to read the same files from here.
-- `docs/` holds the published application, inherited from the base; the start page and editor shell of this repository are planned there ([architecture](architecture.md#derivation-model)).
-- `wireframe/` holds the wireframe with fol. 1r, in which every workflow of the specification runs in memory with undo; `wireframe/checks/` holds its browser walkthroughs. It is served locally and not published.
-- `prototypes/d-flow/` holds the spike of the flow view with its Node and browser checks.
-- `snapshots/` is the place for dated reports such as the demo protocol and test runs with the real files.
-- `data/` is ignored by Git and holds the edition files on a machine that has them.
+- `snapshots/` holds dated reports and frozen states, such as the Schematron findings on the public data and the wireframe reviews.
+
+Every other folder, including the frozen `wireframe/` and the condition under which it is deleted, is described in [architecture](architecture.md#repository-structure).
 
 ## Reading paths
 

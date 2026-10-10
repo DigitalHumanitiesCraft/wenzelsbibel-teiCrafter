@@ -19,7 +19,7 @@ template:
   alias: https://dhcraft.org/Promptotyping/#promptotyping-document-report
 audience:
   type: stakeholder
-  name: Editionsteam Wenzelsbibel und Projektleitung
+  name: Operator
 report-genre: stakeholder-update
 ---
 

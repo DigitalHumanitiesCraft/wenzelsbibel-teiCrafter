@@ -21,7 +21,7 @@ related: [architecture, specification, editorial-guidelines, data, integration, 
 
 # Testing
 
-This document states what the Wenzelsbibel editor guarantees, what it does not, and how each claim is checked. The fork inherits the base's evidence layers unchanged and adds its own: one browser test per meeting workflow, Schematron fixtures per rule with a review run as report, the checks of the flow spike, and a recorded run against the real edition files. Technical evidence never stands in for the edition team's scholarly judgment.
+This document states what the Wenzelsbibel editor guarantees, what it does not, and how each claim is checked. The fork inherits the base's evidence layers unchanged and adds its own: one browser test per workflow, Schematron fixtures per rule with a review run as report, the checks of the flow spike, and a recorded run against the real edition files. Technical evidence never stands in for the edition team's scholarly judgment.
 
 ## Test strategy
 
@@ -30,9 +30,9 @@ This document states what the Wenzelsbibel editor guarantees, what it does not, 
 | Engine proofs | Inherited `test/proofs/`, including the `wenzels_*_check.mjs` proofs for text, image, register and project-check models | Lost or altered bytes outside a deliberate edit, wrong splice, unsafe register deletion, broken note projection |
 | Schema and contract checks | Inherited proofs for manifest, schema set, schema files, worker and cache | A manifest or schema set that loads wrongly, stale validation reused as authorisation |
 | Browser checks | Inherited `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites (import, project, references, register protection, schema, workspace) | Interaction, recovery, working copy, package and output gate failures in Chromium and Firefox |
-| Demo workflow tests (fork) | `test/e2e/wb-demo-*.spec.js`, one per workflow | A meeting workflow that no longer runs end to end in the new interface |
+| Demo workflow tests (fork) | `test/e2e/wb-demo-*.spec.js`, one per workflow | A workflow that no longer runs end to end in the new interface |
 | Schematron fixtures (fork) | `editorial/fixtures/` with `editorial/check_fixtures.py` (Python, lxml), under the fixture rules of the [editorial layer](../editorial/README.md); a required run | A rule that fires on valid encoding or misses the error it names, a rule without both fixtures, a fixture whose phase or severity disagrees with the schema |
-| Review run (fork) | `editorial/check_fixtures.py --data` over local edition files; a report, never a gate, recorded as a dated snapshot in `editorial/data-findings.md` | Data that violate the handbook rules or the editorial guidelines, as input for editorial decisions |
+| Review run (fork) | `editorial/check_fixtures.py --data` over local edition files; a report, never a gate, recorded as a dated snapshot under `snapshots/`, such as the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) | Data that violate the handbook rules or the editorial guidelines, as input for editorial decisions |
 | Flow spike checks (fork) | `prototypes/d-flow/check.mjs` (Node) and `prototypes/d-flow/browser-check.mjs` (Chromium against the prototype dev server) on the fol. 1r excerpt | Lost bytes in a round trip or edit of the flow view, typing that touches a tag, wrong `@orig` sync, broken selection snapping, a wrap that inserts more than two tags or cuts an element |
 | Real-file run (fork) | `snapshots/`, recorded on the operator's machine | Behaviour on the full codex, the real image annotations and registers |
 | Scholarly acceptance | Edition team at PLUS | Readings, normalisations, register identifications, apparatus content |
@@ -41,15 +41,15 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 
 ## What is guaranteed
 
-| Claim | Evidence | Result |
+| Claim | Established by | Limit |
 | --- | --- | --- |
-| Opening and saving preserves every byte outside deliberate edits | Inherited engine proofs and browser round trips | Run in the inherited checks workflow, which passed on the fork on GitHub on 2026-10-10; rerun after each merge |
-| Save is blocked unless TEI All and the project Schematron pass for the exact bytes | Inherited output-gate proofs and browser tests | Part of the same workflow, with the workspace default schema set, which still holds the base draft Schematron; the editorial Schematron enters the gate with its published copy in phase 4 |
-| The flow view keeps untouched bytes identical and edits word text and `@orig` without touching tags | `prototypes/d-flow/check.mjs` | Passed on 2026-10-10 on the fol. 1r excerpt with LF and CRLF line endings; the full codex is open until phase 5 |
-| Each meeting workflow runs end to end in the new interface | `wb-demo-*.spec.js` | Open until phase 5 |
-| Each project Schematron rule accepts its positive and rejects its negative fixture | `python editorial/check_fixtures.py` | Passed on 2026-10-10 in lxml; not yet run in the browser runtime |
-| The `editing` phase accepts the published codex and image annotations unchanged | `check_fixtures.py --phase editing --data` over the public files | No finding on 2026-10-10 (`editorial/data-findings.md`) |
-| The real codex, image annotations and registers open, edit and save through the gate | Run recorded under `snapshots/` | Open until phase 6 |
+| Opening and saving preserves every byte outside deliberate edits | Inherited engine proofs and browser round trips in `node test/verify.mjs` and the inherited `checks.yml`, rerun after each merge | The browser round trips drive the base shell |
+| Save is blocked unless TEI All and the project Schematron pass for the exact bytes | Inherited output-gate proofs and browser tests in the same runs | The workspace default schema set still holds the base draft Schematron; the editorial Schematron enters the gate with its published copy in phase 4 |
+| The flow view keeps untouched bytes identical and edits word text and `@orig` without touching tags | `node prototypes/d-flow/check.mjs`, part of `npm run check:fork`, with LF and CRLF line endings | fol. 1r excerpt only; the full codex is open until phase 5a |
+| Each workflow runs end to end in the new interface | `npm run test:e2e:fork` over `wb-demo-*.spec.js` | No suite exists until phase 5b |
+| Each project Schematron rule accepts its positive and rejects its negative fixture | `python editorial/check_fixtures.py`, part of `npm run check:fork` | Runs in lxml; not yet in the browser runtime |
+| The `editing` phase accepts the published codex and image annotations unchanged | The review run `check_fixtures.py --phase editing --data` over the public files, recorded under `snapshots/` | Holds for the data state of the recorded run |
+| The real codex, image annotations and registers open, edit and save through the gate | Real-file run recorded under `snapshots/` | Open until phase 6 |
 
 ## Acceptance
 
@@ -65,14 +65,14 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 ## What is deliberately not checked
 
 - Scholarly correctness of readings, normalisations, register identifications and apparatus text. Only the edition team can establish it.
-- User acceptance. The meeting demo shows the workflows; acceptance requires the team's decision.
+- User acceptance. The demo workflow tests show that the workflows run; acceptance requires the team's decision.
 - Performance on the full codex beyond the limits the base documents in its [editorial completion report](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/editorial-completion-2026-09-11.md). The first full validation of a changed codex is expensive, particularly in Firefox.
 - Real-file evidence in CI. Edition files and images are not redistributable, so CI runs synthetic twins only; a real-file claim needs a run that actually supplied the files.
 - Image rendering from the ONB server in CI. Browser tests stub the IIIF responses; the real-file run covers the live service.
 
 ## Known exceptions and limits
 
-The new interface will replace the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5. Engine proofs remain fully inherited.
+The new interface will replace the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5b. Engine proofs remain fully inherited.
 
 The fixture check runs the Schematron through lxml with the ISO skeleton for XSLT 1.0, while the editor runs raw Schematron on browser XPath; why both report the same findings is explained under [runtime limits](../editorial/README.md#runtime-limits), and a browser run of the fixtures against the teiCrafter runtime is still to be added.
 
@@ -80,8 +80,8 @@ The review run is slow on the full codex, mostly in the anchor rules ([runtime l
 
 Two workflows run on GitHub.
 
-- `.github/workflows/checks.yml` is inherited and stays identical to the base. It runs `npm run evaluate:editorial` (proofs, harness, types, build and the inherited browser workflows in Chromium and Firefox) on every push and pull request, and it passed on the fork on GitHub on 2026-10-10. Because `test/evaluate-editorial.mjs` expects the base suites, it keeps testing the base shell.
-- `.github/workflows/fork-checks.yml` is fork-only and runs on push and pull request to `main`. It adds the fork's required runs: the flow spike check `node prototypes/d-flow/check.mjs`, `npm run typecheck:src`, the typecheck of `docs/js` with `npx tsc --noEmit -p jsconfig.json`, the fixture check `python editorial/check_fixtures.py` and `python -m ruff check editorial`. It uploads no Pages artifact.
+- `.github/workflows/checks.yml` is inherited and stays identical to the base. It runs `npm run evaluate:editorial` (proofs, harness, types, build and the inherited browser workflows in Chromium and Firefox) on every push and pull request. Because `test/evaluate-editorial.mjs` expects the base suites, it keeps testing the base shell.
+- `.github/workflows/fork-checks.yml` is fork-only and runs on push and pull request to `main`. It runs `npm run check:fork`, whose steps `package.json` defines (flow spike check, the typechecks of `src/` and `docs/js`, fixture check, ruff over `editorial/` and `wireframe/`, Biome). It uploads no Pages artifact.
 
 The flow spike browser check needs the prototype dev server and runs locally only.
 
@@ -90,19 +90,13 @@ The flow spike browser check needs the prototype dev server and runs locally onl
 Use the Node and npm versions pinned in `package.json`, then `npm ci` and `npx playwright install chromium firefox`. Commands run from the repository root.
 
 ```text
-node test/verify.mjs           # engine proofs, Python/lxml harness, typecheck, Biome, Vite build, asset contract
-npm run check:biome            # Biome over docs/js, test/e2e and the configs
-npm run test:e2e               # inherited Playwright suites, Chromium and Firefox; meaningful in the base
-npm run test:e2e:fork          # fork demo suites (wb-demo-*.spec.js) only
-python editorial/check_fixtures.py                                   # required: fixture check
-python -m ruff check editorial                                       # required: lint of the editorial layer
-node prototypes/d-flow/check.mjs                                     # required: flow spike, Node
-npm run typecheck:src                                                # required: typecheck of src/ and the spike
-python editorial/check_fixtures.py --data <codex> <images>           # review run, report only
-node prototypes/d-flow/browser-check.mjs                             # flow spike, needs npm run dev:prototypes
-node wireframe/checks/<name>.mjs                                     # wireframe walkthroughs, need python -m http.server 8765 at the root
+npm run check:fork                                         # required: the fork's checks, steps in package.json
+node test/verify.mjs                                       # required: inherited engine proofs, Python/lxml harness, typecheck, Biome, Vite build, asset contract
+npm run test:e2e:fork                                      # fork demo suites (wb-demo-*.spec.js) through playwright.fork.config.js
+python editorial/check_fixtures.py --data <codex> <images> # review run, report only
+node wireframe/checks/<name>.mjs                           # wireframe walkthroughs, need python -m http.server 8765 at the root
 ```
 
-The wireframe walkthroughs under `wireframe/checks/` drive the wireframe in headless Chromium at desktop and phone widths and assert the acceptance criteria of the user stories on the fol. 1r extraction, feature by feature (`core`, `apparatus`, `register`, `miniature`, `checks-markup`) and for the review fixes of 2026-10-10. They write screenshots to `test-results/wireframe/`. They are plain scripts rather than Playwright specs because the wireframe is a design instrument that the real build replaces; the `wb-demo-*` specs of phase 5 are their successors.
+The wireframe walkthroughs under `wireframe/checks/` drive the frozen wireframe in headless Chromium at desktop and phone widths and assert the acceptance criteria of the user stories on the fol. 1r extraction, feature by feature. They write screenshots to `test-results/wireframe/`. They are plain scripts rather than Playwright specs because the wireframe is a design instrument that the real build replaces; the `wb-demo-*` specs of phase 5b are their successors, and the walkthroughs are deleted with the wireframe.
 
-`npm run test:e2e` uses the inherited `playwright.config.js`: it runs `npm run build`, serves `dist/` with `vite preview` at `http://127.0.0.1:4173` and opens `index.html`. The published form is `docs/` served directly; the base's [`reports/source-browser-check.config.mjs`](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/source-browser-check.config.mjs) runs the same tests in Chromium against a server on port 4199 that serves `docs/` and must be started separately. The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.
+The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.

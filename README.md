@@ -12,7 +12,7 @@ The repository is a Git clone of teiCrafter with the base as `upstream`. Generic
 
 ## Status
 
-The project knowledge base under [knowledge/](knowledge/INDEX.md) is written. The base refactor is merged, the wireframe runs every workflow of the specification in memory on fol. 1r, a spike in `prototypes/d-flow/` tests the flowing text view, and `editorial/` holds the project Schematron with its fixtures, which the published editor does not use yet. The new interface is not built; the order of the remaining work is in [knowledge/plan.md](knowledge/plan.md). Nothing in this repository has been accepted by the edition team.
+The project knowledge base under [knowledge/](knowledge/INDEX.md) is written, and the new interface is not built yet, with the remaining work ordered in [knowledge/plan.md](knowledge/plan.md). Nothing in this repository has been accepted by the edition team.
 
 ## Run locally
 
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-The editor is served from `docs/`. Open a local copy of the edition files from a `data/` folder next to the repository root; that folder is ignored by Git. Tests run with `npm run test:e2e` and `node test/verify.mjs`, see [knowledge/testing.md](knowledge/testing.md).
+The editor is served from `docs/`. Open a local copy of the edition files from a `data/` folder next to the repository root; that folder is ignored by Git. Checks run with `npm run check:fork` and `node test/verify.mjs`, see [knowledge/testing.md](knowledge/testing.md).
 
 ## Rights
 
