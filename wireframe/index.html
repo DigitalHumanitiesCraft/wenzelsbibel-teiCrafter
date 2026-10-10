@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wenzelsbibel Editor</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+  <header class="menubar">
+    <nav aria-label="Hauptmenü">
+      <ul class="menus" role="menubar" id="menus"></ul>
+    </nav>
+  </header>
+
+  <div class="docbar">
+    <div class="docbar-left">
+      <label class="visually-hidden" for="doc-select">Dokument</label>
+      <select id="doc-select">
+        <option value="codex">Codex 2759</option>
+        <option value="images">Bildannotationen</option>
+      </select>
+      <div class="pager" id="pager">
+        <button type="button" id="prev-folio" aria-label="Vorheriges Folio">◀</button>
+        <span class="folio" id="folio-label">fol. 1r</span>
+        <button type="button" id="next-folio" aria-label="Nächstes Folio">▶</button>
+        <div class="segmented" role="group" aria-label="Spalte">
+          <button type="button" class="seg-btn is-active" data-column="0">a</button>
+          <button type="button" class="seg-btn" data-column="1">b</button>
+        </div>
+      </div>
+    </div>
+    <div class="docbar-right">
+      <div class="segmented" role="group" aria-label="Ansicht">
+        <button type="button" class="seg-btn is-active" data-view="text">Text</button>
+        <button type="button" class="seg-btn" data-view="xml">XML</button>
+      </div>
+      <button type="button" class="toggle" id="toggle-facs" aria-pressed="false">Faksimile</button>
+    </div>
+  </div>
+
+  <main class="work" id="work">
+    <section class="text-pane" id="text-pane" aria-label="Text">
+      <div class="lines" id="lines"></div>
+      <pre class="xml" id="xml" hidden></pre>
+    </section>
+    <aside class="facs-pane" id="facs-pane" aria-label="Faksimile" hidden>
+      <div class="facs-frame" id="facs-frame">
+        <img id="facs-img" alt="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759">
+        <svg id="zones" aria-hidden="true"></svg>
+      </div>
+      <div class="facs-controls">
+        <label><input type="checkbox" id="zones-toggle" checked> Zonen</label>
+      </div>
+    </aside>
+  </main>
+
+  <section class="inspector" id="inspector" aria-label="Auswahl" hidden>
+    <div class="inspector-head">
+      <h2 id="inspector-title">Wort</h2>
+      <button type="button" class="link-btn" id="inspector-xml">XML-Stelle</button>
+      <button type="button" class="icon-btn" id="inspector-close" aria-label="Schließen">✕</button>
+    </div>
+    <div class="inspector-body" id="inspector-body"></div>
+  </section>
+
+  <footer class="statusline" id="statusline">
+    <button type="button" class="status" id="status-wf">Wohlgeformt</button>
+    <button type="button" class="status" id="status-rng">TEI All</button>
+    <button type="button" class="status" id="status-sch">Schematron editing</button>
+    <span class="status-unsaved" id="status-unsaved" hidden>ungesichert</span>
+    <span class="status-file" id="status-file">codex-2759.xml</span>
+  </footer>
+
+  <script type="module" src="wireframe.js"></script>
+</body>
+</html>
