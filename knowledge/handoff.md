@@ -39,6 +39,19 @@ This process inbox holds received deltas awaiting integration. Verify each sourc
 - Context: Of the six lessons of the feedback rounds the vault document states none as a rule and the Abnahmecheck asks none, while design.md carries four as rules; the continuous selection highlight and the measurement rule are missing everywhere. The snapshot names the sections to add, the Abnahmecheck items, the conflicts between the vault document and design.md that the vault session resolves, and what a deterministic check in `web-style` carries better than a document sentence.
 - Operator point: start a vault session on the snapshot.
 
+### Vault session: project state in ACTIVE-WORK and the Project Overview
+
+- Received: 2026-10-10
+- Source: the operator's request of 2026-10-10 that the audit, the feedback rounds and the decisions of this day reach the vault as well; the vault was read from this session, which does not write into it.
+- Target: the vault documents `ACTIVE-WORK.md` (entry Wenzelsbibel), `Projects/Wenzelsbibel/Project Overview Wenzelsbibel.md`, `Vault Operations/Erledigt-Log.md`, in a vault session, which checks every mutable statement below against this repository before writing.
+- Context: ACTIVE-WORK still asks the operator to play through the wireframe with a bottom inspector and to release the interaction model, which happened in three feedback rounds today; its next step still describes inspector forms. The Project Overview names the project Schematron at `editorial/wenzelsbibel.sch`, which moved to `docs/schemas/wenzelsbibel.sch` beside the vocabulary. Proposed texts, German as the vault requires:
+  - `stand::` "Das Fortsetzungsprojekt läuft seit dem 01.10.2026, die Zusage zum Erstgespräch steht aus. Die Wenzelsbibel-Version von teiCrafter hat eine durchgeprüfte Wissensbasis, die Editionsregeln mit Vokabular als Regeldateien, ein Wireframe, das nach den Feedback-Runden des Operators auf direkte Manipulation umgestellt ist, und einen Vertrag für die Basismechanismen, der an teiCrafter geht. Regelquelle ist das öffentliche Transkriptionshandbuch, dessen Abweichungen von den Daten mit dem Team zu klären sind."
+  - The operator point `[Freigabe] Den Wireframe ... freigeben` (anchor `^op-wenzelsbibel-wireframe-freigabe`) is answered and moves to the Erledigt-Log as one line: "Wireframe der Wenzelsbibel-Version in drei Feedback-Runden am Bildschirm geprüft, Interaktionsmodell auf direkte Manipulation entschieden (2026-10-10)".
+  - New operator points: `[Entscheidung]` die Design-Skills: installierte Hooks lesen, Impeccable installieren, web-design-guidelines nur mit gepinnter Regelkopie; `[Aktion]` das Editionsteam über den getrackten öffentlichen Auszug fol. 1r informieren; `[Aktion]` die Maschine für das geerbte Gate einrichten, das Node 24.13.0 und npm 11.6.2 pinnt; `[Aktion]` die Vault-Session für das UI-Praxis-Delta ([snapshot](../snapshots/ui-practice-delta-2026-10-10.md)).
+  - The next-step arrow "Nach der Freigabe den Editor bauen ..." becomes: "→ Den Vertrag für Phase 5a in das Handoff der Basis teiCrafter übernehmen und die Mechanismen dort bauen: einzeilige Arbeitsleiste, Popover mit Feldtabelle, rechte Spalte mit Faksimile und Liste, Registersuche, Hinweisleiste und Befundliste, Fluss- und XML-Ansicht in CodeMirror, Meldungstabelle; danach im Fork die Shell komponieren, Startseite und Hilfeseite bauen, je Workflow einen Demo-Test auf fol. 1r, dann das Wireframe löschen". The Erstgespräch arrow stays.
+  - Project Overview: the Schematron row of "Source of Truth" names `docs/schemas/wenzelsbibel.sch` with `wenzelsbibel-vocabulary.json` beside it; the "Live & Code" entry for the repository may name the plan under `knowledge/plan.md` as the place of the phase state.
+- Operator point: start the vault session, which also takes the UI practice delta of the item above.
+
 ### Edition team and the tracked excerpt
 
 - Received: 2026-10-10
