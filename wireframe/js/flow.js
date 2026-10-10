@@ -215,6 +215,17 @@ export function selectLine(lineId) {
 // (new words, deletions across words) belong to the inspector and the XML view.
 // IME composition cannot be cancelled and is not covered by the wireframe.
 // Native history inputs are refused as well; Ctrl+Z reaches history.js through menu.js.
+// A refused keystroke says why (design: a refused action states its reason), at most
+// once per second so that held keys do not flood the notice bar. The reason travels as
+// a "refused" event, because importing notice.js here would close a module cycle.
+let lastRefusal = 0;
+function refuse(reason) {
+  const now = performance.now();
+  if (now - lastRefusal > 1000) flowEvents.dispatchEvent(new CustomEvent("refused", { detail: reason }));
+  lastRefusal = now;
+}
+const STRUCTURE = "Tippen ändert nur das Wort unter dem Caret. Wörter teilen, verbinden oder löschen geht über den Inspector oder im XML.";
+
 function onBeforeInput(e) {
   e.preventDefault();
   const sel = getSelection();
@@ -222,21 +233,22 @@ function onBeforeInput(e) {
   const r = sel.getRangeAt(0);
   const a = wordAt(r.startContainer, r.startOffset);
   const b = wordAt(r.endContainer, r.endOffset);
-  if (!a || !b || a.w !== b.w) return;
+  if (!a || !b || a.w !== b.w) return refuse(STRUCTURE);
   const node = a.w.firstChild;
   const text = node.data;
   let [s, t] = [a.off, b.off];
   let insert = "";
   if (e.inputType === "insertText" || e.inputType === "insertReplacementText" || e.inputType === "insertFromPaste") {
-    insert = (e.data ?? (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "")).replace(/\s+/g, "");
-    if (!insert) return;
+    const raw = e.data ?? (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
+    insert = raw.replace(/\s+/g, "");
+    if (!insert) return refuse(raw ? "Ein Leerzeichen würde das Wort teilen; das geht über den Inspector." : STRUCTURE);
   } else if (e.inputType === "deleteContentBackward" || e.inputType === "deleteContentForward") {
     if (s === t && e.inputType === "deleteContentBackward") s = [...graphemes.segment(text)].map((g) => g.index).filter((i) => i < s).pop() ?? s;
     if (s === t && e.inputType === "deleteContentForward") { const g = [...graphemes.segment(text)].find((x) => x.index >= t); if (g) t = g.index + g.segment.length; }
-    if (s === t) return;
-  } else return;
+    if (s === t) return refuse(STRUCTURE);
+  } else return refuse(e.inputType.startsWith("insertParagraph") || e.inputType === "insertLineBreak" ? "Zeilen und Absätze sind Struktur und werden im XML bearbeitet." : STRUCTURE);
   const next = text.slice(0, s) + insert + text.slice(t);
-  if (!next) return; // deleting a whole word is a structural edit
+  if (!next) return refuse("Das ganze Wort zu löschen ist eine Strukturänderung; über den Inspector oder im XML."); // deleting a whole word is a structural edit
   const tok = state.words[Number(a.w.dataset.k)].tok;
   // F29: the diplomatic reading is the text and @orig together; a word without @orig keeps none.
   commit("Diplomatisch", () => { tok.text = next; if (tok.orig != null) tok.orig = next; });

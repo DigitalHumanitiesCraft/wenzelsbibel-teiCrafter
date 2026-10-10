@@ -3,11 +3,12 @@
 // (ignored by Git, extracted from the public ONB TEI by wireframe/extract_data.py).
 import { $, el, state } from "./state.js";
 import { onChange } from "./history.js";
-import { highlightSelection, placeCaret, renderFlow, setColumn, setWordRange, wireFlow } from "./flow.js";
+import { flowEvents, highlightSelection, placeCaret, renderFlow, setColumn, setWordRange, wireFlow } from "./flow.js";
 import { formatXml, renderXml, setView } from "./xml.js";
 import { setFacs, toggleZones } from "./facsimile.js";
 import { closeInspector, openInspector, refreshInspector } from "./inspector.js";
 import { actions, buildMenus } from "./menu.js";
+import { notify } from "./notice.js";
 // Feature modules register their inspector sections on import, so this order is the
 // visible order in the word states: markup, register, apparatus.
 import "./markup.js";
@@ -30,6 +31,7 @@ async function main() {
   renderFlow();
   renderXml();
   wireFlow();
+  flowEvents.addEventListener("refused", (e) => notify(e.detail));
   wireControls();
   onChange(rerender);
   initMiniatures();
