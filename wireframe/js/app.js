@@ -50,7 +50,7 @@ function wireControls() {
 
   command("facs", () => setFacs(state.side !== "facs"));
   command("zones", () => toggleZones(!state.zones), () => (state.side === "facs" ? null : "Erst das Faksimile einblenden."));
-  command("format", formatXml, () => (activeDoc() === "images" ? "XML formatieren gilt für den Codex; die Bildannotationen haben hier kein XML." : null));
+  command("format", formatXml, () => (activeDoc() === "images" ? "XML formatieren gilt für den Codex." : null));
 }
 
 // After undo or redo every view is rebuilt from state.data, whose tokens are new

@@ -61,7 +61,7 @@
   @container (width < 34rem) { .ic-fields { grid-template-columns: minmax(0, 1fr); } }
   .ic-variants { margin: 0; font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-sm); background: var(--color-review-tint); border-inline-start: 3px solid var(--color-problem); }
   .ic-search { display: grid; gap: var(--space-xs); }
-  .ic-scope, .ic-count { margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+  .ic-count { margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
   .ic-hits {
     margin: 0; max-block-size: 16rem; overflow: auto;
     scroll-margin-block-end: 4rem; /* clear of the sticky Anwenden bar */

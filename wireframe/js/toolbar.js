@@ -3,7 +3,7 @@
 // data-cmd (runs it) or data-guard (a dropdown that opens only while the command is
 // allowed). A command that is not allowed is disabled with its reason as title, never
 // hidden, and its activation states the reason.
-import { $, shell, state, STUB } from "./state.js";
+import { $, shell, state } from "./state.js";
 import { activeDoc, canRedo, canUndo, onChange, redo, undo } from "./history.js";
 import { flowEvents, highlightSelection } from "./flow.js";
 import { closePopover, isPopoverOpen } from "./popover.js";
@@ -29,19 +29,19 @@ command("undo", () => { const label = undo(); notify(`Rückgängig: ${label}.`);
   () => (canUndo() ? null : `Nichts rückgängig zu machen in ${DOC_NAME[activeDoc()]}.`));
 command("redo", () => { const label = redo(); notify(`Wiederholt: ${label}.`); },
   () => (canRedo() ? null : `Nichts zu wiederholen in ${DOC_NAME[activeDoc()]}.`));
-command("search", () => notify(STUB));
 
 export function runAction(id) {
   const a = actions.get(id);
-  if (!a) { notify(STUB); return; }
+  if (!a) return;
   const reason = a.blocked();
   if (reason) { notify(reason); return; }
   a.run();
 }
 
 // Shortcuts by lower-case key with Ctrl or Cmd. Without the interception the browser
-// would open its own save dialog, address bar or find bar.
-const SHORTCUTS = { s: "save", e: "element", f: "search", z: "undo", y: "redo" };
+// would open its own save dialog or address bar. Ctrl+F stays with the browser, because
+// the wireframe has no search field (F6 is built in the product).
+const SHORTCUTS = { s: "save", e: "element", z: "undo", y: "redo" };
 
 export function initToolbar() {
   for (const bar of document.querySelectorAll(".toolbar")) {

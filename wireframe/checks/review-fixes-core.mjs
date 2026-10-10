@@ -55,7 +55,7 @@ await scenario("F1", async () => {
   check("F1 XML in Bildannotationen shows no codex excerpt", !xmlShown);
   check("F1 XML in Bildannotationen shows the plain empty state", note === "Kein XML geladen.", note);
   check("F1 column switch hidden", !(await visible(page, "#column-switch")));
-  check("F1 XML formatieren disabled with its reason in Bildannotationen", (await page.getAttribute('[data-cmd="format"]', "aria-disabled")) === "true" && (await page.getAttribute('[data-cmd="format"]', "title")).includes("Codex"));
+  check("F1 XML formatieren disabled with its reason in Bildannotationen", (await page.getAttribute('[data-cmd="format"]', "aria-disabled")) === "true" && (await page.getAttribute('[data-cmd="format"]', "title")) === "XML formatieren gilt für den Codex.");
   await page.click('[data-view="text"]');
   await page.waitForTimeout(150);
   check("F1 back to Text shows the miniature list", await visible(page, "#minis .mini-item"));
@@ -138,6 +138,8 @@ await scenario("F4/10", async () => {
   const page = await open();
   const badge = await page.getAttribute(".wireframe-badge", "title");
   check("F4 the toolbar badge states the in-memory scope once", await visible(page, ".wireframe-badge") && badge === "Entwurf im Speicher auf fol. 1r; schreibt keine Datei." && (await page.locator(".wireframe-badge").textContent()).includes(badge), badge);
+  check("F4 the Speichern tooltip names function and shortcut only", (await page.getAttribute('[data-cmd="save"]', "title")) === "Speichern (Strg+S)");
+  check("F4 the XML formatieren tooltip names the function, its consequence stands only in the notice", (await page.getAttribute('[data-cmd="format"]', "title")) === "Das ganze Dokument formatieren");
   await page.click('[data-view="xml"]');
   check("F4 the XML view begins with the source, without a toolbar or note", !(await page.locator("#xml-view .xml-head, #xml-note, #xml-format").count()) && await page.evaluate(() => document.querySelector("#xml-view").firstElementChild.id === "xml"));
   await page.click('[data-cmd="format"]');
@@ -148,6 +150,37 @@ await scenario("F4/10", async () => {
   await prufen(page, "Wohlgeformtheit");
   const n = await notice(page);
   check("F10 well-formedness result is stated plainly", n.includes("Wohlgeformtheit: wohlgeformt."), n);
+  await page.context().close();
+});
+
+// Speichern and Herunterladen act on the active document (audit row 41).
+await scenario("Save", async () => {
+  const page = await open("wide", "#bild/miniatures_01");
+  await page.waitForSelector(`${imageForm} input[data-key="title"]`);
+  await page.fill(`${imageForm} input[data-key="title"]`, "Titel zum Speichern");
+  await page.click(`${imageForm} .mini-actions >> text=Anwenden`);
+  check("Save: an image edit sets the unsaved dot", await visible(page, "#status-unsaved"));
+  await page.keyboard.press("Control+s");
+  await page.waitForTimeout(150);
+  check("Save: Bildannotationen runs its save set", /Speichern: TEI All läuft/.test(await notice(page)), await notice(page));
+  await page.waitForTimeout(2300);
+  const n = await notice(page);
+  check("Save: the notice names Bildannotationen and its dot clears", n === "Bildannotationen gespeichert." && !(await visible(page, "#status-unsaved")), n);
+  check("Save: Herunterladen disabled in Bildannotationen with its reason", (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "true" && (await page.getAttribute('[data-cmd="download"]', "title")) === "Kein XML geladen.");
+  await page.selectOption("#doc-select", "codex");
+  await page.waitForTimeout(150);
+  await page.click("#flow .w >> nth=3");
+  await page.waitForTimeout(300);
+  await normInput(page).fill("gespeichert");
+  await normInput(page).press("Enter");
+  check("Save: a codex edit sets the dot", await visible(page, "#status-unsaved"));
+  await page.keyboard.press("Control+s");
+  await page.waitForTimeout(2500);
+  const c = await notice(page);
+  check("Save: the notice names Codex 2759 as the chooser does and its dot clears", c === "Codex 2759 gespeichert." && !(await visible(page, "#status-unsaved")), c);
+  await page.selectOption("#doc-select", "images");
+  await page.waitForTimeout(150);
+  check("Save: Bildannotationen stays saved after the codex save", !(await visible(page, "#status-unsaved")));
   await page.context().close();
 });
 

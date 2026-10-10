@@ -248,7 +248,7 @@ function respText(node) {
   if (!node) return "";
   const parts = [];
   if (node.resp) parts.push(`resp ${node.resp}`);
-  if (node.anchored) parts.push(`anchored ${node.anchored}`);
+  if (node.anchored) parts.push(`verankert ${node.anchored}`);
   return parts.join(", ");
 }
 
@@ -257,8 +257,8 @@ const respNode = (node) => { const t = respText(node); return t ? el("span", { c
 function itemMeta(m) {
   const show = (v) => v ?? "nicht gesetzt";
   return el("p", { class: "item-meta" }, [
-    el("span", { text: "item " }), el("code", { text: m.item.corresp || "" }),
-    el("span", { text: `, Liste ${m.item.list}, resp ${show(m.item.resp)}, anchored ${show(m.item.anchored)}` }),
+    el("span", { text: "Eintrag " }), el("code", { text: m.item.corresp || "" }),
+    el("span", { text: `, Liste ${m.item.list}, resp ${show(m.item.resp)}, verankert ${show(m.item.anchored)}` }),
   ]);
 }
 
@@ -460,7 +460,7 @@ function iconclassSection() {
       const isNew = !itemById(current).fields.iconclass.some((o) => o.notation === entry.notation);
       rows.append(el("li", { class: "ic-entry" }, [
         el("div", { class: "ic-entry-head" }, [
-          el("span", { class: "resp", text: `resp ${entry.resp || "nicht gesetzt"}${isNew ? ", neu, noch nicht angewendet" : ""}` }),
+          el("span", { class: "resp", text: `resp ${entry.resp || "nicht gesetzt"}${isNew ? ", neu, noch nicht übernommen" : ""}` }),
           el("button", { type: "button", class: "link-btn", text: "Entfernen", "aria-label": `ICONCLASS ${entry.notation} entfernen`, onclick: () => { draft.iconclass.splice(i, 1); render(); sec.querySelector(".ic-search-open").focus(); } }),
         ]),
         el("div", { class: "ic-fields" }, [input("Notation", "notation"), input("Deutsch", "de"), input("Englisch", "en")]),
@@ -518,7 +518,7 @@ function searchPanel(onPick) {
     active = -1;
     input.removeAttribute("aria-activedescendant");
     const q = input.value.trim();
-    status.textContent = !q ? "" : hits.length ? `${hits.length} Treffer${hits.length > 20 ? ", die ersten 20 angezeigt" : ""}` : "Kein Treffer im lokalen Katalog.";
+    status.textContent = !q ? "" : hits.length ? `${hits.length} Treffer${hits.length > 20 ? ", die ersten 20 angezeigt" : ""}` : "Kein Treffer.";
     list.hidden = !hits.length;
     input.setAttribute("aria-expanded", String(!list.hidden));
     if (!list.hidden) list.scrollIntoView({ block: "nearest" });
@@ -535,10 +535,7 @@ function searchPanel(onPick) {
     }
   });
   list.addEventListener("mousedown", (e) => e.preventDefault());
-  const panel = el("div", { class: "ic-search", hidden: "" }, [
-    el("p", { class: "ic-scope", text: "Durchsucht den lokalen Katalog: die Notationen, die in den Bildannotationen des Codex verwendet sind. Die Abfrage des ICONCLASS-Dienstes gehört zum eigentlichen Build." }),
-    input, status, list,
-  ]);
+  const panel = el("div", { class: "ic-search", hidden: "" }, [input, status, list]);
   return panel;
 }
 
@@ -632,7 +629,7 @@ sections.push((words) => {
     const stat = m.fields.statistic;
     const li = el("li", {}, [
       el("button", { type: "button", class: "link-btn", onclick: () => selectMiniature(m.id) }, [el("code", { text: m.id }), ` ${itemTitle(m)}`]),
-      el("span", { class: "range-note", text: `Umfang: ${stat.text.split(" WB:")[0]}${cov.lastHere ? "" : `; der Bereich ${rangeEndHint(stat)}, markiert ist er bis zum Seitenende`}` }),
+      el("span", { class: "range-note", text: `Umfang: ${stat.text.split(" WB:")[0]}${cov.lastHere ? "" : `; der Bereich ${rangeEndHint(stat)}`}` }),
     ]);
     if (markedFor === m.id) li.append(el("button", { type: "button", class: "link-btn", text: "Markierung entfernen", onclick: () => { markedFor = null; markRange(); } }));
     list.append(li);
@@ -645,7 +642,7 @@ sections.push((words) => {
 
 function cancel() {
   showImageTab();
-  panelNote("Eingaben verworfen, die gespeicherten Werte sind wiederhergestellt.");
+  panelNote("Nicht übernommene Eingaben verworfen.");
 }
 
 function apply() {

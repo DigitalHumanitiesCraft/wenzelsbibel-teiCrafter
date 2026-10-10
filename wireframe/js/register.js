@@ -20,8 +20,8 @@ const fold = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const countText = (n) => `${n} ${n === 1 ? "Verweis" : "Verweise"} im Codex`;
 const label = (e) => `${TYPE_LABEL[e.type]}: ${e.id}`;
 
-// The codex has no register lists; its entries are the distinct ref/@target values
-// (data.registersNote). Entries created in this session are appended to the same lists.
+// The codex has no register lists; its entries are the distinct ref/@target values.
+// Entries created in this session are appended to the same lists.
 export function registerEntries() {
   const entries = [];
   for (const type of TYPES) for (const e of state.data.registers.codex[type] || []) entries.push(e);
@@ -168,11 +168,6 @@ function unlink(run) {
   $("#popover-content .register input")?.focus();
 }
 
-function noteDisclosure() {
-  if (!state.data.registersNote) return null;
-  return el("details", { class: "reg-note" }, [el("summary", { text: "Herkunft der Einträge" }), el("p", { text: state.data.registersNote })]);
-}
-
 export function registerSection(words) {
   const sec = el("div", { class: "register" });
   const run = selectedRun(words);
@@ -225,7 +220,7 @@ function combo(showForm) {
     input.setAttribute("aria-activedescendant", opts[active].id);
     opts[active].scrollIntoView({ block: "nearest" });
   };
-  // menu.js calls closeList on Escape; it is the first layer of the Escape order.
+  // toolbar.js calls closeList on Escape; it is the first layer of the Escape order.
   list.closeList = () => { list.hidden = true; active = -1; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); };
   list.anchor = input;
   const option = (i, onPick, children) => el("li", { class: "ac-item", id: `ac-opt-${i}`, role: "option", "aria-selected": "false", onclick: onPick }, children);
@@ -268,7 +263,7 @@ function combo(showForm) {
   });
   list.addEventListener("mousedown", (e) => e.preventDefault()); // keep focus in the field
   typeSel.addEventListener("change", update);
-  return [el("div", { class: "combo" }, [typeSel, input]), error, list, noteDisclosure()].filter(Boolean);
+  return [el("div", { class: "combo" }, [typeSel, input]), error, list];
 }
 
 // US3.2 / F39: type, ID and preferred name; Anwenden creates the entry and links the
@@ -456,8 +451,6 @@ function listPanel(type, mode, message = "", query = "") {
   const body = [];
   if (message) body.push(el("p", { class: "empty-note", text: message }));
   body.push(el("div", { class: "combo" }, mode === "search" ? [typeSel, input] : [input]), ul, more);
-  const note = noteDisclosure();
-  if (note) body.push(note);
   openPanel("refs", head, body, () => listPanel(typeSel.value, mode, "", input.value));
   input.focus();
 }

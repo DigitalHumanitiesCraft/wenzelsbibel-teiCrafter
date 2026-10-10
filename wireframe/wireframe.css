@@ -91,8 +91,13 @@
   :is(.tb-btn, .toggle, .act > button):hover:not([aria-disabled="true"]) { background: var(--color-secondary); }
   .tb-btn.is-primary:not([aria-disabled="true"]) { background: var(--color-header); border-color: var(--color-header); color: var(--color-text-inverse); }
   /* Disabled stays focusable (toolbar pattern) and readable at 4.5:1; the dashed edge and
-     the cursor carry the state besides the text colour, the title carries the reason. */
-  [aria-disabled="true"] { color: var(--color-text-secondary); border-style: dashed; cursor: not-allowed; }
+     the cursor carry the state besides the text colour, the title carries the reason. The
+     :is() list lifts the rule above `.act > button` and the later `.menu-item`, which would
+     otherwise keep a disabled dropdown or menu entry looking enabled. Menu entries have no
+     edge (border 0), so colour and cursor carry their state. */
+  [aria-disabled="true"], :is(.act > button, .menu-item)[aria-disabled="true"] {
+    color: var(--color-text-secondary); border-style: dashed; cursor: not-allowed;
+  }
   .folio { font-weight: 600; min-inline-size: 4.5rem; text-align: center; }
   .segmented, .side-tabs { display: inline-flex; flex-wrap: wrap; }
   :is(.segmented, .side-tabs) .seg-btn { border-radius: 0; margin-inline-start: -1px; }

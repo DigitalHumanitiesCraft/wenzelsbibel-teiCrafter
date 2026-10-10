@@ -44,7 +44,7 @@ export function initFacsimile() {
     const z = document.elementsFromPoint(e.originalEvent.clientX, e.originalEvent.clientY).find((n) => n.classList && n.classList.contains("zone"));
     if (z) zoneClick(z);
   });
-  viewer.addHandler("open-failed", () => frame.replaceChildren(el("p", { class: "empty-note", text: "Das Faksimile konnte vom Bildserver der ÖNB nicht geladen werden. Text und Bearbeitung bleiben nutzbar." })));
+  viewer.addHandler("open-failed", () => frame.replaceChildren(el("p", { class: "empty-note", text: "Das Faksimile konnte vom Bildserver der ÖNB nicht geladen werden." })));
   state.viewer = viewer;
 }
 

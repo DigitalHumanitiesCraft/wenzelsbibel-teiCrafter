@@ -148,6 +148,7 @@ async function main() {
   await page.keyboard.press("Control+e");
   await page.waitForTimeout(100);
   ok("E1 element list opens", await page.isVisible(".element-list") && (await page.textContent(".element-choice")).startsWith("Element für Auswahl") && !(await page.locator(".element-choice p").count()));
+  ok("E1 every listed element has a function (no seg stub)", !(await page.textContent(".element-list")).includes("<seg>"));
   await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown");
   const focused = await page.evaluate(() => document.activeElement.textContent);
   ok("E2 arrows move in list", focused.includes("foreign"), focused);
@@ -171,7 +172,7 @@ async function main() {
   await menu("Prüfen", "Wohlgeformtheit");
   ok("P1 well-formed again after undo", (await bar()).includes("wohlgeformt"));
   await menu("Prüfen", "TEI All");
-  ok("P2 TEI All running with cancel", (await bar()).includes("TEI All läuft") && await page.isVisible("#notice button:text-is('Abbrechen')"));
+  ok("P2 TEI All running with cancel, no explanatory sentence", (await bar()).includes("TEI All läuft") && !(await bar()).includes("bearbeitbar") && await page.isVisible("#notice button:text-is('Abbrechen')"), await bar());
   await clickWord(ID.sich);
   ok("P2 interface usable while running", (await page.textContent("#popover-title")).includes("ſich"));
   await page.click("#notice button:text-is('Abbrechen')");
@@ -190,7 +191,9 @@ async function main() {
   await page.click("#notice button:text-is('Befunde anzeigen')");
   const list = await page.textContent(findings);
   ok("P4 list grouped per check", ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"].every((c) => list.includes(c)));
-  ok("P4 finding names doc, rule, location", list.includes("codex-2759.xml") && list.includes("w-id") && list.includes("fol. 1r a Z. 5") && list.includes("hi-rend-data-only"));
+  const panelText = await page.textContent("#side-findings");
+  ok("P4 the title names the document once as the chooser does, findings name rule and location", (await page.textContent("#side-findings .panel-title")) === "Befunde Codex 2759" && panelText.split("Codex 2759").length === 2 && !panelText.includes("codex-2759.xml") && list.includes("w-id") && list.includes("fol. 1r a Z. 5") && list.includes("hi-rend-data-only"));
+  ok("P4 no scope sentence about the page excerpt", !(await page.locator(".findings-scope").count()) && !list.includes("Seitenauszug") && !list.includes("Seitenmodell"));
   const wid = page.locator(".finding:has(code:text-is('w-id')) button");
   await wid.click(); await page.waitForTimeout(300);
   ok("P4 jump selects Got", (await page.evaluate(() => document.querySelector("#flow .w.is-current")?.textContent)) === "Got");
@@ -217,18 +220,18 @@ async function main() {
   ok("S1 save runs the set (TEI All running)", (await bar()).includes("Speichern: TEI All läuft"), await bar());
   await page.waitForTimeout(2300);
   const fb = await bar();
-  ok("S1 failed save names schema and count", fb.includes("Nicht gespeichert: Schematron editing mit 1 Befund") && fb.includes("Befunde anzeigen"), fb);
+  ok("S1 failed save names schema and count, nothing more", fb.includes("Nicht gespeichert: Schematron editing mit 1 Befund") && fb.includes("Befunde anzeigen") && !fb.includes("ungesichert"), fb);
   ok("S1 unsaved dot stays", await unsaved());
   await page.click("#notice button:text-is('Befunde anzeigen')");
   ok("S1 list shows register-type", (await page.textContent(findings)).includes("register-type"));
-  ok("S1 Herunterladen disabled with its reason while unsaved", (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "true" && /Speichern/.test(await page.getAttribute('[data-cmd="download"]', "title")));
+  ok("S1 Herunterladen disabled with its reason while unsaved", (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "true" && (await page.getAttribute('[data-cmd="download"]', "title")) === "Erst Speichern.");
   await page.screenshot({ path: `${SCRATCH}/wireframe-checks-3.png` });
   await undoKey();
   await page.keyboard.press("Control+s");
   await page.waitForTimeout(2400);
   const sb = await bar();
   await page.waitForTimeout(50);
-  ok("S2 save passes, Herunterladen enabled", sb.startsWith("Gespeichert.") && (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "false" && !(await unsaved()), sb);
+  ok("S2 save passes, Herunterladen enabled", sb.startsWith("Codex 2759 gespeichert.") && (await page.getAttribute('[data-cmd="download"]', "aria-disabled")) === "false" && !(await unsaved()), sb);
   const [dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-cmd="download"]')]);
   const dlPath = `${SCRATCH}/dl-auszug.xml`;
   await dl.saveAs(dlPath);
@@ -236,7 +239,7 @@ async function main() {
   ok("S2 download is the excerpt", dl.suggestedFilename() === "codex-2759-fol-1r-auszug.xml" && fs.readFileSync(dlPath, "utf8") === excerpt);
   await page.keyboard.press("Control+s");
   await page.waitForTimeout(100);
-  ok("S3 save with current clean result skips rerun", (await bar()).includes("Gespeichert"));
+  ok("S3 save with current clean result skips rerun", (await bar()).includes("Codex 2759 gespeichert"));
 
   // Narrow
   const narrow = await browser.newPage({ viewport: { width: 390, height: 844 } });

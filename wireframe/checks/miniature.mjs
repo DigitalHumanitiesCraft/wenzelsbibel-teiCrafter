@@ -84,7 +84,7 @@ check("US4.1.2 height 14", form.height === "14");
 check("US4.1.2 artist BA Balaam-Meister", form.artist === "BA, Balaam-Meister", form.artist);
 check("US4.1.2 persons Gott, Engel", form.persons.join() === "Gott,Engel", form.persons.join());
 check("US4.1.2 ICONCLASS entries", form.ic.join() === "11C21(+0),11C211", form.ic.join());
-check("resp and anchored shown", form.text.includes("resp #JT #KS, anchored true") && form.text.includes("resp editor, anchored true"));
+check("resp and verankert shown in German", form.text.includes("resp #JT #KS, verankert true") && form.text.includes("resp editor, verankert true") && form.text.includes("Eintrag #") && !form.text.includes("anchored"));
 check("two field columns at 1400", (await page.evaluate(() => getComputedStyle(document.querySelector(".mini-form")).gridTemplateColumns.split(" ").length)) === 2);
 await page.screenshot({ path: `${SHOTS}wireframe-miniature-1.png` });
 
@@ -92,6 +92,7 @@ await page.screenshot({ path: `${SHOTS}wireframe-miniature-1.png` });
 await titleInput().fill("Anfangs-Initiale (O): Gott thronend");
 await cancel();
 check("Abbrechen restores title", (await titleInput().inputValue()) === "Anfangs-Initiale (O) zum Prolog: Gott auf dem Thron");
+check("Abbrechen says it discards the unapplied input", (await note()) === "Nicht übernommene Eingaben verworfen.", await note());
 await titleInput().fill("Anfangs-Initiale (O): Gott thronend");
 await apply();
 check("Anwenden commits only Titel", (await note()) === "Übernommen: Titel.", await note());
@@ -135,8 +136,7 @@ check("Ctrl+Z restores persons", (await page.locator(`${body} .tags[aria-label="
 
 // US4.2 ICONCLASS
 await page.click(`${body} .ic-search-open`);
-const scope = await page.locator(`${body} .ic-scope`).innerText();
-check("catalogue scope stated at the search", scope.includes("Bildannotationen des Codex") && scope.includes("eigentlichen Build"));
+check("no scope sentence at the search", !(await page.locator(`${body} .ic-scope`).count()) && !(await page.locator(`${body} .ic-search`).innerText()).includes("Katalog"));
 const q = () => page.locator(`${body} .ic-search input`);
 await q().fill("11C21(+0)");
 const first = await page.locator("#ic-hits li").first().innerText();
@@ -149,6 +149,8 @@ check("term search normalised (lowe finds Löwe)", lion.includes("25F23(LION)"))
 check("variants flagged in hits", lion.includes("abweichende Bezeichnung"));
 await q().fill("DRACHE");
 check("case-insensitive German term", (await page.locator("#ic-hits").innerText()).includes("25FF411"));
+await q().fill("qqqq");
+check("no hit stated plainly", (await page.locator(`${body} .ic-count`).innerText()) === "Kein Treffer.");
 await q().fill("dragon");
 await q().press("ArrowDown");
 await q().press("Enter");
@@ -196,7 +198,7 @@ const total = await page.evaluate(() => document.querySelectorAll("#flow .w").le
 check("US4.3.2 range marked from the first word to the column end (running head excluded)", marked[0] === "region_1639399488602_10l3_0" && marked.length === total - 1, `${marked.length}/${total}`);
 const insp = await page.locator(pop).innerText();
 check("US4.3.3 Bilder zu diesem Wort on the first word", insp.includes("Bilder zu diesem Wort") && insp.includes("miniatures_01"));
-check("popover says the range ends on fol. 2r", insp.includes("endet auf fol. 2r"));
+check("popover says the range ends on fol. 2r, without a note on the marking", insp.includes("endet auf fol. 2r") && !insp.includes("Seitenende"));
 check("address names the codex column", (await page.evaluate(() => location.hash)).startsWith("#codex/1r/"));
 await page.click('[data-column="1"]');
 await page.waitForTimeout(200);

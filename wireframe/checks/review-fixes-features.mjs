@@ -1,5 +1,5 @@
 // Review round 2, findings 5, 13, 14, 18, 19, 20 and the Verweise walk. Each check fails
-// on the code before the fix (fixb-orig/) and passes after it.
+// on the code before the fix and passes after it.
 import { chromium } from "playwright";
 
 const URL = "http://127.0.0.1:8765/wireframe/index.html";
@@ -101,7 +101,7 @@ check("19 menu marks the current value rubrication", cur.length === 1 && cur[0].
 await page.click('#tb-markup .act[data-action="Hervorhebung"] .menu-item:has-text("gold")');
 await wait();
 const n19 = await page.locator("#popover-note").textContent();
-check("19 note names the replacement", /rubrication durch gold ersetzt/.test(n19), n19);
+check("19 note confirms with übernommen and names the replacement", /übernommen/.test(n19) && /rubrication durch gold ersetzt/.test(n19), n19);
 await page.click('#tb-markup .act[data-action="Hervorhebung"] > button');
 const cur2 = await page.locator('#tb-markup .act[data-action="Hervorhebung"] [aria-checked="true"]').allTextContents();
 check("19 menu marks gold after the change", cur2.length === 1 && cur2[0].includes("gold"), JSON.stringify(cur2));
@@ -123,7 +123,7 @@ await page.locator('#popover-content .app-form textarea[lang="en"]').fill("Test 
 await sig.fill("CP");
 await page.click('#popover-content .app-form button[type="submit"]');
 await wait();
-check("5 comment on the ligature word created", /angelegt/.test(await page.locator("#popover-note").textContent()));
+check("5 comment on the ligature word created, confirmed with übernommen", /übernommen/.test(await page.locator("#popover-note").textContent()));
 await col(1);
 await select("NB");
 await menu("comment");

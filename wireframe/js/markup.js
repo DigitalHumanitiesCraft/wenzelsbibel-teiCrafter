@@ -1,6 +1,6 @@
 // Word editing: the applicable Diplomatisch field (F29), the markup dropdowns of the
 // Arbeitsleiste (F32, F33) and the element list behind Strg+E (F21).
-import { $, el, refKey, state, STUB } from "./state.js";
+import { $, el, refKey, state } from "./state.js";
 import { commit } from "./history.js";
 import { flowEvents, highlightSelection, renderFlow, selectedWords, setWordRange, wordDecorators } from "./flow.js";
 import { field, hideNote, isPopoverOpen, openPopover, popoverNote, sections, wordFields } from "./popover.js";
@@ -9,9 +9,10 @@ import { notify } from "./notice.js";
 import { setView } from "./xml.js";
 
 // The five markup actions of F32 with the handbook values (editorial-guidelines.md,
-// controlled vocabularies); the real tool reads them from the manifest. Tilgung
-// covers surplus/@reason and del/@type. Data-only values such as erasure_point stay
-// out until the edition team ratifies them.
+// controlled vocabularies); the real tool reads them from the project vocabulary
+// docs/schemas/wenzelsbibel-vocabulary.json (F32). Tilgung covers surplus/@reason and
+// del/@type. Data-only values such as erasure_point stay out until the edition team
+// ratifies them.
 export const MARKUP = [
   { label: "Hervorhebung", groups: [["hi/@rend", ["rubrication", "inkRed", "gold", "initial", "initial_historisiert", "border_decoration"]]] },
   { label: "Ergänzung", groups: [["supplied/@reason", ["text_intervention", "switch", "damage"]]] },
@@ -80,8 +81,8 @@ function diplomaticField(tok) {
   const apply = () => {
     const value = input.value.trim();
     if (value === shown) { popoverNote("Keine Änderung an der diplomatischen Lesung."); return; }
-    if (!value) { popoverNote("Ein Wort braucht Text. Wörter löschen geht über die XML-Ansicht."); return; }
-    if (/\s/.test(value)) { popoverNote("Ein Leerzeichen würde das Wort teilen. Wörter teilen geht über die XML-Ansicht."); return; }
+    if (!value) { popoverNote("Ein Wort braucht Text."); return; }
+    if (/\s/.test(value)) { popoverNote("Ein Leerzeichen würde das Wort teilen."); return; }
     // Text and @orig change together; a word without @orig (Got) keeps none.
     commit("Diplomatisch", () => { tok.text = value; if (tok.orig != null) tok.orig = value; });
     const w = state.words.find((x) => x.tok === tok);
@@ -126,7 +127,7 @@ function refusal(element, from, to) {
     if (tok.markup) {
       const [a, b] = runAround(k, (x, y) => x.markup === y.markup);
       if (tok.markup.element !== element && actionOf(tok.markup.element) !== actionOf(element)) {
-        return `„${state.words[k].node.textContent}“ steht bereits in <${tok.markup.element}>. Verschachteltes Markup wird in der XML-Ansicht angelegt.`;
+        return `„${state.words[k].node.textContent}“ steht bereits in <${tok.markup.element}>.`;
       }
       // Replacing the value of part of an element would split it.
       if (a < from || b > to) return `Die Auswahl umfasst nur einen Teil des Elements <${tok.markup.element}> (${b - a + 1} Wörter). Ein Teilwechsel würde es teilen. Das ganze Element auswählen.`;
@@ -169,7 +170,7 @@ export function applyMarkup(group, value) {
     const ok = commit(`Hervorhebung ${value}`, () => {
       for (const w of words) w.tok.rend = [...(w.tok.rend || []).filter((r) => !HI_VALUES.includes(r)), value];
     });
-    if (ok) { rerenderWords('#tb-markup .act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" auf ${scope} angewendet.${replacedNote(old, value)}`, true); }
+    if (ok) { rerenderWords('#tb-markup .act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" für ${scope} übernommen.${replacedNote(old, value)}`, true); }
     return;
   }
   const reason = refusal(element, from, to);
@@ -266,7 +267,6 @@ const ELEMENTS = [
   { name: "foreign", label: "Fremdsprache", route: "Fremdsprache" },
   { name: "num", label: "Zahl", route: "Zahl" },
   { name: "rs", label: "Registerverweis", route: "register" },
-  { name: "seg", label: "Textregion", route: null },
 ];
 
 export function elementList() {
@@ -298,7 +298,6 @@ function chooseElement(e, box) {
     if (input) input.focus(); else popoverNote("Kein Registerfeld für diese Auswahl.");
     return;
   }
-  if (!e.route) { popoverNote(STUB); return; }
   openAction(e.route);
 }
 

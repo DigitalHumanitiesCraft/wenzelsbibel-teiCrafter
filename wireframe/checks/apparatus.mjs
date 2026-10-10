@@ -81,6 +81,8 @@ check("after undo the index still shows the comment on got", (await entryFroms(p
 const UEBIT = "region_1639399497290_13l7_1";
 await selectRange(page, UEBIT);
 check("app with anchors.from null shown at uebit", (await entryFroms(page)).includes("start_9748") && (await page.locator("#popover-content .app-unresolved").count()) === 1);
+const unresolvedNote = await page.locator("#popover-content .app-unresolved").innerText();
+check("the missing anchor is named in one sentence", unresolvedNote === "Startanker start_9748 steht nicht auf dieser Seite.", unresolvedNote);
 check("page start not covered by the unresolved app", await page.$eval("#flow .w", (n) => !n.classList.contains("in-app")));
 
 // Column b app spanning two lines

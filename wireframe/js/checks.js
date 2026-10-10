@@ -1,4 +1,4 @@
-// Checks, findings bar and list, and the save flow (US5.1, US5.2, F44 to F52).
+// Checks, findings bar and list, and the save flow (US5.1, US5.2, F44 to F51).
 // No permanent status line: the bar shows a running check, a result with findings or
 // a failed save; a clean result and a save are announced and, by CONFIRM_CLEAN,
 // confirmed briefly. The findings list is the tab Befunde of the Seitenleiste.
@@ -6,10 +6,10 @@
 // What is simulated: the XML view renders the excerpt read-only, so well-formedness
 // parses that excerpt once on request. TEI All is a timed stand-in for the worker run
 // against the vendored RelaxNG. Schematron evaluates those rules of
-// editorial/wenzelsbibel.sch that can be stated on the in-memory model of this page,
+// docs/schemas/wenzelsbibel.sch that can be stated on the in-memory model of this page,
 // with the rule ids, phases, severities and message texts of the .sch.
 import { $, columns, el, refKey, state } from "./state.js";
-import { markSaved, onChange, revision } from "./history.js";
+import { activeDoc, markSaved, onChange, revision } from "./history.js";
 import { placeCaret, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
 import { closePanel, narrow, openPanel, panelBody, tabs } from "./panel.js";
@@ -17,11 +17,13 @@ import { switchDocument } from "./miniature.js";
 import { command } from "./toolbar.js";
 import { announce, notify, setStanding } from "./notice.js";
 
-const DOC = "codex-2759.xml";
 const DOWNLOAD_NAME = "codex-2759-fol-1r-auszug.xml";
 
-// Operator's open question (F46): a clean run shows a short visible confirmation that
-// disappears on its own. Recommended; false leaves the announcement only.
+// The document as the document chooser names it, the one name the interface uses for it.
+const docLabel = (doc) => $(`#doc-select option[value="${doc}"]`).textContent;
+
+// Operator decision (F46): a clean run and a save show a short visible confirmation that
+// disappears on its own; false would leave the announcement only.
 const CONFIRM_CLEAN = true;
 const TEI_ALL_MS = 2000;
 
@@ -71,15 +73,9 @@ const HI_DATA = ["ligature", "textStyle", "decoration", "full_page", "marginalia
 const FW_ANA = ["header", "instruction_note", "marginalia", "text_in_image", "borderdecoration", "scroll", "painter_instruction"];
 const APP_TYPES = ["comment_edition", "comment_understanding", "comment_translation", "comment_translation_ses", "comment_translation_vev", "comment_manuscript", "comment_variant"];
 
-// Rules that the wireframe does not state on the model, named in the findings list.
-const NOT_EVALUATED = {
-  editing: "tei-root gilt für die ganze Datei und entfällt beim Seitenauszug.",
-  review: "Nicht am Seitenmodell geprüft: tei-root, note-type-known, seg-ana-known, app-sameas-unanchored, app-anchors-resolve und app-order (dokumentweit), die Bildannotationsregeln (anderes Dokument).",
-};
-
 function schematron(phase) {
   const out = [];
-  const add = (role, rule, message, at, path) => out.push({ doc: DOC, check: `Schematron ${phase}`, phase, role, rule, message, where: where(at), at, path });
+  const add = (role, rule, message, at, path) => out.push({ check: `Schematron ${phase}`, phase, role, rule, message, where: where(at), at, path });
   const words = walk();
   const review = phase === "review";
 
@@ -200,7 +196,7 @@ function wellFormed() {
   const doc = new DOMParser().parseFromString(`<excerpt>${head}${src}${tail}</excerpt>`, "application/xml");
   const err = doc.querySelector("parsererror");
   if (!err) return [];
-  return [{ doc: DOC, check: "Wohlgeformtheit", phase: null, role: "error", rule: "XML", message: (err.querySelector("div") || err).textContent.trim().split("\n")[0], where: "XML", at: null, path: "/" }];
+  return [{ check: "Wohlgeformtheit", phase: null, role: "error", rule: "XML", message: (err.querySelector("div") || err).textContent.trim().split("\n")[0], where: "XML", at: null, path: "/" }];
 }
 
 // Runs. TEI All and the save set are asynchronous and cancellable; the interface stays usable.
@@ -233,30 +229,41 @@ export async function runCheck(check) {
   if (CONFIRM_CLEAN) notify(msg); else announce(msg);
 }
 
-// Datei, Speichern (F49 to F52): runs every check of the set without a current result,
-// and marks the revision saved only when all pass.
+// Datei, Speichern (F49 to F51) for the active document: runs every check of its save
+// set without a current result, and marks that document's revision saved only when all
+// pass. Deliberate shortcut: the image annotations have no source in the wireframe, so
+// of their set only the timed TEI All stand-in runs, and its result is not kept, because
+// the findings list holds the codex results. The product runs the full set on
+// Bildannotationen.xml.
 export async function save() {
   if (running) { notify(`${running.label} läuft noch. Erst abwarten oder abbrechen.`); return; }
-  for (const check of SAVE_SET) {
-    const r = results.get(check);
-    if (r && !r.stale) continue;
-    try { results.set(check, { findings: await evaluate(check, `Speichern: ${check}`), stale: false }); } catch {
-      barState = null; renderBar(); notify("Speichern abgebrochen. Nichts geschrieben."); return;
+  const doc = activeDoc();
+  if (doc === "images") {
+    try { await evaluate("TEI All", "Speichern: TEI All"); } catch { renderBar(); notify("Speichern abgebrochen."); return; }
+  } else {
+    for (const check of SAVE_SET) {
+      const r = results.get(check);
+      if (r && !r.stale) continue;
+      try { results.set(check, { findings: await evaluate(check, `Speichern: ${check}`), stale: false }); } catch {
+        barState = null; renderBar(); notify("Speichern abgebrochen."); return;
+      }
     }
+    const failed = SAVE_SET.filter((c) => errors(results.get(c).findings).length);
+    if (failed.length) { barState = { kind: "save-failed", checks: failed }; renderBar(); return; }
+    barState = null;
   }
-  const failed = SAVE_SET.filter((c) => errors(results.get(c).findings).length);
-  if (failed.length) { barState = { kind: "save-failed", checks: failed }; renderBar(); return; }
-  markSaved("codex");
-  savedRevision = revision("codex");
-  barState = null;
+  markSaved(doc);
+  if (doc === "codex") savedRevision = revision("codex");
   renderBar();
-  if (CONFIRM_CLEAN) notify("Gespeichert."); else announce("Gespeichert.");
+  const msg = `${docLabel(doc)} gespeichert.`;
+  if (CONFIRM_CLEAN) notify(msg); else announce(msg);
 }
 
 // The wireframe does not serialise the model edits to XML, so the download carries the
 // excerpt as loaded (or as formatted), not the edited words. The real build writes the
 // edited bytes, in place with a native handle or as this download in Firefox (F50).
 // Only bytes that passed the save set are offered, so the toolbar gates it on the revision.
+// The image annotations have no source here, so Herunterladen is disabled for them.
 function download() {
   const url = URL.createObjectURL(new Blob([state.data.xmlExcerpt], { type: "application/xml" }));
   const a = el("a", { href: url, download: DOWNLOAD_NAME, hidden: "" });
@@ -276,7 +283,6 @@ function barContent() {
   if (running) {
     return [
       el("strong", { text: `${running.label} läuft …` }),
-      el("span", { text: "Der Text bleibt bearbeitbar." }),
       el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => running && running.cancel() }),
     ];
   }
@@ -285,7 +291,7 @@ function barContent() {
   const nodes = stale ? [el("strong", { class: "is-stale", text: "Ergebnis veraltet, Prüfung erneut ausführen." })] : [];
   if (barState.kind === "save-failed") {
     const parts = barState.checks.map((c) => `${c} mit ${plural(errors(results.get(c).findings).length)}`);
-    return [...nodes, el("strong", { text: `Nicht gespeichert: ${parts.join(", ")}.` }), el("span", { text: "Nichts geschrieben, die Änderungen bleiben ungesichert." }), show];
+    return [...nodes, el("strong", { text: `Nicht gespeichert: ${parts.join(", ")}.` }), show];
   }
   const check = barState.checks[0];
   const fs = results.get(check).findings;
@@ -294,12 +300,13 @@ function barContent() {
   return [...nodes, el("strong", { text: `${check}: ${counts}` }), el("span", { text: `${first.message} ${first.where}` }), show];
 }
 
-// Findings list (F47): grouped per check, each finding with document, location, rule,
-// XML path and message; choosing its location selects it in the text.
+// Findings list (F47): the checked document named once in the title as the document
+// chooser names it, findings grouped per check, each with location, rule, XML path and
+// message; choosing its location selects it in the text.
 
 export function showFindings() {
   if (!results.size) {
-    openPanel("findings", ["Befunde"], [el("p", { class: "empty-note", text: "Noch keine Prüfung gelaufen. Prüfen in der Arbeitsleiste startet eine." })]);
+    openPanel("findings", ["Befunde"], [el("p", { class: "empty-note", text: "Noch keine Prüfung gelaufen." })]);
     return;
   }
   const body = [];
@@ -310,8 +317,6 @@ export function showFindings() {
     const fs = r.findings;
     const head = el("h3", { class: "findings-check" }, [check, el("span", { class: "context", text: fs.length ? `${plural(fs.length)}, ${errors(fs).length} Fehler${r.stale ? ", veraltet" : ""}` : `keine Befunde${r.stale ? ", veraltet" : ""}` })]);
     const group = el("section", { class: "findings-group" }, [head]);
-    const phase = check.startsWith("Schematron") ? check.split(" ")[1] : null;
-    if (phase) group.append(el("p", { class: "findings-scope", text: NOT_EVALUATED[phase] }));
     if (fs.length) {
       const list = el("ul", { class: "findings" });
       for (const f of fs) {
@@ -319,14 +324,14 @@ export function showFindings() {
           el("span", { class: "finding-role", text: f.role === "error" ? "Fehler" : "Warnung" }),
           el("span", { class: "finding-msg", text: f.message }),
           f.at ? el("button", { type: "button", class: "link-btn", text: f.where, onclick: () => jumpToFinding(f) }) : el("span", { text: f.where }),
-          el("span", { class: "finding-meta" }, [`${f.doc} · `, el("code", { text: f.rule }), " · ", el("code", { text: f.path })]),
+          el("span", { class: "finding-meta" }, [el("code", { text: f.rule }), " · ", el("code", { text: f.path })]),
         ]));
       }
       group.append(list);
     }
     body.push(group);
   }
-  openPanel("findings", ["Befunde ", el("span", { class: "context", text: DOC })], body, showFindings);
+  openPanel("findings", ["Befunde ", el("span", { class: "context", text: docLabel("codex") })], body, showFindings);
   panelBody("findings").querySelector("button")?.focus();
 }
 
@@ -377,5 +382,8 @@ command("check:sch-editing", () => runCheck("Schematron editing"));
 command("check:sch-review", () => runCheck("Schematron review"));
 command("findings", showFindings, () => (results.size ? null : "Noch keine Prüfung gelaufen."));
 command("save", save);
-command("download", download, () => (savedRevision !== null && savedRevision === revision("codex") ? null : "Erst Speichern; heruntergeladen werden nur Bytes, die den Schemasatz bestanden haben."));
+command("download", download, () => {
+  if (activeDoc() === "images") return "Kein XML geladen.";
+  return savedRevision !== null && savedRevision === revision("codex") ? null : "Erst Speichern.";
+});
 tabs.set("findings", { show: showFindings });

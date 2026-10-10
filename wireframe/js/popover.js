@@ -238,7 +238,7 @@ export function holdForPendingInput() {
   const input = pendingInput();
   if (!input) return false;
   input.focus();
-  const msg = "Die Eingabe ist weder angewendet noch abgebrochen. Erst Anwenden oder Abbrechen, dann das Dokument wechseln.";
+  const msg = "Die Eingabe ist weder übernommen noch abgebrochen. Erst Anwenden oder Abbrechen, dann das Dokument wechseln.";
   if (pop().contains(input)) popoverNote(msg); else panelNote(msg);
   return true;
 }

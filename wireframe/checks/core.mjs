@@ -25,6 +25,13 @@ const row2 = await page.$$eval('#tb-selection [data-guard="markup"], #tb-selecti
 check("row 2 visible and disabled with a title reason before a selection", row2.length === 6 && row2.every(([vis, dis, t]) => vis && dis === "true" && /auswählen/.test(t)), JSON.stringify(row2[0]));
 await page.click('#tb-selection [data-cmd="comment"]', { force: true }); // aria-disabled stays clickable
 check("activating a disabled control states its reason", /auswählen/.test(await page.locator("#notice").innerText()));
+// Every disabled control looks disabled: the dropdowns as the buttons, menu entries by colour and cursor.
+const look = await page.$$eval('#tb-selection [data-guard="markup"], #tb-selection [data-cmd="comment"]', (bs) => bs.map((b) => { const s = getComputedStyle(b); return `${s.borderTopStyle} ${s.cursor} ${s.color}`; }));
+check("disabled dropdowns look like the disabled buttons (dashed edge, not-allowed cursor, secondary colour)", look.length === 6 && new Set(look).size === 1 && look[0].startsWith("dashed not-allowed "), JSON.stringify([...new Set(look)]));
+await page.click('.act[data-action="Register"] > button');
+const entry = await page.$eval('[data-cmd="register:link"]', (b) => { const s = getComputedStyle(b); return `${b.getAttribute("aria-disabled")} ${s.cursor} ${s.color}`; });
+check("a disabled menu entry shows the secondary colour and the not-allowed cursor", entry === `true not-allowed ${look[0].split(" ").slice(2).join(" ")}`, entry);
+await page.keyboard.press("Escape");
 
 await page.click('[data-column="1"]');
 check("column b", (await page.getAttribute("#flow", "aria-label")).endsWith("Spalte b") && (await page.locator("#flow .w").count()) > 0);
@@ -41,6 +48,9 @@ await page.click("#toggle-facs");
 await page.waitForSelector("#zones", { state: "attached", timeout: 15000 }).catch(() => {});
 check("Faksimile in the Seitenleiste", await page.isVisible("#side-facs") && (await page.getAttribute("#toggle-facs", "aria-pressed")) === "true" && (await page.getAttribute("#tab-facs", "aria-selected")) === "true", `zones attached: ${await page.locator("#zones").count()}`);
 check("Zonen enabled with the facsimile", !(await disabled("#toggle-zones")));
+await page.click("#tab-findings");
+check("empty Befunde tab states only that no check has run", (await page.locator("#side-findings .panel-body").innerText()) === "Noch keine Prüfung gelaufen.");
+await page.click("#tab-facs");
 await page.click("#toggle-facs");
 check("Faksimile toggle closes the column", await page.isHidden("#side"));
 
@@ -113,7 +123,12 @@ await page.keyboard.press("Control+z");
 await page.waitForTimeout(300);
 check("flow typing and undo", typed === `${w5text}x` && (await page.locator("#flow .w").nth(5).innerText()) === w5text && await page.isHidden("#status-unsaved"), `typed="${typed}" after="${await page.locator("#flow .w").nth(5).innerText()}"`);
 await page.keyboard.press(" ");
-check("refused keystroke states its reason", /teilen|XML-Ansicht/.test(await page.locator("#notice").innerText()), await page.locator("#notice").innerText());
+const spaceReason = await page.locator("#notice").innerText();
+check("refused space states its reason without pointing to the read-only XML view", spaceReason === "Ein Leerzeichen würde das Wort teilen.", spaceReason);
+await page.waitForTimeout(1100); // one refusal notice per second
+await page.keyboard.press("Enter");
+const enterReason = await page.locator("#notice").innerText();
+check("refused Enter names what typing changes", enterReason === "Tippen ändert nur das Wort unter der Schreibmarke.", enterReason);
 
 // Register autocomplete; Tab from the flow reaches the popover's controls.
 await page.locator("#flow .w").nth(3).click();
@@ -149,7 +164,10 @@ check("opening the list does not push the text", (await page.locator("#flow .w")
 await page.keyboard.press("Escape");
 await page.keyboard.press("Control+s");
 await page.waitForTimeout(100);
-check("Ctrl+S runs the save flow", /Speichern|Gespeichert/.test(await page.locator("#notice").innerText()), await page.locator("#notice").innerText());
+check("Ctrl+S runs the save flow", /Speichern|gespeichert/.test(await page.locator("#notice").innerText()), await page.locator("#notice").innerText());
+// No Suchen stub: Ctrl+F is not intercepted, so the browser's own find stays available.
+const ctrlF = await page.evaluate(() => { const e = new KeyboardEvent("keydown", { key: "f", ctrlKey: true, bubbles: true, cancelable: true }); document.body.dispatchEvent(e); return e.defaultPrevented; });
+check("Ctrl+F stays with the browser, no search stub", !ctrlF);
 
 check("no console errors", errors.length === 0, errors.join(" | "));
 console.log(results.join("\n"));

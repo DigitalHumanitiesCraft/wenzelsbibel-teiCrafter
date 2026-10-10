@@ -59,7 +59,7 @@ for (const w of ["Rotlebín", "herren", "merteín"]) {
   check(`3.1.1 ${w}: chip over the three words`, g && g.chip === "Person: Martin" && g.words.join(" ") === "Rotlebín herren merteín", JSON.stringify(g));
   check(`3.1.1 ${w}: popover register field shows Martin`, (await regChip()) === "Person: Martin");
 }
-check("registersNote disclosure under the field", (await page.locator("#popover-content .reg-note summary").textContent()) === "Herkunft der Einträge");
+check("no provenance disclosure under the field", !(await page.locator(".reg-note").count()) && !(await page.locator("#popover-content").innerText()).includes("Herkunft"));
 
 // US3.1 AC2, AC3: keyboard-only autocomplete; new link of "werden vrowen" to Königin Sophie.
 await select("werden", "vrowen", 1);
@@ -202,6 +202,7 @@ t = await page.locator("#popover-title").textContent();
 check("list jump selects the first occurrence", t.includes("Rotlebín"), t);
 await menu("register:folk");
 check("Register Völker lists peoples", (await page.locator("#side-refs .panel-title").textContent()) === "Register Völker" && (await page.locator("#side-refs .reg-list li").count()) > 0);
+check("no provenance disclosure in the register list", !(await page.locator("#side-refs .reg-note").count()) && !(await page.locator("#side-refs").innerText()).includes("Herkunft"));
 
 // Narrow sheet layout.
 await page.setViewportSize({ width: 390, height: 800 });

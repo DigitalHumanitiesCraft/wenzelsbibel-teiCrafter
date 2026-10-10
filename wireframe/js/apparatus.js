@@ -203,7 +203,7 @@ function applyForm(words, fields) {
   indexApparatus();
   refreshMarks();
   openPopover();
-  popoverNote(`Apparatkommentar ${ids[0]} bis ${ids[1]} angelegt.`);
+  popoverNote(`Apparatkommentar ${ids[0]} bis ${ids[1]} übernommen.`);
   $(`#popover-content .app-entry[data-from="${ids[0]}"] textarea`)?.focus();
 }
 
@@ -252,7 +252,7 @@ function commentEntry(app) {
     el("span", { text: `${app.type ? `${app.type}, ` : ""}${app.from ?? "?"} bis ${app.to}` }),
   ]));
   const missing = unresolved.get(app);
-  if (missing) entry.append(el("p", { class: "app-unresolved", text: `${missing === "from" ? "Startanker" : "Endanker"} ${app[missing]} steht nicht auf dieser Seite; der Kommentar ist dem Wort am vorhandenen Anker zugeordnet.` }));
+  if (missing) entry.append(el("p", { class: "app-unresolved", text: `${missing === "from" ? "Startanker" : "Endanker"} ${app[missing]} steht nicht auf dieser Seite.` }));
   const notes = app.notes || {};
   const areas = {};
   for (const [lang, label] of LANGS) {

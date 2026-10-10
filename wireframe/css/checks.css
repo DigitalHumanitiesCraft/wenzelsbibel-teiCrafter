@@ -7,7 +7,6 @@
   .findings-group { display: grid; gap: var(--space-xs); margin-block-end: var(--space-md); }
   .findings-check { font-size: var(--font-size-sm); margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: baseline; }
   .findings-check .context { font-weight: 400; color: var(--color-text-secondary); }
-  .findings-scope { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .findings { display: grid; gap: var(--space-xs); }
   .finding {
     display: flex; flex-wrap: wrap; gap: 0 var(--space-md); align-items: baseline;
