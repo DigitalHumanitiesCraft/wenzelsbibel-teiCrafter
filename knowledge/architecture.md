@@ -161,7 +161,8 @@ The base's automated Axe floor and keyboard paths apply to inherited views. The 
 | `docs/` | Published application; `index.html` and `editor.html` as inherited from the base until the fork's shell replaces them, `js/editor/` generic editor, `js/projects/wenzelsbibel/` specialisation |
 | `test/` | Inherited proofs and browser tests plus the fork's demo workflow tests |
 | `snapshots/` | Dated reports such as the demo protocol and test runs with real files |
-| `wireframe/` | Static wireframe with fol. 1r, not published |
+| `wireframe/` | Wireframe with fol. 1r in which every workflow runs in memory with undo; `js/` modules, `css/` per feature, `checks/` browser walkthroughs; not published |
+| `scripts/` | `extract_wireframe_data.py`, which generates the fol. 1r extraction from the public TEI files |
 | `data/` | Local edition files and extractions, ignored by git |
 | `prototypes/d-flow/` | Fork-only spike of the flow view (CodeMirror decorations over raw TEI on fol. 1r) with its Node and browser checks |
 | `prototypes/` | `d-flow/` only, with the inherited dev server configuration and an index page that lists it |

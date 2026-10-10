@@ -40,4 +40,4 @@ jobs:
       - name: Schematron fixture check
         run: python editorial/check_fixtures.py
       - name: Ruff over editorial
-        run: python -m ruff check editorial
+        run: python -m ruff check editorial scripts
