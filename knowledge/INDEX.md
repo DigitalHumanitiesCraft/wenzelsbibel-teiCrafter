@@ -75,8 +75,8 @@ Editionsregeln
 Handbook
 : The edition's published Transkriptionshandbuch (version February 2025), the rule source for the encoding, see editorial-guidelines.
 
-Inspector
-: The bottom bar of the editor that shows and edits what is selected, in text and XML view alike.
+Popover
+: The editing surface anchored at the selection that shows and edits what is selected, in text and XML view alike; lists and large forms live in the side panel.
 
 Project folder
 : The folder in the base that holds the Wenzelsbibel specialisation, `docs/js/projects/wenzelsbibel/`.

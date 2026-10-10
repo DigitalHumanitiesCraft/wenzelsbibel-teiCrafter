@@ -39,7 +39,7 @@ The tool is finished enough when the edition team actually edits with it. Until 
 | 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data, kept as the feedback instrument until phase 5b | The agreed layout and every workflow run in memory on fol. 1r; the walkthroughs under `wireframe/checks/` pass | None |
 | 3 Base refactor and merge | Refactor steps a to e in teiCrafter, merged into the fork | Base acceptance holds (teiCrafter `knowledge/plan.md`); the inherited checks workflow passes on the fork | None |
 | 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); the project Schematron `docs/schemas/wenzelsbibel.sch` as single source, named "Editionsregeln" in the workspace default schema set; the project vocabulary `docs/schemas/wenzelsbibel-vocabulary.json`; the [editorial layer](../editorial/README.md) with fixtures and the fixture check including the vocabulary comparison; the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) of the public data | Fixture check green, including equal value lists in Schematron and vocabulary; the editing phase accepts the published codex and image annotations unchanged | None |
-| 5a Base mechanisms in teiCrafter | Built in the base and merged: the inspector rendering forms from a field table, the register autocomplete over any register list, the notice bar and findings list over `validation-view.js` results, the CodeMirror flow view with its vendored bundle and "XML formatieren", and the `tei-document` seam between the legacy offset tree and `src/core` | Accepted against the base's own plan and checks (teiCrafter `knowledge/plan.md`); the merge leaves the inherited proofs green; the flow view keeps untouched bytes identical on the full codex | Operator decision on typing in the flow (specification F18) before the word commands; the base plan still lists inspector and autocomplete as an open decision |
+| 5a Base mechanisms in teiCrafter | Built in the base and merged: the toolbar, the popover at the selection rendering forms from a field table, the side panel, the register autocomplete over any register list, the notice bar and findings list over `validation-view.js` results, the folding of `xml:id` and `facs` in the XML view, the CodeMirror flow view with its vendored bundle and "XML formatieren", and the `tei-document` seam between the legacy offset tree and `src/core` | Accepted against the base's own plan and checks (teiCrafter `knowledge/plan.md`); the merge leaves the inherited proofs green; the flow view keeps untouched bytes identical on the full codex | The base plan still lists the inspector (now the popover) and autocomplete as an open decision |
 | 5b Fork composition | In `docs/js/projects/wenzelsbibel/`: field tables, markup value lists and labels read from the project vocabulary, German labels, menu and document bar definitions, and the composition of the new `editor.html` shell from the base mechanisms; inline register links ([specification](specification.md#key-decisions)); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; `npm run check:fork` clean; the wireframe deleted | Phase 5a merged |
 | 6 Verification with real files | Real-file run and demo protocol under `snapshots/` | All five workflows on the real codex, image annotations and registers; output passes the gate; untouched bytes identical | Operator names the machine that holds the edition files |
 | 7 Publication | Pages from `main:/docs` | The published start page and editor load and open a user-supplied file | Operator action: enabling Pages from `main:/docs` |
@@ -65,12 +65,22 @@ Phase 5a is base work and is ordered by the base's plan. A feasibility study for
 
 The mark tables and register types these packages consume are project data and belong to phase 5b. The inherited browser suites that drive the base shell are excluded in the fork through a fork-only Playwright configuration ([testing](testing.md#known-exceptions-and-limits)).
 
+## Next steps
+
+The order of the remaining work after the operator's feedback rounds of 2026-10-10, as the living list of what is still to do. An item leaves this list when its phase row records it as done.
+
+1. Wireframe, second feedback round: word commands in the flow (a space splits a word, Backspace at a word boundary joins, Delete on a whole word removes it, each with undo and an `xml:id` for a new word); `xml:id` and `facs` folded in the XML view with a switch "IDs anzeigen"; the findings-list texts that still name the page excerpt; the facsimile follows a line selection when the line lies outside the visible image.
+2. Wireframe observations still open from the pivot: the single-word state shows Anwenden and Abbrechen twice (once per field), and Apparatkommentar is disabled on a single word; decide whether a word may receive a comment alone.
+3. Phase 5a in the base: the five mechanisms, with the popover at the selection in place of the bottom inspector, and the XML view folding as a CodeMirror decoration.
+4. Phase 5b, then 6, 7 and 8 as the phase table orders them.
+5. Operator points in [handoff](handoff.md): review and install the design skills, inform the edition team about the tracked excerpt, the vocabulary editor, the German summary layer.
+
 ## Status tracker
 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | 1 Knowledge base | in progress | Operator review pending |
-| 2 Static wireframe | completed | Frozen until its deletion in phase 5b |
+| 2 Static wireframe | in progress | Shell pivot to toolbar, popover and side panel done and verified by the walkthroughs; second feedback round listed under [next steps](#next-steps); deleted in phase 5b |
 | 3 Base refactor and merge | completed | Merged with the base knowledge deletions kept |
 | 4 Editorial layer | in progress | Move to `docs/schemas/`, vocabulary and its consistency check to be verified |
 | 5a Base mechanisms in teiCrafter | pending | Flow spike done in `prototypes/d-flow` |
@@ -87,8 +97,6 @@ Legend: completed, in progress, pending.
 | --- | --- | --- |
 | Written form and pointer syntax of register links ([specification](specification.md#key-decisions)) | Phase 8 (seeding the register); the tool writes the proposed form meanwhile | Proposed form |
 | List element for peoples in the register file | Phase 8 (seeding the register) | Open |
-| Whether typing in the flow writes to the source | Phase 5a, work package 4 (word commands) | Yes, limited to words without inner markup ([specification](specification.md#open-questions)) |
-| Visible confirmation of a clean check | Phase 5a, notice bar | A brief confirmation that dismisses itself |
 | `xml:space` handling in "XML formatieren" | Phase 5a, before phase 8 formats the files | Leave elements under `xml:space="preserve"` untouched |
 | Working model and file topology | Phase 8 | The operator's proposal in [integration](integration.md#working-model) |
 | Composition of the new shell through `editor-app.js` or a fork-specific module | Phase 5b | Fork-specific module reusing the generic controllers |

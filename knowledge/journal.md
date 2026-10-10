@@ -21,6 +21,12 @@ related: [project, specification, plan, handoff]
 
 ## Entries
 
+### 2026-10-10 integrated Shell pivot to toolbar, popover and side panel, and the decisions of the second feedback round
+
+- Source: the operator's judgement after the first feedback round ("nicht überzeugend": hidden actions, a bottom bar that opens and closes, a text that refuses typing), the pivot built in `wireframe/` and verified by all seven walkthroughs, and the operator's answers on typing, clean-check confirmation and IDs in the XML view.
+- Target: `wireframe/` (toolbar.js, popover.js, panel.js replace menu.js and inspector.js), [design.md](design.md), [specification.md](specification.md) (F1 to F13, F18, F24, F27 to F36, F46, F47, F56, F57), [architecture.md](architecture.md), [plan.md](plan.md), [handoff.md](handoff.md), the base handoff in teiCrafter.
+- Result: The interface works by direct manipulation. A two-row toolbar replaces menu bar and document bar, with every action visible and disabled with its reason where the selection does not allow it; a popover at the selection replaces the bottom inspector for word, sequence, line and element; a side panel shares the right column with the facsimile for findings, references and the image-annotation form. Decided: typing in the flow writes to the source and word commands (split, join, delete) make it edit like a text editor within the word model (F18); a clean check confirms itself briefly (F46); `xml:id` and `facs` fold in the XML view with a switch (F57); a line selection brings its zone into view (F24). The remaining wireframe items and the base mechanisms are ordered in the plan's next steps.
+
 ### 2026-10-10 integrated First operator feedback round on the wireframe
 
 - Source: the operator's own test of the wireframe on fol. 1r (screenshots and questions of 2026-10-10), a headless Chromium measurement of long tasks per interaction, and the fix package of the same day.

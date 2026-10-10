@@ -102,14 +102,15 @@ Components of the new shell. The base builds each mechanism and the fork compose
 
 | Component | Built in the base | Kept in the fork |
 | --- | --- | --- |
-| Menu bar and document bar | The rendering, where a generic one emerges (open) | German menu entries and their actions, document chooser (codex, image annotations), folio, column and miniature navigation |
-| Bottom inspector | A component rendering forms from a field table | The field tables for word, apparatus and miniature |
+| Toolbar | A two-row toolbar component with disabled-with-reason actions and the WAI-ARIA toolbar keyboard pattern | German labels, the action set, document chooser (codex, image annotations), folio, column and miniature navigation |
+| Popover at the selection | A component anchored at the selection, rendering forms from a field table, with a bottom-sheet variant for narrow screens | The field tables for word, sequence, line and element |
+| Side panel | A right-column panel sharing its column with the facsimile through a segmented switch | The lists and the image-annotation form |
 | Register autocomplete | A component over any list in a register file | Register types and German labels |
 | Flow view | The CodeMirror module hosted by the legacy app, with its vendored bundle, decorations over words, wrap and word commands, and "XML formatieren" | The mark tables |
 | Notice bar and findings list | Logic over `validation-view.js` results | German labels |
 | `tei-document` seam | The bridge between the legacy offset tree and `src/core` (see below) | Nothing |
 
-A generic component built in the fork would have to be offered to the base and replaced by the base version later, so the fork builds none. The base's plan still lists inspector and autocomplete as an open decision, which this repository's decision settles from its side.
+A generic component built in the fork would have to be offered to the base and replaced by the base version later, so the fork builds none. The base's plan still lists the inspector (now the popover) and autocomplete as an open decision, which this repository's decision settles from its side.
 
 Whether the new `editor.html` composes the generic controllers through `editor-app.js` or through a fork-specific composition module is open. `editor-app.js` assembles the base shell's DOM, so a separate composition module in the project folder that reuses session, validation, facsimile, recovery and output controllers is the likely path (inference from the module structure, to be confirmed while building phase 5b).
 
@@ -124,7 +125,7 @@ caret or selection in the flow view (word, word sequence, line, zone) or cursor 
   -> element and offset range in the raw string (tei-document offset tree, word xml:id)
   -> project model computes the edit (text, register or image model)
   -> splice through tei-document, new canonical string, EditorSession revision
-  -> re-render of text view, inspector, facsimile overlay
+  -> re-render of text view, popover, facsimile overlay
   -> validation: RelaxNG in the worker, Schematron in the page, bound to the revision
   -> notice bar when well-formedness breaks or a requested check has findings;
      Save passes the output gate only when every schema result is valid
@@ -132,10 +133,10 @@ caret or selection in the flow view (word, word sequence, line, zone) or cursor 
 
 | Workflow | Modules involved |
 | --- | --- |
-| 1 Page, facsimile, word edit | Document bar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; inspector word fields write `w/@orig` and `w/@norm` through the text model; typing in the flow would write word text and `@orig` once the operator decides it ([specification](specification.md#text-view)) |
+| 1 Page, facsimile, word edit | Toolbar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; popover word fields write `w/@orig` and `w/@norm` through the text model; typing in the flow would write word text and `@orig` once the operator decides it ([specification](specification.md#text-view)) |
 | 2 Apparatus comment | Selection of a word range; the text model inserts empty anchors and an `app` with `@from`/`@to` and bilingual notes with sigle in the stand-off apparatus |
 | 3 Register link | Autocomplete over the register file held in the project collection; the selected words are wrapped inline in `rs[@type][@ref]`, and existing `ref[@type][@target]` links are read ([specification](specification.md#key-decisions)); a new entry is written to the register file as a companion edit |
-| 4 Miniature | Zone selection opens the image-annotation form in the inspector; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
+| 4 Miniature | Zone selection opens the image-annotation form in the side panel; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
 | 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the bottom area; `output-controller.js` writes the file |
 
 ## External services
@@ -153,7 +154,7 @@ The tool runs in the browser without a backend. Edition files are opened from th
 
 ## Accessibility
 
-The base's automated Axe floor and keyboard paths apply to inherited views. The new shell components need the same: reachable by keyboard, Esc closes the inspector, Ctrl+E on a selection opens the list of allowed elements, `lang="de"` on the interface. Manual keyboard and screen-reader review of the new shell is open.
+The base's automated Axe floor and keyboard paths apply to inherited views. The new shell components need the same: reachable by keyboard, Esc closes the popover, Ctrl+E on a selection opens the list of allowed elements, `lang="de"` on the interface. Manual keyboard and screen-reader review of the new shell is open.
 
 ## Repository structure
 
