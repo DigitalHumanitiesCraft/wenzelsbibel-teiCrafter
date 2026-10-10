@@ -1,152 +1,179 @@
 {
-  "about": "Controlled value lists of the Wenzelsbibel edition, edited by hand. Each list names the element and attribute it governs and the Schematron rules in wenzelsbibel.sch that encode it: \"all\" means the rule lists every value, \"data\" means it lists only the values with source data. A value has source handbook when the Transkriptionshandbuch names it, and source data when only the edition data uses it. python editorial/check_fixtures.py --vocabulary fails when this file and the schema disagree.",
+  "about": "Controlled value lists of the Wenzelsbibel edition, edited by hand. Each list names the element and attribute it governs and the Schematron rules in wenzelsbibel.sch that encode it, with \"all\" when the rule lists every value and \"data\" when it lists only the values with source data. A value has source handbook when the Transkriptionshandbuch names it, and source data when only the edition data uses it. Every list carries a German caption and every value a German label, each with a labelSource, which is handbook for the German wording of the Transkriptionshandbuch, wireframe for a label the wireframe shows, and working label for a plain descriptive label that awaits the edition team's confirmation. python editorial/check_fixtures.py --vocabulary fails when this file and the schema disagree, in a rule test or in a value list a message repeats, and when a caption or label is missing.",
   "lists": [
     {
       "key": "apparatus-type",
       "element": "app",
       "attribute": "type",
+      "label": "Kommentartyp",
+      "labelSource": "working label",
       "rules": { "app-type-known": "all" },
-      "note": "The handbook has no apparatus chapter, so every value comes from the data and none is reported as a warning. offered marks the types the editor offers for a new comment.",
+      "note": "The handbook has no apparatus chapter, so every value comes from the data and none is reported as a warning. offered marks the types the editor offers for a new comment. The labels of the offered types come from the wireframe and the others are working labels. The meaning of the suffixes _ses and _vev is undocumented, so their labels keep the suffix.",
       "values": [
-        { "value": "comment_edition", "source": "data", "label": "Editionskommentar", "offered": true },
-        { "value": "comment_understanding", "source": "data", "label": "Verständniskommentar", "offered": true },
-        { "value": "comment_translation", "source": "data" },
-        { "value": "comment_translation_ses", "source": "data" },
-        { "value": "comment_translation_vev", "source": "data" },
-        { "value": "comment_manuscript", "source": "data" },
-        { "value": "comment_variant", "source": "data" }
+        { "value": "comment_edition", "source": "data", "label": "Editionskommentar", "labelSource": "wireframe", "offered": true },
+        { "value": "comment_understanding", "source": "data", "label": "Verständniskommentar", "labelSource": "wireframe", "offered": true },
+        { "value": "comment_translation", "source": "data", "label": "Übersetzungskommentar", "labelSource": "working label" },
+        { "value": "comment_translation_ses", "source": "data", "label": "Übersetzungskommentar (ses)", "labelSource": "working label" },
+        { "value": "comment_translation_vev", "source": "data", "label": "Übersetzungskommentar (vev)", "labelSource": "working label" },
+        { "value": "comment_manuscript", "source": "data", "label": "Handschriftenkommentar", "labelSource": "working label" },
+        { "value": "comment_variant", "source": "data", "label": "Variantenkommentar", "labelSource": "working label" }
       ]
     },
     {
       "key": "hi-rend",
       "element": "hi",
       "attribute": "rend",
+      "label": "Hervorhebung",
+      "labelSource": "wireframe",
       "rules": { "hi-rend-known": "all", "hi-rend-data-only": "data" },
+      "note": "The handbook labels follow sections 1.4.2 to 1.4.5, 1.4.14 and 1.4.16. Randnotiz is the handbook's term for marginalia in section 1.2.3. The other data values carry working labels.",
       "values": [
-        { "value": "rubrication", "source": "handbook" },
-        { "value": "inkRed", "source": "handbook" },
-        { "value": "gold", "source": "handbook" },
-        { "value": "initial", "source": "handbook" },
-        { "value": "initial_historisiert", "source": "handbook" },
-        { "value": "border_decoration", "source": "handbook" },
-        { "value": "ligature", "source": "data" },
-        { "value": "textStyle", "source": "data" },
-        { "value": "decoration", "source": "data" },
-        { "value": "full_page", "source": "data" },
-        { "value": "marginalia", "source": "data" },
-        { "value": "italic", "source": "data" }
+        { "value": "rubrication", "source": "handbook", "label": "Rubrizierung", "labelSource": "handbook" },
+        { "value": "inkRed", "source": "handbook", "label": "Rote Tinte", "labelSource": "handbook" },
+        { "value": "gold", "source": "handbook", "label": "Goldene Schrift", "labelSource": "handbook" },
+        { "value": "initial", "source": "handbook", "label": "Initiale", "labelSource": "handbook" },
+        { "value": "initial_historisiert", "source": "handbook", "label": "Historisierte Initiale", "labelSource": "handbook" },
+        { "value": "border_decoration", "source": "handbook", "label": "Text in Marginalverzierung", "labelSource": "handbook" },
+        { "value": "ligature", "source": "data", "label": "Ligatur", "labelSource": "working label" },
+        { "value": "textStyle", "source": "data", "label": "Textstil", "labelSource": "working label" },
+        { "value": "decoration", "source": "data", "label": "Verzierung", "labelSource": "working label" },
+        { "value": "full_page", "source": "data", "label": "Ganzseitig", "labelSource": "working label" },
+        { "value": "marginalia", "source": "data", "label": "Randnotiz", "labelSource": "handbook" },
+        { "value": "italic", "source": "data", "label": "Kursiv", "labelSource": "working label" }
       ]
     },
     {
       "key": "supplied-reason",
       "element": "supplied",
       "attribute": "reason",
+      "label": "Ergänzung",
+      "labelSource": "wireframe",
       "rules": { "supplied-reason-known": "all", "supplied-reason-data-only": "data" },
+      "note": "The handbook labels follow sections 1.4.9 and 1.4.15. additionalPunctuation carries a working label.",
       "values": [
-        { "value": "text_intervention", "source": "handbook" },
-        { "value": "switch", "source": "handbook" },
-        { "value": "damage", "source": "handbook" },
-        { "value": "additionalPunctuation", "source": "data" }
+        { "value": "text_intervention", "source": "handbook", "label": "Editorische Ergänzung", "labelSource": "handbook" },
+        { "value": "switch", "source": "handbook", "label": "Textumstellung", "labelSource": "handbook" },
+        { "value": "damage", "source": "handbook", "label": "Beschädigung der Handschrift", "labelSource": "handbook" },
+        { "value": "additionalPunctuation", "source": "data", "label": "Ergänzte Interpunktion", "labelSource": "working label" }
       ]
     },
     {
       "key": "surplus-reason",
       "element": "surplus",
       "attribute": "reason",
+      "label": "Überflüssige Textelemente",
+      "labelSource": "handbook",
       "rules": { "surplus-reason-known": "all" },
-      "note": "The attribute may also be absent.",
+      "note": "The attribute may also be absent. The caption and labels follow handbook sections 1.4.7 and 1.4.10. The toolbar shows this list and del-type under Tilgung.",
       "values": [
-        { "value": "Diplography", "source": "handbook" },
-        { "value": "decor", "source": "handbook" },
-        { "value": "text_erasure", "source": "handbook" },
-        { "value": "switch", "source": "handbook" },
-        { "value": "instruction_note", "source": "handbook" }
+        { "value": "Diplography", "source": "handbook", "label": "Wortwiederholung", "labelSource": "handbook" },
+        { "value": "decor", "source": "handbook", "label": "Dekoration", "labelSource": "handbook" },
+        { "value": "text_erasure", "source": "handbook", "label": "Überflüssiger Text", "labelSource": "handbook" },
+        { "value": "switch", "source": "handbook", "label": "Textumstellung", "labelSource": "handbook" },
+        { "value": "instruction_note", "source": "handbook", "label": "Umgesetzte Anweisung", "labelSource": "handbook" }
       ]
     },
     {
       "key": "del-type",
       "element": "del",
       "attribute": "type",
+      "label": "Tilgungen und Streichungen",
+      "labelSource": "handbook",
       "rules": { "del-type-known": "all", "del-type-data-only": "data" },
-      "note": "The attribute may also be absent. The handbook names redemption_point for the point of deletion that the data writes as erasure_point.",
+      "note": "The attribute may also be absent. The handbook names redemption_point for the point of deletion that the data writes as erasure_point. The caption and labels follow handbook sections 1.4.8 and 1.3.6, and both spellings of the deletion point carry the handbook term Tilgungspunkt. The toolbar shows this list and surplus-reason under Tilgung.",
       "values": [
-        { "value": "erasure", "source": "handbook" },
-        { "value": "redemption_point", "source": "handbook" },
-        { "value": "erasure_point", "source": "data" }
+        { "value": "erasure", "source": "handbook", "label": "Rasierter Text", "labelSource": "handbook" },
+        { "value": "redemption_point", "source": "handbook", "label": "Tilgungspunkt", "labelSource": "handbook" },
+        { "value": "erasure_point", "source": "data", "label": "Tilgungspunkt", "labelSource": "handbook" }
       ]
     },
     {
       "key": "foreign-lang",
       "element": "foreign",
       "attribute": "xml:lang",
+      "label": "Fremdsprache",
+      "labelSource": "wireframe",
       "rules": { "foreign-lang-known": "all" },
+      "note": "The labels follow handbook sections 1.4.11 and 1.4.12.",
       "values": [
-        { "value": "lat", "source": "handbook" },
-        { "value": "cze", "source": "handbook" }
+        { "value": "lat", "source": "handbook", "label": "Lateinische Textpassage", "labelSource": "handbook" },
+        { "value": "cze", "source": "handbook", "label": "Tschechische Textpassage", "labelSource": "handbook" }
       ]
     },
     {
       "key": "num-type",
       "element": "num",
       "attribute": "type",
+      "label": "Zahl",
+      "labelSource": "wireframe",
       "rules": { "num-type-known": "all" },
+      "note": "The label follows handbook section 1.4.6.",
       "values": [
-        { "value": "chapter", "source": "handbook" }
+        { "value": "chapter", "source": "handbook", "label": "Kapitelangabe", "labelSource": "handbook" }
       ]
     },
     {
       "key": "note-type",
       "element": "note",
       "attribute": "type",
+      "label": "Schreib- und Malanweisung",
+      "labelSource": "handbook",
       "rules": { "note-type-known": "all" },
-      "note": "Applies to notes in the codex text, not to notes inside the image-annotation lists.",
+      "note": "Applies to notes in the codex text. Notes inside the image-annotation lists are outside this list. The caption and label follow handbook section 1.4.10.",
       "values": [
-        { "value": "instruction", "source": "handbook", "label": "nicht ausgeführte Anweisung" }
+        { "value": "instruction", "source": "handbook", "label": "Nicht umgesetzte Anweisung", "labelSource": "handbook" }
       ]
     },
     {
       "key": "fw-ana",
       "element": "fw",
       "attribute": "ana",
+      "label": "Textregion",
+      "labelSource": "handbook",
       "rules": { "fw-ana-known": "all" },
+      "note": "The caption follows handbook section 1.1 and the labels sections 1.2.1 to 1.2.7.",
       "values": [
-        { "value": "header", "source": "handbook" },
-        { "value": "instruction_note", "source": "handbook" },
-        { "value": "marginalia", "source": "handbook" },
-        { "value": "text_in_image", "source": "handbook" },
-        { "value": "borderdecoration", "source": "handbook" },
-        { "value": "scroll", "source": "handbook" },
-        { "value": "painter_instruction", "source": "handbook" }
+        { "value": "header", "source": "handbook", "label": "Kopfzeile", "labelSource": "handbook" },
+        { "value": "instruction_note", "source": "handbook", "label": "Notiz zur Schreib- oder Malanweisung", "labelSource": "handbook" },
+        { "value": "marginalia", "source": "handbook", "label": "Randnotiz", "labelSource": "handbook" },
+        { "value": "text_in_image", "source": "handbook", "label": "Text in Miniatur", "labelSource": "handbook" },
+        { "value": "borderdecoration", "source": "handbook", "label": "Text in Randverzierung", "labelSource": "handbook" },
+        { "value": "scroll", "source": "handbook", "label": "Schriftrolle", "labelSource": "handbook" },
+        { "value": "painter_instruction", "source": "handbook", "label": "Maleranweisung", "labelSource": "handbook" }
       ]
     },
     {
       "key": "seg-ana",
       "element": "seg",
       "attribute": "ana",
+      "label": "Textregion",
+      "labelSource": "handbook",
       "rules": { "seg-ana-known": "all" },
-      "note": "The handbook encodes text regions as fw/@ana; the data also uses seg/@ana, which the review phase reports as a warning for every value.",
+      "note": "The handbook encodes text regions as fw/@ana. The data also uses seg/@ana, which the review phase reports as a warning for every value. The labels are those of fw-ana, and the spellings border-decoration and border_decoration carry the label of the handbook value borderdecoration.",
       "values": [
-        { "value": "header", "source": "handbook" },
-        { "value": "instruction_note", "source": "handbook" },
-        { "value": "marginalia", "source": "handbook" },
-        { "value": "text_in_image", "source": "handbook" },
-        { "value": "borderdecoration", "source": "handbook" },
-        { "value": "border-decoration", "source": "data" },
-        { "value": "border_decoration", "source": "data" },
-        { "value": "scroll", "source": "handbook" },
-        { "value": "painter_instruction", "source": "handbook" }
+        { "value": "header", "source": "handbook", "label": "Kopfzeile", "labelSource": "handbook" },
+        { "value": "instruction_note", "source": "handbook", "label": "Notiz zur Schreib- oder Malanweisung", "labelSource": "handbook" },
+        { "value": "marginalia", "source": "handbook", "label": "Randnotiz", "labelSource": "handbook" },
+        { "value": "text_in_image", "source": "handbook", "label": "Text in Miniatur", "labelSource": "handbook" },
+        { "value": "borderdecoration", "source": "handbook", "label": "Text in Randverzierung", "labelSource": "handbook" },
+        { "value": "border-decoration", "source": "data", "label": "Text in Randverzierung", "labelSource": "handbook" },
+        { "value": "border_decoration", "source": "data", "label": "Text in Randverzierung", "labelSource": "handbook" },
+        { "value": "scroll", "source": "handbook", "label": "Schriftrolle", "labelSource": "handbook" },
+        { "value": "painter_instruction", "source": "handbook", "label": "Maleranweisung", "labelSource": "handbook" }
       ]
     },
     {
       "key": "register-type",
       "element": "rs | ref",
       "attribute": "type",
+      "label": "Registertyp",
+      "labelSource": "wireframe",
       "rules": { "register-type": "all", "register-type-case": "all" },
-      "note": "The editing phase accepts any capitalisation, the review phase reports other spellings as a warning.",
+      "note": "The editing phase accepts any capitalisation, the review phase reports other spellings as a warning. Person and Ort follow handbook sections 1.4.19 and 1.4.21. Volk is the chip label of the wireframe and of the design, while section 1.4.20 of the handbook speaks of Bevölkerungsgruppen.",
       "values": [
-        { "value": "person", "source": "handbook", "label": "Person" },
-        { "value": "place", "source": "handbook", "label": "Ort" },
-        { "value": "folk", "source": "handbook", "label": "Volk" }
+        { "value": "person", "source": "handbook", "label": "Person", "labelSource": "handbook" },
+        { "value": "place", "source": "handbook", "label": "Ort", "labelSource": "handbook" },
+        { "value": "folk", "source": "handbook", "label": "Volk", "labelSource": "wireframe" }
       ]
     }
   ]

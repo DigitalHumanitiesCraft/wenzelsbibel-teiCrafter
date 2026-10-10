@@ -149,7 +149,7 @@ export function createWenzelsComment(doc, selection, options = {}) {
     { start: range.start, end: range.start, text: qualifyTeiMarkup(`<anchor xml:id="${escapeAttr(from)}"/>`, range.firstContext) },
     { start: range.end, end: range.end, text: qualifyTeiMarkup(`<anchor xml:id="${escapeAttr(to)}"/>`, range.lastContext) },
   ];
-  const fragment = `<app xml:id="${escapeAttr(id)}" type="${type}" from="#${escapeAttr(from)}" to="#${escapeAttr(to)}">${options.notes.map(noteXml).join("")}</app>`;
+  const fragment = `<app xml:id="${escapeAttr(id)}" type="${escapeAttr(type)}" from="#${escapeAttr(from)}" to="#${escapeAttr(to)}">${options.notes.map(noteXml).join("")}</app>`;
   appendWenzelsStandOff(doc, "listApp", null, fragment, edits);
   return applyEdits(doc, edits);
 }
