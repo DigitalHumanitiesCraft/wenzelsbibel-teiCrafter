@@ -37,6 +37,7 @@ Read `knowledge/design.md` before generating or changing interface or interface 
 - Label controls in German by their function, consistently across views.
 - Render each column as one continuous flow, the reading unit; use the manuscript line as the reference unit for line numbers, facsimile linking and line selection; keep the selection across the Text and XML switch.
 - Render no control that cannot work in the detected browser; end a failed capability check in a working alternative.
+- Place an action where its object is, an action on the selection in the popover at the selection and an action on document or view in the toolbar, and render no control whose object the current view lacks.
 - Keep no permanent status line. The notice bar overlays the work area without shifting it and shows only the notices F44 of `knowledge/specification.md` lists: standing, a well-formedness break with its reason and jump and the findings of a requested check with the route to the findings list; transient and self-dismissing, the confirmation of a clean check or a completed save, the name of an undone or redone step, the reason of a refused keystroke or action, and the consequence of "XML formatieren" when it runs. Keep the unsaved dot directly after the document chooser until a save succeeds.
 
 ## Scope

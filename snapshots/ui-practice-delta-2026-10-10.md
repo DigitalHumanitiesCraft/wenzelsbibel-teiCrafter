@@ -1,10 +1,10 @@
 # Delta für die UI-Praxis agentisch erzeugter Frontends, Stand 2026-10-10
 
-Dieses Dokument hält den Vorschlag fest, den die Feedback-Runden auf das Wireframe der Wenzelsbibel-Edition für das Vault-Dokument "UI-Praxis für agentisch erzeugte Frontends", seinen Abnahmecheck und den Skill web-style ergeben haben. Es ist ein datierter Bericht für die Vault-Session, die das Delta einarbeitet. Quellen sind die beiden Feedback-Runden des Operators vom 2026-10-10, wie sie knowledge/journal.md und knowledge/design.md festhalten, das Vault-Dokument mit Abnahmecheck, der Skill web-style mit seinen Referenzen, die Skills Impeccable (Tag skill-v4.5.2, Engine 0.1.14), frontend-design (anthropics/skills, Stand 2026-09-03) und web-design-guidelines (vercel-labs/agent-skills, Regeldatei command.md, Stand 2026-10-05), alle vollständig gelesen.
+Dieses Dokument hält den Vorschlag fest, den die Feedback-Runden auf das Wireframe der Wenzelsbibel-Edition für das Vault-Dokument "UI-Praxis für agentisch erzeugte Frontends", seinen Abnahmecheck und den Skill web-style ergeben haben. Es ist ein datierter Bericht für die Vault-Session, die das Delta einarbeitet. Quellen sind die drei Feedback-Runden des Operators vom 2026-10-10, wie sie knowledge/journal.md und knowledge/design.md festhalten, das Vault-Dokument mit Abnahmecheck, der Skill web-style mit seinen Referenzen, die Skills Impeccable (Tag skill-v4.5.2, Engine 0.1.14), frontend-design (anthropics/skills, Stand 2026-09-03) und web-design-guidelines (vercel-labs/agent-skills, Regeldatei command.md, Stand 2026-10-05), alle vollständig gelesen.
 
 ## Befund
 
-Die Feedback-Runden haben sechs Lehren hinterlassen. Die Tabelle zeigt, welcher Träger sie heute als Regel hält.
+Die ersten beiden Feedback-Runden haben sechs Lehren hinterlassen. Die Tabelle zeigt, welcher Träger sie heute als Regel hält.
 
 | Lehre | Vault-Dokument | Abnahmecheck | web-style | design.md |
 |---|---|---|---|---|
@@ -16,6 +16,41 @@ Die Feedback-Runden haben sechs Lehren hinterlassen. Die Tabelle zeigt, welcher 
 | Trägheit wird gemessen, bevor etwas geändert wird | fehlt | fehlt | fehlt | Regel seit diesem Tag |
 
 Dazu kommen Lehren, die erst beim Vergleich sichtbar wurden: Rückmeldung auf direkte Manipulation folgt im nächsten Frame ohne Timer, Komponentenselektoren sind an ihren Container gebunden, Bearbeiten geschieht an der Auswahl ohne Layoutsprung, eine Fläche mit Schreibmarke verhält sich wie ein Editor, kein Erfolg bleibt stumm, gekoppelte Ansichten folgen der Auswahl auch räumlich, und bestandene automatische Durchläufe belegen Funktion und noch keine Annehmbarkeit.
+
+## Dritte Runde
+
+Die dritte Feedback-Runde vom 2026-10-10 entstand an Screenshots des Wireframes mit den echten Daten von fol. 1r. Der Operator fand die folgenden Inkonsistenzen in wenigen Minuten, nachdem Agenten-Reviews jedes Akzeptanzkriterium als erfüllt gemeldet hatten. Die Lehren stehen als Regelsätze in der Form, die das Vault-Dokument übernehmen kann, ohne Anbieter, Modell oder Projekt.
+
+### Ort und Zahl der Handlungen
+
+- Eine Handlung steht dort, wo ihr Objekt steht. Handlungen auf einer Auswahl erscheinen an der Auswahl, Handlungen auf Dokument und Ansicht in der Werkzeugleiste und Handlungen auf einem Listeneintrag in der Liste. Eine Handlung auf einer Auswahl ist ohne Auswahl leer und darum genau dann sichtbar, wenn sie möglich ist.
+- Eine Handlung hat genau ein Bedienelement. Eine Regel gilt erst, wenn der Abnahmecheck sie am Artefakt abfragt, denn in der dritten Runde standen zwei Handlungen trotz geltender Regel doppelt, in der Leiste und an der Auswahl.
+- Bedienelemente folgen der Ansicht. Ein Bedienelement, dessen Objekt die aktuelle Ansicht nicht enthält, wird nicht gerendert, und eine Handlung, deren Objekt vorhanden ist, deren Zustand sie aber verbietet, bleibt gesperrt sichtbar und nennt ihren Grund.
+
+### Formulare und Felder
+
+- Ein Formular wiederholt kein Objekt, das die Fläche schon zeigt und bearbeiten lässt. Bearbeitet wird am Objekt selbst.
+- Ein einzelnes Feld braucht kein Knopfpaar. Enter übernimmt den Wert als einen Schritt im Verlauf, Escape verwirft ihn, und Rückgängig deckt den Rest. Anwenden und Abbrechen stehen nur in Formularen mit mehreren Feldern.
+- Ein leerer Zustand erzählt nichts. Ein Satz wie "Kein Kommentar zu dieser Stelle" sagt nur, was das Fehlen des Kommentars schon zeigt.
+- Ein Suchfeld über einem gruppierten Werteraum ersetzt eine Reihe von Menüs. Es braucht weniger Klicks, hat einen Tastaturweg und bleibt entdeckbar, weil die geöffnete Liste Gruppen und Werte zeigt.
+- Angaben, die die Interpretation nicht ändern, bekommen weniger Gewicht. Eine technische Kennung oder ein Satz zum Umfang steht unter dem Titel oder entfällt.
+
+### Rahmen und Gliederung
+
+- Die Semantik des Rahmens muss stimmen. Reiter stehen für Aspekte eines Gegenstands, und eine Liste, die aus einer Handlung entsteht, öffnet mit eigenem Titel und Schließen-Element.
+- Gruppen einer Leiste folgen einem benennbaren Prinzip. Jede Gruppe beantwortet eine Frage der Nutzenden, etwa wo sie sind, was sie sehen und wie die Arbeit das Werkzeug verlässt, und Abstand trennt die Gruppen.
+- Schalter sehen anders aus als Handlungen. Ein Zustand erscheint als Schalter mit sichtbarer Stellung, eine Handlung als Knopf mit ihrer Beschriftung.
+- Das Standardkleid einer Bibliothek wird ersetzt. Die voreingestellten Bedienelemente einer eingebundenen Komponente weichen den wenigen nötigen im Hausstil, und ihr Anfangszustand passt zur Aufgabe, etwa eine in den Bereich eingepasste Seite.
+
+### Defaults und Raum
+
+- Der Default folgt dem Hauptworkflow. Was die Kernaufgabe ständig braucht, ist beim Öffnen an, und der zuletzt gewählte Zustand bleibt erhalten.
+- Nutzende bestimmen den Raum. Die Aufteilung zwischen Bereichen ist ziehbar, per Tastatur verstellbar, durch Mindestgrößen begrenzt und wird gemerkt.
+
+### Methode
+
+- Klicks und Mauswege für die Kernaufgabe werden gezählt, und Alternativen werden in einer Tabelle verglichen, bevor entschieden wird.
+- Die dritte Runde bestätigt die Ergänzung in "Synthesis" unten. Automatische Durchläufe belegen Funktion, und über die Annehmbarkeit entscheidet der Blick der verantwortlichen Person auf die Kerninteraktionen mit echten Daten.
 
 ## Vorgeschlagene Regeln für das Vault-Dokument
 
@@ -75,6 +110,16 @@ In der deklarativen Form der bestehenden Liste.
 - Ein Objekt trägt an einer Stelle genau einen sichtbaren Namen und eine Handlung genau ein Bedienelement.
 - Für die Kerninteraktionen liegt eine Messung langer Tasks und der Reaktionszeit vor, und jede gemeldete Verzögerung ist auf eine gemessene Ursache zurückgeführt.
 - Die verantwortliche Person hat die Kerninteraktionen am Bildschirm abgenommen, unabhängig davon, ob die automatischen Durchläufe bestehen.
+- Jede Handlung steht an ihrem Objekt, Handlungen auf der Auswahl an der Auswahl und Handlungen auf Dokument und Ansicht in der Leiste, und keine Handlung erscheint in zwei Flächen.
+- Ein Bedienelement, dessen Objekt die aktuelle Ansicht nicht enthält, ist nicht gerendert.
+- Ein einzelnes Feld übernimmt mit Enter und verwirft mit Escape, ohne Knopfpaar, und Anwenden und Abbrechen stehen nur in Formularen mit mehreren Feldern.
+- Kein Formular wiederholt ein Objekt, das die Fläche schon zeigt, und kein leerer Zustand trägt einen Satz.
+- Die Wahl aus einem gruppierten Werteraum geschieht über ein Suchfeld mit gruppierter Liste und Tastaturweg.
+- Reiter stehen nur für Aspekte eines Gegenstands, und eine aus einer Handlung entstandene Liste trägt Titel und Schließen-Element.
+- Schalter sind sichtbar von Handlungen unterschieden, und die Gruppen der Leiste folgen einem benennbaren Prinzip und sind durch Abstand getrennt.
+- Der Anfangszustand folgt dem Hauptworkflow, ein gewählter Ansichtszustand und die Aufteilung des Raums bleiben gemerkt, und die Aufteilung ist ziehbar und per Tastatur verstellbar.
+- Keine voreingestellten Bedienelemente einer eingebundenen Bibliothek sind sichtbar, und ihr Anfangszustand passt zur Aufgabe.
+- Für die Kernaufgabe liegt eine Zählung von Klicks und Mauswegen vor, und die Alternativen sind in einer Tabelle verglichen.
 
 ## Konflikte, die die Vault-Session entscheidet
 

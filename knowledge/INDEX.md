@@ -61,7 +61,7 @@ The knowledge base follows the Promptotyping Documents convention of the operato
 ## Terms
 
 Arbeitsleiste
-: The two-row toolbar of the editor, the single entry point for commands, see design.
+: The one-row toolbar of the editor for the document and the place in it, the view, the history and the way the work leaves the tool. Actions on the selection stand in the popover, see design.
 
 Base
 : The teiCrafter repository and its legacy application under `docs/`, from which this repository derives and merges.
@@ -79,7 +79,7 @@ Handbook
 : The edition's published Transkriptionshandbuch (version February 2025), the rule source for the encoding, see editorial-guidelines.
 
 Popover
-: The editing surface anchored at the selection that shows and edits what is selected, in text and XML view alike; lists and large forms live in the side panel.
+: The editing surface anchored at the selection that shows and edits what is selected, in text and XML view alike; lists and large forms open into the lower pane of the right column.
 
 Project folder
 : The folder in the base that holds the Wenzelsbibel specialisation, `docs/js/projects/wenzelsbibel/`.
@@ -91,7 +91,7 @@ Register
 : The shared file of persons, places and peoples that words in the codex and items in the image annotations refer to.
 
 Seitenleiste
-: The side panel that shares the right column with the facsimile and holds lists and large forms, see design.
+: The lower pane of the right column, under the facsimile, into which the findings list, the references and the image-annotation form open from their actions, see design.
 
 Workspace registry
 : The mechanism in the base through which a project folder registers its workspace, replacing hard-wired references.

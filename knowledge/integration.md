@@ -60,15 +60,16 @@ The fork stays a derivation of teiCrafter permanently. Every generic mechanism i
 
 This is the one list of what the base builds for the fork in phase 5a. The [plan](plan.md#phases) and the [component table](architecture.md#components) refer to it.
 
-- A two-row toolbar with disabled-with-reason actions, menu buttons for value lists and check sets, and the WAI-ARIA toolbar keyboard pattern.
-- A popover at the selection that renders forms from a field table, with one Anwenden and one Abbrechen per popover and a bottom-sheet variant for narrow screens.
-- A side panel that shares the right column with the facsimile and renders lists and forms from a field table.
-- A register autocomplete over any register list.
+- A one-row toolbar built from an item list in groups separated by spacing, with items rendered per view, switches drawn distinct from action buttons, disabled-with-reason actions, menu buttons for the file and check menus, and the WAI-ARIA toolbar keyboard pattern.
+- A popover at the selection that renders rows from a field table, a single field applying on Enter as one undo step and reverting on Escape, Anwenden and Abbrechen only in forms with several fields, a search field over a grouped value list with chips for the values already present (the markup field, opened by Ctrl+E), and a bottom-sheet variant for narrow screens.
+- A lower pane under the facsimile in the right column, without tabs, which opens a list or form from its action with its own title and close control, takes the whole column when the facsimile is off, and renders lists and forms from a field table.
+- Two draggable handles in the WAI-ARIA window splitter pattern, the boundary between text and right column and the divider between facsimile and lower pane, with arrow-key steps, minimum sizes and positions remembered in the browser (F62).
+- A register combobox over any register list, searching all types together with type and ID on each hit.
 - A notice bar and a findings list, fed by validation results, the flow view and editor actions, with the notice kinds of F44 ([specification](specification.md#validation-and-notice-bar)).
 - The CodeMirror flow view hosted by the legacy app, with its vendored bundle under `docs/vendor/`, the word commands of F18, wrap and unwrap, and "XML formatieren" (F56).
 - A CodeMirror XML view in the same bundle, replacing the textarea overlay of `source-view.js`, with the display-only folding of `xml:id` and `facs` and the switch "IDs anzeigen" (F57), selection mapping (F19) and Ctrl+E (F21).
 - Search in the flow view and the XML view (F6), where the base does not have it.
-- The facsimile zone layer, with the zones' polygons drawn as one SVG layer styled by zone type, a line-zone click selecting the line and a line selection outlining its zone (F23, F24), and the navigation state in the page address (F12), where the base does not have them.
+- The facsimile zone layer, with the zones' polygons drawn as one SVG layer styled by zone type, a line-zone click selecting the line and a line selection outlining its zone (F23, F24), and the navigation state in the page address (F12), where the base does not have them. The viewer opens with the page fitted into the column, replaces OpenSeadragon's default buttons by one "Seite einpassen" control, and keeps its on state in the browser (F22).
 - The `tei-document` seam between the legacy offset tree and `src/core`.
 - The `EditorSession` seam, in which each flow transaction becomes one session revision and undo is handed over to the session, without a parse of the whole codex per keystroke ([architecture](architecture.md#components)).
 - The decision how "XML formatieren" treats elements under `xml:space="preserve"`, where the recommendation is to leave them untouched.
@@ -80,7 +81,7 @@ This is the one list of what the base builds for the fork in phase 5a. The [plan
 - The removal of the base draft `wenzelsbibel-editorial.sch` from `docs/schemas/` and `public/schemas/`, together with what depends on it in the base: the default schema set and panel schema of the base's Wenzelsbibel module, the proof `test/proofs/wenzels_project_controls_check.mjs` and the suite `test/e2e/wenzelsbibel-schema.spec.js`.
 - The remaining flow packages of the [plan](plan.md#phase-5-notes), with the load test on the full codex.
 
-The contract form of this handoff, with the mechanisms table, the schema of the field table, the interfaces of toolbar, popover, side panel and notice bar, the message table, the findings contract and the open decisions for the base, is the [handoff text of 2026-10-10](../snapshots/base-handoff-5a-contract-2026-10-10.md), which the operator carries into the base's `knowledge/handoff.md`; once the base has integrated it, the base's knowledge owns the living version and this list stays the fork's summary.
+The contract form of this handoff, with the mechanisms table, the schema of the field table, the interfaces of toolbar, popover, side panel and notice bar, the message table, the findings contract and the open decisions for the base, is the [handoff text of 2026-10-10](../snapshots/base-handoff-5a-contract-2026-10-10.md), which the operator carries into the base's `knowledge/handoff.md`. Once the base has integrated it, the base's knowledge owns the living version and this list stays the fork's summary. The contract text predates the third feedback round, so where it describes two toolbar rows with the markup value menus, a tab row in the side panel, Anwenden and Abbrechen in every form or a type filter in the register search, this list and the [specification](specification.md) hold until the text is brought up to date.
 
 The flow view and the XML view may consume `src/core` and `src/editor` through the vendored bundle, as the flow spike already does. This conflicts with the rule of the base's plan that the source-first rebuild under `src/` writes nothing into `docs/`, which is an open decision for the base: either that rule admits the vendored bundle, or both views work on the legacy offset tree.
 

@@ -44,8 +44,8 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 
 Each demo workflow test of phase 5b also accepts the views it passes through against [design](design.md), in three parts.
 
-- An axe run per view (text view, XML view, facsimile, popover in each state, side panel with findings, references and image form, start page, help page) checks the automatable accessibility minima of [design](design.md#accessibility-minima).
-- The keyboard paths of [design](design.md#interaction-rules) are driven without the mouse, among them entering and leaving the toolbar, selecting word, sequence and line, the popover and side panel by Tab, and the Escape order.
+- An axe run per view (text view, XML view, facsimile, popover in each state, the lower pane with findings, references and image form, start page, help page) checks the automatable accessibility minima of [design](design.md#accessibility-minima).
+- The keyboard paths of [design](design.md#interaction-rules) are driven without the mouse, among them entering and leaving the toolbar, selecting word, sequence and line, the popover and the lower pane by Tab, the markup search field, the two splitter handles by arrow keys, the folio pager, and the Escape order.
 - A latency measurement drives each core interaction (keystroke in a word, caret move, word and line selection, popover open, view switch, facsimile on, turning the folio) in headless Chromium. A `PerformanceObserver` records long-task and event-timing entries, each attributed to the interaction in whose window it starts, and the run reports per interaction the long tasks over 50 ms and the interaction to next paint, taken as the longest event with an interaction ID. The thresholds are those of [design](design.md#interaction-latency). The run on the excerpt is part of CI, and the run on the full codex belongs to the real-file run of phase 6.
 
 Contrast at 4.5:1, the 200 percent zoom and the screen-reader announcement of the notice bar are checked by hand on the rendered views and recorded with the demo protocol under `snapshots/`.

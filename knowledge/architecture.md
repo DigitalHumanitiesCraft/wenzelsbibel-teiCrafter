@@ -103,10 +103,10 @@ Components of the new shell. The base builds each mechanism, as the one list of 
 
 | Component | Built in the base | Kept in the fork |
 | --- | --- | --- |
-| Toolbar | A two-row toolbar component with disabled-with-reason actions, menu buttons and the WAI-ARIA toolbar keyboard pattern | German labels, the action set, document chooser (codex, image annotations), folio, column and miniature navigation |
-| Popover at the selection | A component anchored at the selection, rendering forms from a field table with one Anwenden and one Abbrechen, with a bottom-sheet variant for narrow screens | The field tables for word, sequence, line and element |
-| Side panel | A right-column panel sharing its column with the facsimile through a segmented switch, rendering lists and forms | The lists and the image-annotation form |
-| Register autocomplete | A component over any list in a register file | Register types and German labels |
+| Toolbar | A one-row toolbar component in groups separated by spacing, with items rendered per view, switches distinct from actions, disabled-with-reason actions, menu buttons and the WAI-ARIA toolbar keyboard pattern | German labels, the action set on document and view, document chooser (codex, image annotations), folio, column and miniature navigation |
+| Popover at the selection | A component anchored at the selection, rendering rows from a field table, a single field applying on Enter and reverting on Escape, Anwenden and Abbrechen only in forms with several fields, a search field over a grouped value list, with a bottom-sheet variant for narrow screens | The field tables for word, sequence, line and element, and the markup groups from the vocabulary |
+| Lower pane | A pane under the facsimile in the right column, without tabs, opened by an action with its own title and close control, taking the whole column when the facsimile is off, rendering lists and forms, and two draggable splitter handles for column width and pane height | The lists and the image-annotation form |
+| Register autocomplete | A combobox over any list in a register file, searching all types together | Register types and German labels |
 | Flow view | The CodeMirror module hosted by the legacy app, with its vendored bundle, decorations over words, wrap and word commands, and "XML formatieren" | The mark tables |
 | XML view | A CodeMirror XML view in the same bundle, replacing `source-view.js` in the new shell, with the display-only folding of `xml:id` and `facs`, selection mapping and Ctrl+E | The label "IDs anzeigen" |
 | Notice bar and findings list | A notice service fed by validation results, the flow view and editor actions, and the findings list over `validation-view.js` results | German labels and message texts |
@@ -138,8 +138,8 @@ caret or selection in the flow view (word, word sequence, line, zone) or cursor 
 | 1 Page, facsimile, word edit | Toolbar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; popover word fields write `w/@orig` and `w/@norm` through the text model; typing in the flow writes word text and `@orig`, and word commands split, join and delete words ([specification](specification.md#text-view)) |
 | 2 Apparatus comment | Selection of a word or a word range; the text model inserts empty anchors and an `app` with `@from`/`@to` and bilingual notes with sigle in the stand-off apparatus |
 | 3 Register link | Autocomplete over the register file held in the project collection; the selected words are wrapped inline in `rs[@type][@ref]`, and existing `ref[@type][@target]` links are read ([specification](specification.md#key-decisions)); a new entry is written to the register file as a companion edit |
-| 4 Miniature | Zone selection opens the image-annotation form in the side panel; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
-| 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the side panel; `output-controller.js` writes the file |
+| 4 Miniature | Zone selection opens the image-annotation form in the lower pane; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
+| 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the lower pane; `output-controller.js` writes the file |
 
 ## External services
 
