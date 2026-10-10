@@ -26,7 +26,7 @@ This process inbox holds received deltas awaiting integration. Verify each sourc
 ### Operator actions for the repository
 
 - Received: 2026-10-10
-- Source: session of 2026-10-10; the GitHub CLI on the operator's machine is not authenticated.
-- Target: GitHub organisation DigitalHumanitiesCraft.
-- Context: The repository exists locally with the remotes `upstream` (teiCrafter) and `origin` (wenzelsbibel-teiCrafter). The GitHub repository has to be created and the first push made by the operator. The edition files for test runs with real data lie on the operator's other machine.
-- Operator point: create the GitHub repository, push, and name the machine that holds the edition files.
+- Source: session of 2026-10-10.
+- Target: phase 6 of [plan.md](plan.md).
+- Context: The GitHub repository exists and holds the founding commits. The edition files for test runs with real data lie on the operator's other machine, and GitHub Pages is not yet enabled.
+- Operator point: name the machine that holds the edition files, and enable Pages from `main:/docs` when the prototype is ready.
