@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>teiCrafter flowing word editor</title>
+</head>
+<body>
+  <header class="bar">
+    <span class="wordmark">teiCrafter</span>
+    <h1 class="file-name">fol1r.xml</h1>
+    <div class="group" role="group" aria-label="Document">
+      <button type="button" id="undo" aria-keyshortcuts="Control+Z">Undo</button>
+      <button type="button" id="redo" aria-keyshortcuts="Control+Y">Redo</button>
+      <button type="button" id="source" aria-pressed="false">Show source</button>
+      <button type="button" id="check">Check</button>
+      <button type="button" id="save" class="primary">Save</button>
+    </div>
+    <div class="group" role="group" aria-label="Wrap selected words">
+      <label>type <input id="rs-type" value="person" size="8" autocomplete="off"></label>
+      <label>ID <input id="rs-id" value="pers_" size="12" autocomplete="off"></label>
+      <button type="button" id="wrap">Wrap as rs</button>
+      <button type="button" id="unwrap">Remove wrapper</button>
+    </div>
+  </header>
+  <main class="scroller">
+    <div id="editor" class="editor"></div>
+  </main>
+  <footer class="status">
+    <span id="wellformed">not checked</span>
+    <span id="dirty" class="dirty" hidden>unsaved</span>
+    <span id="timing" class="timing"></span>
+    <output id="message" class="message" aria-live="polite"></output>
+  </footer>
+  <script type="module" src="./d-flow.ts"></script>
+</body>
+</html>

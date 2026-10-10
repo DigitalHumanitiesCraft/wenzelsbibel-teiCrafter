@@ -1,0 +1,708 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title type="main">Codex 2759, fol. 1r (excerpt)</title>
+      </titleStmt>
+      <publicationStmt>
+        <publisher>Paris Lodron University Salzburg and Austrian National Library</publisher>
+        <availability>
+          <licence target="https://creativecommons.org/licenses/by/4.0/">
+            <p>Distributed under the Creative Commons Attribution 4.0 International License (CC BY
+              4.0)</p>
+          </licence>
+        </availability>
+        <idno type="PID">o:wen.codex-2759</idno>
+      </publicationStmt>
+      <sourceDesc>
+        <p>The text of fol. 1r, from its pb to the pb of fol. 1v, copied byte for byte from the TEI
+          source of o:wen.codex-2759 (Die Wenzelsbibel, edition.onb.ac.at) and placed in the div and
+          p elements that enclose it there. Only this header and the closing tags are added.</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div type="prologus" xml:id="Prologus">
+        <div type="paratext" xml:id="Transition0">
+          <p ana="paragraph">
+            <pb facs="#page_32494516" n="1r" xml:id="pb_42521"></pb>
+            <cb></cb>
+            <fw ana="header" facs="#region_1639399465019_4">
+              <lb facs="#line_1639401326021_84" xml:id="lb_42524"></lb>
+              <w norm="PROLOGUS" orig="PROLOGUS" xml:id="line_1639401326021_84_0">PROLOGUS</w>
+            </fw>
+            <milestone facs="#region_1639399488602_10" unit="paragraph_beginning"></milestone>
+            <lb facs="#region_1639399488602_10l1" xml:id="lb_42528"></lb>
+            <hi rend="inkRed">
+              <w norm="Hie" orig="Hie" xml:id="region_1639399488602_10l3_0">Hie</w>
+              <w norm="hebt" orig="hebt" xml:id="region_1639399488602_10l1_0">hebt</w>
+              <w norm="sich" orig="ſich" xml:id="region_1639399488602_10l1_1">ſich</w>
+              <w norm="an" orig="an" xml:id="region_1639399488602_10l1_2">an</w>
+              <w norm="die" orig="die" xml:id="region_1639399488602_10l1_3">die</w>
+              <w norm="vor" orig="voꝛ" xml:id="region_1639399488602_10l1_4">voꝛ</w>
+              <w norm="rede" orig="rede" xml:id="region_1639399488602_10l1_5">rede</w>
+              <w norm="vnd" orig="vnd" xml:id="region_1639399488602_10l1_6">vnd</w>
+              <pc>•</pc>
+              <lb facs="#region_1639399488602_10l2" xml:id="lb_42547"></lb>
+              <w norm="der" orig="der" xml:id="region_1639399488602_10l1_7">
+                <hi rend="ligature">de</hi>r</w>
+              <w norm="prologus" orig="pꝛologus" xml:id="region_1639399488602_10l2_0">pꝛologus</w>
+              <w norm="vber" orig="vber" xml:id="region_1639399488602_10l2_1">vber</w>
+              <w norm="das" orig="das" xml:id="region_1639399488602_10l2_2">das</w>
+              <w norm="buch" orig="buch" xml:id="region_1639399488602_10l2_3">buch</w>
+              <supplied reason="additionalPunctuation">
+                <pc>,</pc>
+              </supplied>
+              <w norm="daz" orig="daz" xml:id="region_1639399488602_10l2_4">daz</w>
+              <w norm="do" orig="do" xml:id="region_1639399488602_10l2_5">
+                <hi rend="ligature">do</hi>
+              </w>
+              <lb facs="#region_1639399488602_10l3" xml:id="lb_42568"></lb>
+              <w norm="heisset" orig="heiſſet" xml:id="region_1639399488602_10l2_6">heiſſet</w>
+              <w norm="vnd" orig="vnd" xml:id="region_1639399488602_10l3_1">vnd</w>
+              <w norm="genant" orig="genant" xml:id="region_1639399488602_10l3_2">genant</w>
+              <w norm="ist" orig="iſt" xml:id="region_1639399488602_10l3_3">iſt</w>
+              <w norm="Biblia" orig="Biblia" xml:id="region_1639399488602_10l3_4">Biblia</w>
+              <pc>•</pc>
+              <w norm="etcetera" orig="⁊t͛" xml:id="region_1639399488602_10l3_5">
+                <choice>
+                  <abbr>⁊c͛</abbr>
+                  <expan>etcetera</expan>
+                </choice>
+              </w>
+            </hi>
+          </p>
+        </div>
+        <div>
+          <p ana="paragraph">
+            <milestone facs="#region_1639399497290_13" unit="paragraph_beginning"></milestone>
+            <lb facs="#line_1641903719739_2081" xml:id="lb_42588"></lb>
+            <w norm="O" orig="O" xml:id="region_1639399508072_16l10_0">
+              <hi rend="initial_historisiert">O</hi>
+            </w>
+            <lb facs="#region_1639399497290_13l1" xml:id="lb_42592"></lb>
+            <w>Got</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="got" orig="got" xml:id="region_1639399497290_13l1_0">
+              <anchor xml:id="start_42597"></anchor>got<anchor xml:id="end_42599"></anchor>
+            </w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="du" orig="du" xml:id="region_1639399497290_13l1_1">du</w>
+            <w norm="herczen" orig="herczen" xml:id="region_1639399497290_13l1_2">herczen</w>
+            <w norm="liebes" orig="liebes" xml:id="region_1639399497290_13l1_3">lie<hi rend="ligature">be</hi>s</w>
+            <w norm="gute" orig="gute" xml:id="region_1639399497290_13l1_4">gute</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Czu" orig="Czu" xml:id="region_1639399497290_13l1_5">
+              <anchor xml:id="start_42618"></anchor> Czu<anchor xml:id="end_42620"></anchor>
+            </w>
+            <lb facs="#region_1639399497290_13l2" xml:id="lb_42621"></lb>
+            <w norm="dir" orig="dir" xml:id="region_1639399497290_13l2_0">dir</w>
+            <w norm="hebit" orig="hebit" xml:id="region_1639399497290_13l2_1">hebit</w>
+            <w norm="sich" orig="ſich" xml:id="region_1639399497290_13l2_2">ſich</w>
+            <w norm="mein" orig="mein" xml:id="region_1639399497290_13l2_3">mein</w>
+            <w norm="mut" orig="mut" xml:id="region_1639399497290_13l2_4">mut</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399497290_13l2_5">Und</w>
+            <lb facs="#region_1639399497290_13l3" xml:id="lb_42636"></lb>
+            <w norm="rufet" orig="rufet" xml:id="region_1639399497290_13l2_6">rufet</w>
+            <w norm="dich" orig="dich" xml:id="region_1639399497290_13l3_0">dich</w>
+            <w norm="gutlichen" orig="gutlichen" xml:id="region_1639399497290_13l3_1">gutlichen</w>
+            <w norm="an" orig="an" xml:id="region_1639399497290_13l3_2">an</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="wenne" orig="wenne" xml:id="region_1639399497290_13l3_3">wenne</w>
+            <lb facs="#region_1639399497290_13l4" xml:id="lb_42650"></lb>
+            <w norm="nyemant" orig="nyemant" xml:id="region_1639399497290_13l3_4">nyemant</w>
+            <w norm="wol" orig="wol" xml:id="region_1639399497290_13l4_0">wol</w>
+            <w norm="geschaffen" orig="geſchaffen" xml:id="region_1639399497290_13l4_1">geſchaffen</w>
+            <w norm="kan" orig="kan" xml:id="region_1639399497290_13l4_2">kan</w>
+            <pc>•</pc>
+            <lb facs="#region_1639399497290_13l5" xml:id="lb_42661"></lb>
+            <w norm="An" orig="An" xml:id="region_1639399497290_13l4_3">An</w>
+            <w norm="dich" orig="dich" xml:id="region_1639399497290_13l5_0">dich</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>         
+   </supplied>
+            <w norm="wil" orig="wil" xml:id="region_1639399497290_13l5_1">wil</w>
+            <w norm="yemant" orig="yemant" xml:id="region_1639399497290_13l5_2">yemant</w>
+            <w norm="icht" orig="icht" xml:id="region_1639399497290_13l5_3">icht</w>
+            <w norm="beginnen" orig="begínnen" xml:id="region_1639399497290_13l5_4">
+              <hi rend="ligature">be</hi>gín<lb facs="#region_1639399497290_13l6" xml:id="lb_42679"></lb>nen</w>
+            <pc>•</pc>
+            <w norm="Von" orig="Von" xml:id="region_1639399497290_13l6_0">Von</w>
+            <w norm="herczen" orig="herczen" xml:id="region_1639399497290_13l6_1">herczen</w>
+            <w norm="vnd" orig="vnd" xml:id="region_1639399497290_13l6_2">vnd</w>
+            <w norm="von" orig="von" xml:id="region_1639399497290_13l6_3">von</w>
+            <w norm="sinnen" orig="ſínnē" xml:id="region_1639399497290_13l6_4">ſínn<choice>
+                <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>
+            </w>
+            <lb facs="#region_1639399497290_13l7" xml:id="lb_42695"></lb>
+            <w norm="bit" orig="bit" xml:id="region_1639399497290_13l7_0">
+              <damage agent="water">
+                <supplied reason="damage">wer</supplied>
+              </damage>
+            </w>
+            <w norm="bit" orig="bit" xml:id="region_1639399497290_13l7_1">
+              <damage agent="water">
+                <supplied reason="damage">ue</supplied>
+              </damage>bit</w>
+            <anchor xml:id="end_42705"></anchor>
+            <w norm="keiner" orig="keíner" xml:id="region_1639399497290_13l7_2">keíner</w>
+            <w norm="hand" orig="hand" xml:id="region_1639399497290_13l7_3">hand</w>
+            <w norm="geticht" orig="geticht" xml:id="region_1639399497290_13l7_4">geticht</w>
+            <pc>•</pc>
+            <lb facs="#line_1639403125044_125" xml:id="lb_42714"></lb>
+            <anchor xml:id="start_42715"></anchor>
+            <w norm="t" orig="t" xml:id="line_1639403125044_125_0">
+              <damage agent="water">
+                <supplied reason="damage">Und</supplied>
+              </damage>
+            </w>
+            <w norm="t" orig="t" xml:id="line_1639403125044_125_1">
+              <damage agent="water">
+                <supplied reason="damage">ha</supplied>
+              </damage>t</w>
+            <anchor xml:id="end_42725"></anchor>
+            <w norm="er" orig="er" xml:id="line_1639403125044_125_2">er</w>
+            <w norm="deiner" orig="deíner" xml:id="line_1639403125044_125_3">
+              <hi rend="ligature">de</hi>íner</w>
+            <w norm="hulffe" orig="hŭlffe" xml:id="line_1639403125044_125_4">hŭlffe</w>
+            <w norm="nicht" orig="nícht" xml:id="line_1639403125044_125_5a">nícht</w>
+            <pc>•</pc>
+            <lb facs="#region_1639399497290_13l9" xml:id="lb_42738"></lb>
+            <w norm="Vnd" orig="Vnd" xml:id="line_1639403125044_125_5b">Vnd</w>
+            <w norm="ob" orig="ob" xml:id="region_1639399497290_13l9_0">ob</w>
+            <w norm="er" orig="er" xml:id="region_1639399497290_13l9_1">er</w>
+            <w norm="die" orig="die" xml:id="region_1639399497290_13l9_2">die</w>
+            <w norm="vorkeuset" orig="voꝛkeuſet" xml:id="region_1639399497290_13l9_3">voꝛkeuſet</w>
+            <pc>•</pc>
+            <w norm="Sein" orig="Sein" xml:id="region_1639399497290_13l9_4">Sein</w>
+            <w norm="arbeit" orig="arbeit" xml:id="region_1639399497290_13l9_5">ar<lb facs="#region_1639399497290_13l10" xml:id="lb_42755"></lb>
+              <hi rend="ligature">be</hi>it</w>
+            <w norm="er" orig="er" xml:id="region_1639399497290_13l10_0">er</w>
+            <w norm="vorleuset" orig="voꝛleuſet" xml:id="region_1639399497290_13l10_1">voꝛleuſet</w>
+            <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Wenne" orig="Wenne" xml:id="region_1639399497290_13l10_2">Wenne</w>
+            <w norm="also" orig="alſo" xml:id="region_1639399497290_13l10_3">alſo</w>
+            <w norm="sp" orig="ſp" xml:id="region_1639399497290_13l10_4">
+              <del type="erasure">ſp</del>
+            </w>
+            <lb facs="#region_1639399497290_13l11" xml:id="lb_42773"></lb>
+            <w norm="spricht" orig="ſpricht" xml:id="region_1639399497290_13l10_5">ſpricht</w>
+            <w norm="dein" orig="deín" xml:id="region_1639399497290_13l11_0">
+              <hi rend="ligature">de</hi>ín</w>
+            <w norm="werder" orig="werder" xml:id="region_1639399497290_13l11_1">wer<hi rend="ligature">de</hi>r</w>
+            <w norm="svn" orig="ſvn" xml:id="region_1639399497290_13l11_2">ſvn</w>
+            <supplied reason="additionalPunctuation">
+              <pc>:</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="An" orig="An" xml:id="region_1639399497290_13l11_3">An</w>
+            <w norm="mich" orig="mich" xml:id="region_1639399497290_13l11_4">mich</w>
+            <lb facs="#region_1639399497290_13l12" xml:id="lb_42795"></lb>
+            <w norm="mugt" orig="mŭgt" xml:id="region_1639399497290_13l11_5">mŭgt</w>
+            <w norm="ir" orig="ir" xml:id="region_1639399497290_13l12_0">ir</w>
+            <w norm="nicht" orig="nícht" xml:id="region_1639399497290_13l12_1">nícht</w>
+            <w norm="getvn" orig="getvn" xml:id="region_1639399497290_13l12_2">getvn</w>
+            <supplied reason="additionalPunctuation">
+              <pc>!</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Dorvmbe" orig="Doꝛv̆mbe" xml:id="region_1639399497290_13l12_3">
+              <hi rend="ligature">Do</hi>ꝛv̆mbe</w>
+            <lb facs="#region_1639399497290_13l13" xml:id="lb_42812"></lb>
+            <w norm="rufe" orig="rufe" xml:id="region_1639399497290_13l12_4">rufe</w>
+            <w norm="ich" orig="ich" xml:id="region_1639399497290_13l13_0">ich</w>
+            <w norm="herre" orig="herre" xml:id="region_1639399497290_13l13_1">herre</w>
+            <w norm="czu" orig="czu" xml:id="region_1639399497290_13l13_2">czu</w>
+            <w norm="dir" orig="dir" xml:id="region_1639399497290_13l13_3">dir</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399497290_13l13_4">Und</w>
+            <w norm="bite" orig="bite" xml:id="region_1639399497290_13l13_5">bite</w>
+            <lb facs="#region_1639399497290_13l14" xml:id="lb_42829"></lb>
+            <w norm="dich" orig="dich" xml:id="region_1639399497290_13l13_6">dich</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="das" orig="das" xml:id="region_1639399497290_13l14_0">das</w>
+            <w norm="du" orig="du" xml:id="region_1639399497290_13l14_1">du</w>
+            <w norm="sendest" orig="ſendeſt" xml:id="region_1639399497290_13l14_2">ſen<hi rend="ligature">de</hi>ſt</w>
+            <w norm="mir" orig="mír" xml:id="region_1639399497290_13l14_3">mír</w>
+            <pc>•</pc>
+            <w norm="Deiner" orig="Deíner" xml:id="region_1639399497290_13l14_4">
+              <hi rend="ligature">De</hi>íner</w>
+            <lb facs="#region_1639399497290_13l15" xml:id="lb_42850"></lb>
+            <w norm="gnaden" orig="gnaden" xml:id="region_1639399497290_13l14_5">gna<hi rend="ligature">de</hi>n</w>
+            <w norm="stew̆er" orig="ſtew̆er" xml:id="region_1639399497290_13l15_0">ſtew̆er</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>         
+   <w norm="Des" orig="Des" xml:id="region_1639399497290_13l15_1">Des</w>
+            <w norm="heiligen" orig="heiligē" xml:id="region_1639399497290_13l15_2">heilig<choice>
+                <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>
+            </w>
+            <w norm="geistes" orig="geíſtes" xml:id="region_1639399497290_13l15_3">geí<lb facs="#region_1639399497290_13l16" xml:id="lb_42871"></lb>ſtes</w>
+            <w norm="fewer" orig="fewer" xml:id="region_1639399497290_13l16_0">fewer</w>    
+        <supplied reason="additionalPunctuation">    
+          <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399497290_13l16_1">Das</w>
+            <w norm="mein" orig="meín" xml:id="region_1639399497290_13l16_2">meín</w>
+            <w norm="sinne" orig="ſínne" xml:id="region_1639399497290_13l16_3">ſínne</w>
+            <w norm="durchfeuchte" orig="durchfeŭchte" xml:id="region_1639399497290_13l16_4">durch<lb facs="#region_1639399497290_13l17" xml:id="lb_42887"></lb>feŭchte</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399497290_13l17_0">Und</w>
+            <w norm="mein" orig="meín" xml:id="region_1639399497290_13l17_1">meín</w>
+            <w norm="sele" orig="ſele" xml:id="region_1639399497290_13l17_2">ſele</w>
+            <w norm="erleuchte" orig="erleuchte" xml:id="region_1639399497290_13l17_3">erleuchte</w>
+            <pc>•</pc>
+            <lb facs="#region_1639399497290_13l18" xml:id="lb_42899"></lb>
+            <w norm="Und" orig="Und" xml:id="region_1639399497290_13l17_4">Und</w>
+            <w norm="mir" orig="mír" xml:id="region_1639399497290_13l18_0">mír</w>
+            <w norm="entsliesse" orig="entſlieſſe" xml:id="region_1639399497290_13l18_1">entſlieſſe</w>
+            <w norm="meinen" orig="meínē" xml:id="region_1639399497290_13l18_2">meín<choice>
+                <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>
+            </w>
+            <w norm="mvnt" orig="mvnt" xml:id="region_1639399497290_13l18_3">mvnt</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <lb facs="#region_1639399497290_13l19" xml:id="lb_42916"></lb>
+            <w norm="Das" orig="Das" xml:id="region_1639399497290_13l18_4">Das</w>
+            <w norm="ich" orig="ich" xml:id="region_1639399497290_13l19_0">ich</w>
+            <w norm="mvze" orig="mv̆ze" xml:id="region_1639399497290_13l19_1">mv̆ze</w>
+            <w norm="czu" orig="czu" xml:id="region_1639399497290_13l19_2">czu</w>
+            <w norm="aller" orig="aller" xml:id="region_1639399497290_13l19_3">aller</w>
+            <w norm="stvnt" orig="ſtvnt" xml:id="region_1639399497290_13l19_4">ſtvnt</w>
+            <pc>•</pc>
+            <w norm="In" orig="In" xml:id="region_1639399497290_13l19_5">In</w>
+            <cb></cb>
+            <fw ana="header" facs="#region_1639399470214_7">
+              <lb facs="#line_1639403803931_156" xml:id="lb_42935"></lb>
+              <w norm="PROLOGUS" orig="PROLOGUS" xml:id="line_1639403803931_156_0">PROLOGUS</w>
+            </fw>
+            <milestone facs="#region_1639399508072_16" unit="paragraph-continued_beginning"></milestone>
+            <lb facs="#region_1639399508072_16l1" xml:id="lb_42939"></lb>
+            <w norm="trewen" orig="trewen" xml:id="region_1639399497290_13l19_6">trewen</w>
+            <w norm="ymmer" orig="ymmer" xml:id="region_1639399508072_16l1_0">ymmer</w>
+            <w norm="meren" orig="meren" xml:id="region_1639399508072_16l1_1">meren</w>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399508072_16l1_2">Das</w>
+            <w norm="lop" orig="lop" xml:id="region_1639399508072_16l1_3">lop</w>
+            <w norm="deiner" orig="deiner" xml:id="region_1639399508072_16l1_4">
+              <hi rend="ligature">de</hi>i<lb facs="#region_1639399508072_16l2" xml:id="lb_42956"></lb>ner</w>
+            <w norm="eren" orig="eren" xml:id="region_1639399508072_16l2_0">eren</w>           
+ <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399508072_16l2_1">Das</w>
+            <w norm="ich" orig="ich" xml:id="region_1639399508072_16l2_2">ich</w>
+            <w norm="die" orig="die" xml:id="region_1639399508072_16l2_3">die</w>
+            <w norm="pfunt" orig="pfunt" xml:id="region_1639399508072_16l2_4">pfunt</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="die" orig="die" xml:id="region_1639399508072_16l2_5">die</w>
+            <w norm="du" orig="du" xml:id="region_1639399508072_16l2_6">du</w>
+            <lb facs="#region_1639399508072_16l3" xml:id="lb_42978"></lb>
+            <w norm="mir" orig="mír" xml:id="region_1639399508072_16l2_7">mír</w>
+            <pc>•</pc>
+            <w norm="Hast" orig="Haſt" xml:id="region_1639399508072_16l3_0">Haſt</w>
+            <w norm="vorlihen" orig="voꝛlihen" xml:id="region_1639399508072_16l3_1">voꝛlihen</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="brenge" orig="bꝛenge" xml:id="region_1639399508072_16l3_2">bꝛenge</w>
+            <w norm="dir" orig="dir" xml:id="region_1639399508072_16l3_3">dir</w>
+            <pc>•</pc>
+            <w norm="m" orig="m" xml:id="region_1639399508072_16l3_4">
+              <del type="erasure">m</del>
+            </w>
+            <lb facs="#region_1639399508072_16l4" xml:id="lb_42997"></lb>
+            <w norm="Mit" orig="Mit" xml:id="region_1639399508072_16l3_5">Mit</w>
+            <w norm="reichem" orig="reichem" xml:id="region_1639399508072_16l4_0">reichem</w>
+            <w norm="wucher" orig="wucher" xml:id="region_1639399508072_16l4_1">wucher</w>
+            <w norm="vrolich" orig="vrolích" xml:id="region_1639399508072_16l4_2">vrolích</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399508072_16l4_3">Das</w>
+            <lb facs="#region_1639399508072_16l5" xml:id="lb_43011"></lb>
+            <w norm="dein" orig="deín" xml:id="region_1639399508072_16l4_4">
+              <hi rend="ligature">de</hi>ín</w>
+            <w norm="mvnt" orig="mvnt" xml:id="region_1639399508072_16l5_0">mvnt</w>
+            <w norm="so" orig="ſo" xml:id="region_1639399508072_16l5_1">ſo</w>
+            <w norm="fruntlich" orig="frŭntlich" xml:id="region_1639399508072_16l5_2">frŭntlich</w>
+            <pc>•</pc>
+            <w norm="Mir" orig="Mir" xml:id="region_1639399508072_16l5_3">Mir</w>
+            <w norm="denne" orig="denne" xml:id="region_1639399508072_16l5_4">
+              <hi rend="ligature">de</hi>nne</w>
+            <lb facs="#region_1639399508072_16l6" xml:id="lb_43030"></lb>
+            <w norm="gutlich" orig="gŭtlich" xml:id="region_1639399508072_16l5_5">gŭtlich</w>
+            <w norm="spreche" orig="ſpreche" xml:id="region_1639399508072_16l6_0">ſpreche</w>
+            <w norm="czu" orig="czu" xml:id="region_1639399508072_16l6_1">czu</w>
+            <supplied reason="additionalPunctuation">
+              <pc>:</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Vrewe" orig="Vrewe" xml:id="region_1639399508072_16l6_2">Vrewe</w>
+            <w norm="dich" orig="dich" xml:id="region_1639399508072_16l6_3">dich</w>
+            <w norm="lieber" orig="lieber" xml:id="region_1639399508072_16l6_4">lie<lb facs="#region_1639399508072_16l7" xml:id="lb_43047"></lb>
+              <hi rend="ligature">be</hi>r</w>
+            <w norm="diener" orig="diener" xml:id="region_1639399508072_16l7_0">diener</w>
+            <w norm="nv" orig="nv" xml:id="region_1639399508072_16l7_1">nv</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Sint" orig="Sint" xml:id="region_1639399508072_16l7_2">Sint</w>
+            <w norm="du" orig="du" xml:id="region_1639399508072_16l7_3">du</w>
+            <w norm="bist" orig="biſt" xml:id="region_1639399508072_16l7_4">biſt</w>
+            <w norm="czu" orig="czu" xml:id="region_1639399508072_16l7_5">czu</w>
+            <w norm="disen" orig="diſen" xml:id="region_1639399508072_16l7_6">di<lb facs="#region_1639399508072_16l8" xml:id="lb_43069"></lb>ſen</w>
+            <w norm="stunden" orig="ſtunden" xml:id="region_1639399508072_16l8_0">ſtun<hi rend="ligature">de</hi>n</w>
+            <pc>•</pc>
+            <w norm="Getrewe" orig="Getrewe" xml:id="region_1639399508072_16l8_1">Getrewe</w>
+            <w norm="vber" orig="vber" xml:id="region_1639399508072_16l8_2">v<hi rend="ligature">be</hi>r</w>
+            <w norm="wenig" orig="weníg" xml:id="region_1639399508072_16l8_3">weníg</w>
+            <lb facs="#region_1639399508072_16l9" xml:id="lb_43086"></lb>
+            <w norm="sunden" orig="ſunden" xml:id="region_1639399508072_16l8_4">ſun<hi rend="ligature">de</hi>n</w>
+            <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Ich" orig="Ich" xml:id="region_1639399508072_16l9_0">Ich</w>
+            <w norm="wil" orig="wil" xml:id="region_1639399508072_16l9_1">wil</w>
+            <w norm="dich" orig="dich" xml:id="region_1639399508072_16l9_2">dich</w>
+            <w norm="deiner" orig="deíner" xml:id="region_1639399508072_16l9_3">
+              <hi rend="ligature">de</hi>íner</w>
+            <w norm="not" orig="not" xml:id="region_1639399508072_16l9_4">not</w>
+            <w norm="ergeczen" orig="ergeczen" xml:id="region_1639399508072_16l9_5">er<lb facs="#region_1639399508072_16l10" xml:id="lb_43110"></lb>geczen</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399508072_16l10_1">Und</w>
+            <w norm="vber" orig="vber" xml:id="region_1639399508072_16l10_2">vber</w>
+            <w norm="vil" orig="vil" xml:id="region_1639399508072_16l10_3">vil</w>
+            <w norm="gutes" orig="gutes" xml:id="region_1639399508072_16l10_4">gutes</w>
+            <w norm="seczen" orig="ſeczen" xml:id="region_1639399508072_16l10_5">ſeczen</w>
+            <supplied reason="additionalPunctuation">
+              <pc>!</pc>
+            </supplied>
+          </p>
+          <p ana="paragraph">
+            <milestone facs="#region_1639399535558_19" unit="paragraph_beginning"></milestone>
+            <lb facs="#region_1639399535558_19l1" xml:id="lb_43128"></lb>
+            <w norm="Reiche" orig="Reiche" xml:id="line_1639477133545_136_0">
+              <hi rend="initial">R</hi>eiche</w>
+            <w norm="ouch" orig="ouch" xml:id="region_1639399535558_19l1_0">ouch</w>
+            <w norm="herre" orig="herre" xml:id="region_1639399535558_19l1_1">herre</w>
+            <w norm="deine" orig="deíne" xml:id="region_1639399535558_19l1_2">
+              <hi rend="ligature">de</hi>íne</w>
+            <w norm="stewer" orig="ſtewer" xml:id="region_1639399535558_19l1_3">ſtew<lb facs="#region_1639399535558_19l2" xml:id="lb_43143"></lb>er</w>
+            <pc>•</pc>
+            <w norm="Czu" orig="Czu" xml:id="region_1639399535558_19l2_0">Czu</w>
+            <w norm="diser" orig="diſer" xml:id="region_1639399535558_19l2_1">diſer</w>
+            <w norm="lieben" orig="lieben" xml:id="region_1639399535558_19l2_2">lie<hi rend="ligature">be</hi>n</w>
+            <w norm="abenttewer" orig="abenttewer" xml:id="region_1639399535558_19l2_3">abent<lb facs="#region_1639399535558_19l3" xml:id="lb_43158"></lb>tewer</w>
+            <pc>•</pc>
+            <w norm="Dem" orig="Dem" xml:id="region_1639399535558_19l3_0">Dem</w>
+            <w norm="vromen" orig="vromen" xml:id="region_1639399535558_19l3_1">vromen</w>
+            <w norm="herren" orig="herren" xml:id="region_1639399535558_19l3_2">herren</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <w norm="der" orig="der" xml:id="region_1639399535558_19l3_3">der</w>
+            <lb facs="#region_1639399535558_19l4" xml:id="lb_43171"></lb>   
+         <w norm="den" orig="den" xml:id="region_1639399535558_19l3_4">
+              <hi rend="ligature">de</hi>n</w>
+            <w norm="rat" orig="rat" xml:id="region_1639399535558_19l4_0">rat</w>
+            <pc>•</pc>
+            <w norm="Uon" orig="Uon" xml:id="region_1639399535558_19l4_1">Uon</w>
+            <w norm="dir" orig="dir" xml:id="region_1639399535558_19l4_2">dir</w>
+            <w norm="selbe" orig="ſelbe" xml:id="region_1639399535558_19l4_3">ſel<hi rend="ligature">be</hi>            
+</w>
+            <w norm="enpfangen" orig="enpfangē" xml:id="region_1639399535558_19l4_4">enpfang<choice>
+                <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>
+            </w>
+            <lb facs="#region_1639399535558_19l5" xml:id="lb_43193"></lb>
+            <w norm="hat" orig="hat" xml:id="region_1639399535558_19l4_5">hat</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Dem" orig="Dem" xml:id="region_1639399535558_19l5_0">
+              <hi rend="ligature">De</hi>m</w>
+            <w norm="werden" orig="werden" xml:id="region_1639399535558_19l5_1">wer<hi rend="ligature">de</hi>n</w>
+            <w norm="getrewen" orig="getrewen" xml:id="region_1639399535558_19l5_2">getrewen</w>
+            <w norm="diener" orig="díener" xml:id="region_1639399535558_19l5_3">díener</w>
+            <lb facs="#region_1639399535558_19l6" xml:id="lb_43213"></lb>
+            <w norm="dein" orig="deín" xml:id="region_1639399535558_19l5_4">
+              <hi rend="ligature">de</hi>ín</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Dem" orig="Dem" xml:id="region_1639399535558_19l6_0">
+              <hi rend="ligature">De</hi>m</w>
+            <ref target="Martin" type="person">
+              <w norm="Rotlebin" orig="Rotlebín" xml:id="region_1639399535558_19l6_1">
+                <hi rend="rubrication">Rotlebín</hi>
+              </w>
+              <w norm="herren" orig="herren" xml:id="region_1639399535558_19l6_2">herren</w>
+              <w norm="mertein" orig="merteín" xml:id="region_1639399535558_19l6_3">
+                <hi rend="rubrication">mer<lb facs="#region_1639399535558_19l7" xml:id="lb_43234"></lb>teín</hi>
+              </w>
+            </ref>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Der" orig="Der" xml:id="region_1639399535558_19l7_0">
+              <hi rend="ligature">De</hi>r</w>
+            <w norm="in" orig="ín" xml:id="region_1639399535558_19l7_1">ín</w>
+            <w norm="rechter" orig="rechter" xml:id="region_1639399535558_19l7_2">rechter</w>
+            <w norm="tugende" orig="tugende" xml:id="region_1639399535558_19l7_3">tugen<hi rend="ligature">de</hi>
+            </w>
+            <w norm="kern" orig="kern" xml:id="region_1639399535558_19l7_4">kern</w>
+            <lb facs="#region_1639399535558_19l8" xml:id="lb_43254"></lb>
+            <w norm="Brinnet" orig="Bꝛínnet" xml:id="region_1639399535558_19l7_5">Bꝛínnet</w>
+            <w norm="als" orig="als" xml:id="region_1639399535558_19l8_0">als</w>
+            <w norm="ein" orig="eín" xml:id="region_1639399535558_19l8_1">eín</w>
+            <w norm="liechter" orig="liechter" xml:id="region_1639399535558_19l8_2">liechter</w>
+            <w norm="morgenstern" orig="moꝛgenſtern" xml:id="region_1639399535558_19l8_3">moꝛgen<lb facs="#region_1639399535558_19l9" xml:id="lb_43265"></lb>ſtern</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399535558_19l9_0">Und</w>
+            <w norm="sich" orig="ſich" xml:id="region_1639399535558_19l9_1">ſich</w>
+            <w norm="vnder" orig="vnder" xml:id="region_1639399535558_19l9_2">vn<hi rend="ligature">de</hi>r</w>
+            <w norm="deinen" orig="deínen" xml:id="region_1639399535558_19l9_3">
+              <hi rend="ligature">de</hi>ínen</w>
+            <w norm="dienst" orig="dienſt" xml:id="region_1639399535558_19l9_4">dienſt</w>
+            <lb facs="#region_1639399535558_19l10" xml:id="lb_43284"></lb>
+            <w norm="beuget" orig="beuget" xml:id="region_1639399535558_19l9_5">beuget</w>
+            <pc>•</pc>
+            <w norm="Vnd" orig="Vnd" xml:id="region_1639399535558_19l10_0">Vnd</w>
+            <w norm="manch" orig="manch" xml:id="region_1639399535558_19l10_1">manch</w>
+            <w norm="gut" orig="gut" xml:id="region_1639399535558_19l10_2">gut</w>
+            <w norm="testament" orig="teſtamēt" xml:id="region_1639399535558_19l10_3">teſtam<choice>
+                <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>t</w>
+            <lb facs="#region_1639399535558_19l12" xml:id="lb_43301"></lb>
+            <w norm="czeuget" orig="czeuget" xml:id="region_1639399535558_19l10_4">czeuget</w>
+            <pc>•</pc>
+            <w norm="Vnd" orig="Vnd" xml:id="region_1639399535558_19l12_0">Vnd</w>
+            <w norm="meret" orig="meret" xml:id="region_1639399535558_19l12_1">meret</w>
+            <w norm="deine" orig="deíne" xml:id="region_1639399535558_19l12_2">
+              <hi rend="ligature">de</hi>íne</w>
+            <w norm="heilige" orig="heilige" xml:id="region_1639399535558_19l12_3">heilige</w>
+            <lb facs="#region_1639399535558_19l13" xml:id="lb_43315"></lb>
+            <w norm="schrift" orig="ſchrift" xml:id="region_1639399535558_19l12_4">ſchrift</w>
+            <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Der" orig="Der" xml:id="region_1639399535558_19l13_0">
+              <hi rend="ligature">De</hi>r</w>
+            <w norm="ouch" orig="ouch" xml:id="region_1639399535558_19l13_1">ouch</w>
+            <w norm="stiftet" orig="ſtiftet" xml:id="region_1639399535558_19l13_2">ſtiftet</w>
+            <w norm="dise" orig="diſe" xml:id="region_1639399535558_19l13_3">diſe</w>
+            <w norm="gestift" orig="geſtift" xml:id="region_1639399535558_19l13_4">geſtift</w>
+            <lb facs="#region_1639399535558_19l14" xml:id="lb_43334"></lb>
+            <w norm="Czu" orig="Czu" xml:id="region_1639399535558_19l13_5">Czu</w>
+            <w norm="lobe" orig="lobe" xml:id="region_1639399535558_19l14_0">lo<hi rend="ligature">be</hi>
+            </w>
+            <w norm="deiner" orig="deíner" xml:id="region_1639399535558_19l14_1">
+              <hi rend="ligature">de</hi>íner</w>
+            <w norm="heilicheit" orig="heilicheit" xml:id="region_1639399535558_19l14_2">heilicheit</w>
+            <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Gib" orig="Gib" xml:id="region_1639399535558_19l14_3">Gib</w>
+            <lb facs="#region_1639399535558_19l15" xml:id="lb_43353"></lb>
+            <w norm="im" orig="ím" xml:id="region_1639399535558_19l14_4">ím</w>
+            <w norm="herre" orig="herre" xml:id="region_1639399535558_19l15_0">herre</w>
+            <w norm="steticheit" orig="ſteticheit" xml:id="region_1639399535558_19l15_1">ſteticheit</w>
+            <pc>•</pc>
+            <w norm="Und" orig="Und" xml:id="region_1639399535558_19l15_2">Und</w>
+            <w norm="dorczu" orig="doꝛczu" xml:id="region_1639399535558_19l15_3">
+              <hi rend="ligature">do</hi>ꝛczu</w>
+            <lb facs="#region_1639399535558_19l17" xml:id="lb_43367"></lb>
+            <w norm="vrolichen" orig="vrolichen" xml:id="region_1639399535558_19l15_4">vrolichen</w>
+            <w norm="mut" orig="mut" xml:id="region_1639399535558_19l17_0">mut</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399535558_19l17_1">Das</w>
+            <w norm="er" orig="er" xml:id="region_1639399535558_19l17_2">er</w>
+            <w norm="dicz" orig="dicz" xml:id="region_1639399535558_19l17_3">dicz</w>
+            <w norm="werke" orig="werke" xml:id="region_1639399535558_19l17_4">wer<lb facs="#region_1639399535558_19l18" xml:id="lb_43384"></lb>ke</w>
+            <w norm="gut" orig="gut" xml:id="region_1639399535558_19l18_0">gut</w>
+            <pc>•</pc>
+            <w norm="Muze" orig="Mŭze" xml:id="region_1639399535558_19l18_1">Mŭze</w>
+            <w norm="volfuren" orig="volfuren" xml:id="region_1639399535558_19l18_2">volfuren</w>
+            <w norm="in" orig="in" xml:id="region_1639399535558_19l18_3">in</w>
+            <w norm="seinen" orig="ſeínē" xml:id="region_1639399535558_19l18_4">ſeín<choice>       
+         <abbr>ē</abbr>
+                <expan>en</expan>
+              </choice>
+            </w>
+            <lb facs="#region_1639399535558_19l19" xml:id="lb_43401"></lb>
+            <w norm="tagen" orig="tagen" xml:id="region_1639399535558_19l18_5">tagen</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399535558_19l19_0">Das</w>
+            <w norm="er" orig="er" xml:id="region_1639399535558_19l19_1">er</w>
+            <w norm="do" orig="do" xml:id="region_1639399535558_19l19_2">
+              <hi rend="ligature">do</hi>
+            </w>
+            <w norm="mite" orig="míte" xml:id="region_1639399535558_19l19_3">míte</w>
+            <w norm="muze" orig="mŭze" xml:id="region_1639399535558_19l19_4">mŭze</w>
+            <w norm="beiagen" orig="beiagen" xml:id="region_1639399535558_19l19_5">
+              <hi rend="ligature">be</hi>
+              <lb facs="#region_1639399535558_19l20" xml:id="lb_43422"></lb>iagen</w>
+            <pc>•</pc>
+            <w norm="Der" orig="Der" xml:id="region_1639399535558_19l20_0">Der</w>
+            <w norm="ewigen" orig="ewigen" xml:id="region_1639399535558_19l20_1">ewigen</w>
+            <w norm="selden" orig="ſelden" xml:id="region_1639399535558_19l20_2">ſel<hi rend="ligature">de</hi>n</w>
+            <w norm="hort" orig="hoꝛt" xml:id="region_1639399535558_19l20_3">hoꝛt</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <lb facs="#region_1639399535558_19l21" xml:id="lb_43439"></lb>
+            <w norm="Vreude" orig="Vreude" xml:id="region_1639399535558_19l20_4">Vreu<hi rend="ligature">de</hi>
+            </w>
+            <w norm="beide" orig="beide" xml:id="region_1639399535558_19l21_0">bei<hi rend="ligature">de</hi>
+            </w>
+            <w norm="hie" orig="hie" xml:id="region_1639399535558_19l21_1">hie</w>
+            <w norm="vnd" orig="vnd" xml:id="region_1639399535558_19l21_2">vnd</w>
+            <w norm="dort" orig="doꝛt" xml:id="region_1639399535558_19l21_3">
+              <hi rend="ligature">do</hi>ꝛt</w>
+            <supplied reason="additionalPunctuation">
+              <pc>.</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Gib" orig="Gib" xml:id="region_1639399535558_19l21_4">Gib</w>
+            <lb facs="#region_1639399535558_19l22" xml:id="lb_43462"></lb>
+            <w norm="ouch" orig="ouch" xml:id="region_1639399535558_19l21_5">ouch</w>
+            <w norm="seiner" orig="ſeíner" xml:id="region_1639399535558_19l22_0">ſeíner</w>
+            <w norm="werden" orig="werden" xml:id="region_1639399535558_19l22_1">wer<hi rend="ligature">de</hi>n</w>
+            <w norm="vrowen" orig="vrowen" xml:id="region_1639399535558_19l22_2">vrowen</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="die" orig="die" xml:id="region_1639399535558_19l22_3">die</w>
+            <lb facs="#region_1639399535558_19l23" xml:id="lb_43480"></lb>
+            <w norm="sich" orig="ſich" xml:id="region_1639399535558_19l22_4">ſich</w>
+            <w norm="lest" orig="leſt" xml:id="region_1639399535558_19l23_0">leſt</w>
+            <w norm="intrewen" orig="íntrewen" xml:id="region_1639399535558_19l23_1">í<unclear>nt</unclear>rewen</w>
+            <w norm="schowen" orig="ſchowen" xml:id="region_1639399535558_19l23_2">ſchowen</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="zu" orig="zu" xml:id="region_1639399535558_19l23_3">zu</w>
+            <lb facs="#region_1639399535558_19l24" xml:id="lb_43497"></lb>
+            <w norm="allen" orig="allen" xml:id="region_1639399535558_19l23_4">allen</w>
+            <w norm="cziten" orig="cziten" xml:id="region_1639399535558_19l24_0">cziten</w>
+            <w norm="loze" orig="loze" xml:id="region_1639399535558_19l24_1">loze</w>
+            <pc>•</pc>
+            <w norm="Recht" orig="Recht" xml:id="region_1639399535558_19l24_2">Recht</w>
+            <w norm="als" orig="als" xml:id="region_1639399535558_19l24_3">als</w>
+            <w norm="ein" orig="eín" xml:id="region_1639399535558_19l24_4">eín</w>
+            <lb facs="#region_1639399535558_19l25" xml:id="lb_43511"></lb>
+            <w norm="werde" orig="werde" xml:id="region_1639399535558_19l24_5">wer<hi rend="ligature">de</hi>
+            </w>
+            <w norm="rose" orig="roſe" xml:id="region_1639399535558_19l25_0">roſe</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Sterck" orig="Sterck" xml:id="region_1639399535558_19l25_1">Sterck</w>
+            <w norm="vnd" orig="vnd" xml:id="region_1639399535558_19l25_2">vnd</w>
+            <w norm="vollekumenheit" orig="vollekumenheit" xml:id="region_1639399535558_19l25_3">volleku<lb facs="#region_1639399535558_19l27" xml:id="lb_43528"></lb>menheit</w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399535558_19l27_0">Das</w>
+            <w norm="sie" orig="ſie" xml:id="region_1639399535558_19l27_1">ſie</w>
+            <w norm="an" orig="an" xml:id="region_1639399535558_19l27_2">an</w>
+            <w norm="deiner" orig="deíner" xml:id="region_1639399535558_19l27_3">
+              <hi rend="ligature">de</hi>íner</w>
+            <w norm="arbeit" orig="arbeit" xml:id="region_1639399535558_19l27_4">ar<lb facs="#region_1639399535558_19l28" xml:id="lb_43546"></lb>
+              <hi rend="ligature">be</hi>it</w>
+            <pc>•</pc>
+            <w norm="Mit" orig="Mit" xml:id="region_1639399535558_19l28_0">Mit</w>
+            <w norm="deinen" orig="deínen" xml:id="region_1639399535558_19l28_1">
+              <hi rend="ligature">de</hi>ínen</w>
+            <w norm="schriften" orig="ſchriften" xml:id="region_1639399535558_19l28_2">ſchriften</w>
+            <w norm="erwerbe" orig="erwerbe" xml:id="region_1639399535558_19l28_3">erwer<lb facs="#region_1639399535558_19l29" xml:id="lb_43561"></lb>
+              <hi rend="ligature">be</hi>
+            </w>
+            <supplied reason="additionalPunctuation">
+              <pc>,</pc>
+            </supplied>
+            <pc>•</pc>
+            <w norm="Das" orig="Das" xml:id="region_1639399535558_19l29_0">Das</w>
+            <w norm="sie" orig="ſie" xml:id="region_1639399535558_19l29_1">ſie</w>
+            <w norm="nymmer" orig="nymmer" xml:id="region_1639399535558_19l29_2">nymmer</w>
+            <w norm="ersterbe" orig="erſterbe" xml:id="region_1639399535558_19l29_3">erſterbe</w>
+            <pc>•</pc>
+            <seg ana="marginalia" facs="#region_1639399585108_22">
+              <anchor xml:id="start_43578"></anchor>
+              <hi rend="marginalia">
+                <w norm="" orig="" xml:id="line_1639405016730_271_0">
+                  <pc>=</pc>
+                  <lb facs="#line_1639405016730_271" xml:id="lb_43582"></lb>
+                </w>
+                <w norm="nota bene" orig="NB" xml:id="line_1639405016730_271_1">
+                  <choice>
+                    <abbr>
+                      <hi rend="ligature">NB</hi>
+                    </abbr>
+                    <expan>nota bene</expan>
+                  </choice>
+                </w>
+                <supplied reason="additionalPunctuation">
+                  <pc>.</pc>          
+      </supplied>
+              </hi>
+              <anchor xml:id="end_43591"></anchor>
+            </seg>
+            </p>
+        </div>
+      </div>
+    </body>
+  </text>
+</TEI>
