@@ -2,13 +2,21 @@
 import { $, escapeHtml, state } from "./state.js";
 import { commit } from "./history.js";
 import { highlightSelection, setWordRange } from "./flow.js";
+import { notify } from "./notice.js";
 
 // One tokenising pass over the raw source, so markup is never re-highlighted.
 const XML_TOKEN = /<!--[\s\S]*?-->|<(\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>|[^<]+/g;
 
+// The view is a pure function of the source string, and word edits do not change it,
+// so the DOM is rebuilt only when the string differs (load, formatting, its undo).
+let renderedSource = null;
+
 export function renderXml() {
+  const source = state.data.xmlExcerpt;
+  if (source === renderedSource) return;
+  renderedSource = source;
   let html = "";
-  for (const m of state.data.xmlExcerpt.matchAll(XML_TOKEN)) {
+  for (const m of source.matchAll(XML_TOKEN)) {
     const [raw, close, name, attrs, selfClose] = m;
     if (!name) { html += raw.startsWith("<!--") ? `<span class="com">${escapeHtml(raw)}</span>` : escapeHtml(raw); continue; }
     const id = name === "w" && !close ? (/xml:id="([^"]*)"/.exec(attrs) || [])[1] : null;
@@ -48,16 +56,15 @@ function formatted(source) {
 }
 
 export function formatXml() {
-  commit("XML formatieren", (data) => { data.xmlExcerpt = formatted(data.xmlExcerpt); });
-  renderXml();
+  commit("XML formatieren", (data) => { data.xmlExcerpt = formatted(data.xmlExcerpt); }); // rerender in app.js redraws the view
   highlightSelection();
-  $("#xml-format-note").hidden = false;
+  notify("Formatierung ist eine Änderung am ganzen Dokument und wird erst beim Speichern wirksam.");
   if (state.view !== "xml") setView("xml");
 }
 
 // Both documents share the view switch. The codex shows its flow or the excerpt; the
-// image annotations show their item list, and in XML only a note, because their source
-// file is not part of the wireframe's extraction.
+// image annotations show their item list, and in XML the empty state, because their
+// source file is not part of the wireframe's extraction.
 export function setView(view) {
   const keep = state.sel;
   const images = $("#doc-select").value === "images";

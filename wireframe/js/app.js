@@ -42,7 +42,6 @@ function wireControls() {
   $("#zones-toggle").addEventListener("change", (e) => toggleZones(e.target.checked));
   $("#inspector-close").addEventListener("click", closeInspector);
   $("#inspector-xml").addEventListener("click", () => setView(state.view === "xml" ? "text" : "xml"));
-  $("#xml-format").addEventListener("click", formatXml);
   $("#doc-select").addEventListener("change", (e) => switchDocument(e.target.value));
 
   actions.set("Ansicht/Text", () => setView("text"));
@@ -55,8 +54,10 @@ function wireControls() {
 
 // After undo or redo every view is rebuilt from state.data, whose tokens are new
 // objects. The selection survives where its words still exist, and a caret in the
-// flow returns to the same word and offset.
+// flow returns to the same word and offset. The XML view follows every change to its
+// source, a commit included; renderXml is a no-op while the source is unchanged.
 function rerender(kind) {
+  renderXml();
   if (kind === "commit" || kind === "saved" || kind === "document") return;
   const sel = state.sel;
   const s = getSelection();
@@ -65,7 +66,6 @@ function rerender(kind) {
   const caretAt = caret ? { k: Number(caret.dataset.k), off: s.anchorOffset } : null;
   indexApparatus();
   renderFlow();
-  renderXml();
   if (sel && sel.to < state.words.length) {
     state.sel = sel;
     if (flowFocused && state.view === "text") {

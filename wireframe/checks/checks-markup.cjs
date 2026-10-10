@@ -137,7 +137,7 @@ async function main() {
   await page.focus("#flow");
   await page.keyboard.press("Control+e");
   await page.waitForTimeout(100);
-  ok("E1 element list opens", await page.isVisible(".element-list") && (await page.textContent(".element-choice")).includes("Manifest"));
+  ok("E1 element list opens", await page.isVisible(".element-list") && (await page.textContent(".element-choice")).startsWith("Element für Auswahl") && !(await page.locator(".element-choice p").count()));
   await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown"); await page.keyboard.press("ArrowDown");
   const focused = await page.evaluate(() => document.activeElement.textContent);
   ok("E2 arrows move in list", focused.includes("foreign"), focused);
@@ -152,11 +152,11 @@ async function main() {
   // Checks
   await page.keyboard.press("Escape");
   await menu("Prüfen", "Wohlgeformtheit");
-  ok("P1 well-formed", (await bar()).includes("Wohlgeformtheit (geladener Auszug): wohlgeformt."), await bar());
+  ok("P1 well-formed", (await bar()).includes("Wohlgeformtheit: wohlgeformt."), await bar());
   // Negative: an end tag removed from the excerpt (test commit; the XML view is read-only).
   await page.evaluate(async () => { const { commit } = await import("/wireframe/js/history.js"); commit("Test: Endtag", (d) => { d.xmlExcerpt = d.xmlExcerpt.replace("</w>", ""); }); });
   await menu("Prüfen", "Wohlgeformtheit");
-  ok("P1 broken excerpt reported", /Wohlgeformtheit \(geladener Auszug\): 1 Befund/.test(await bar()), (await bar()).slice(0, 140));
+  ok("P1 broken excerpt reported", /Wohlgeformtheit: 1 Befund/.test(await bar()), (await bar()).slice(0, 140));
   await page.focus("#flow"); await page.keyboard.press("Control+z"); await page.waitForTimeout(150);
   await menu("Prüfen", "Wohlgeformtheit");
   ok("P1 well-formed again after undo", (await bar()).includes("wohlgeformt"));
@@ -216,7 +216,7 @@ async function main() {
   await page.keyboard.press("Control+s");
   await page.waitForTimeout(2400);
   const sb = await bar();
-  ok("S2 save passes", sb.includes("Gespeichert (Entwurf: nichts geschrieben)") && !(await unsaved()), sb);
+  ok("S2 save passes", sb.startsWith("Gespeichert.") && sb.includes("Herunterladen") && !(await unsaved()), sb);
   const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#notice a[download]")]);
   const dlPath = `${SCRATCH}/dl-auszug.xml`;
   await dl.saveAs(dlPath);

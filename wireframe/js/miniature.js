@@ -96,8 +96,8 @@ function applyAddress(initial) {
     return;
   }
   const [, folio, col] = /^#codex\/([^/]+)\/([ab])$/.exec(h) || [];
-  if (h && !folio) notify(`Die Adresse ${h} bezeichnet keine Stelle dieses Entwurfs.`);
-  else if (folio && folio !== state.data.folio) notify(`Fol. ${folio} liegt nicht im Entwurf, er enthält nur fol. ${state.data.folio}.`);
+  if (h && !folio) notify(`Die Adresse ${h} bezeichnet keine Stelle in dieser Datei.`);
+  else if (folio && folio !== state.data.folio) notify(`Fol. ${folio} liegt nicht in dieser Datei, sie enthält nur fol. ${state.data.folio}.`);
   if (docIsImages()) switchDocument("codex", false);
   const i = folio === state.data.folio ? "ab".indexOf(col) : 0;
   if (state.column !== i) setColumn(i);
@@ -115,7 +115,7 @@ export function switchDocument(which, address = true) {
   }
   $("#doc-select").value = which;
   shownDoc = which;
-  $("#status-file").textContent = isImages ? "Bildannotationen.xml" : "codex-2759.xml";
+  $("#doc-select").title = $("#doc-select").selectedOptions[0].title;
   $("#pager").hidden = isImages;
   closeInspector();
   current = null;

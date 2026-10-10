@@ -101,7 +101,7 @@ function diplomaticField(tok) {
 function openInXml(tok) {
   setView("xml");
   const x = tok.id && document.querySelector(`.xml .xw[data-id="${CSS.escape(tok.id)}"]`);
-  if (x) { x.classList.add("is-selected"); x.scrollIntoView({ block: "center" }); } else inspectorNote("Das Wort steht nicht im XML-Auszug dieses Entwurfs.");
+  if (x) { x.classList.add("is-selected"); x.scrollIntoView({ block: "center" }); } else inspectorNote("Das Wort steht nicht im XML.");
 }
 
 wordFields.diplomatic = diplomaticField;
@@ -272,7 +272,6 @@ export function elementList() {
   const list = el("ul", { class: "element-list", "aria-label": "Elemente für die Auswahl" });
   const box = el("div", { class: "element-choice" }, [
     el("div", { class: "group-title", text: "Element für Auswahl" }),
-    el("p", { class: "element-note", text: "Feste Liste im Entwurf; das Werkzeug liest die zulässigen Elemente aus dem Manifest." }),
     list,
   ]);
   for (const e of ELEMENTS) {

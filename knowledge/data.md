@@ -149,7 +149,7 @@ The project Schematron keeps to XPath 1.0, so that the same file runs in the bro
 - The fixture check `editorial/check_fixtures.py` fails when a value list of the project Schematron differs from the JSON ([testing](testing.md#test-strategy)).
 - The project modules under `docs/js/projects/wenzelsbibel/` read their value lists and labels from it.
 
-The frozen wireframe keeps its own lists. Why a value is accepted, reported or open is argued against the handbook in [editorial guidelines](editorial-guidelines.md#controlled-vocabularies).
+The wireframe keeps its own lists. Why a value is accepted, reported or open is argued against the handbook in [editorial guidelines](editorial-guidelines.md#controlled-vocabularies).
 
 ## Fixtures
 

@@ -44,7 +44,7 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 - `snapshots/` holds dated reports and frozen states, such as the Schematron findings on the public data and the wireframe reviews.
 - `docs/schemas/` holds the rule files the knowledge base describes, the project Schematron and the project vocabulary, beside the files merged from the base.
 
-Every other folder, including the frozen `wireframe/` and the condition under which it is deleted, is described in [architecture](architecture.md#repository-structure).
+Every other folder, including the feedback instrument `wireframe/` and the condition under which it is deleted, is described in [architecture](architecture.md#repository-structure).
 
 ## Reading paths
 

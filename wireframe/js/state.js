@@ -1,7 +1,7 @@
 // Shared state and DOM helpers. Every other module imports from here; this module imports nothing.
 
 // Answer of every control the wireframe does not implement, so no label promises more than it does.
-export const STUB = "Im Entwurf noch ohne Funktion.";
+export const STUB = "Noch ohne Funktion.";
 
 export const TYPE_LABEL = { person: "Person", place: "Ort", folk: "Volk" };
 

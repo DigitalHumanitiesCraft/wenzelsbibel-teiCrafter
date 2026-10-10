@@ -17,19 +17,18 @@
     <nav aria-label="Hauptmenü">
       <ul class="menus" role="menubar" id="menus"></ul>
     </nav>
+    <span class="wireframe-badge" title="Entwurf im Speicher auf fol. 1r; schreibt keine Datei.">Wireframe<span class="visually-hidden">: Entwurf im Speicher auf fol. 1r; schreibt keine Datei.</span></span>
   </header>
 
   <div class="docbar">
     <div class="docbar-left">
       <label class="visually-hidden" for="doc-select">Dokument</label>
-      <select id="doc-select">
-        <option value="codex">Codex 2759</option>
-        <option value="images">Bildannotationen</option>
+      <!-- Each option's title is its file name; switchDocument copies it to the select. -->
+      <select id="doc-select" title="codex-2759.xml">
+        <option value="codex" title="codex-2759.xml">Codex 2759</option>
+        <option value="images" title="Bildannotationen.xml">Bildannotationen</option>
       </select>
-      <span class="file" role="status">
-        <span id="status-file">codex-2759.xml</span>
-        <span class="unsaved" id="status-unsaved" title="Ungesicherte Änderungen" hidden><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span>
-      </span>
+      <span role="status"><span class="unsaved" id="status-unsaved" title="Ungesicherte Änderungen" hidden><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span></span>
       <div class="pager" id="pager">
         <!-- The wireframe holds one folio, so the folio pager of F12 is left out. -->
         <span class="folio" id="folio-label">fol. 1r</span>
@@ -53,13 +52,8 @@
       <div class="flow" id="flow" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="false" aria-label="Text"></div>
       <div class="minis" id="minis" hidden></div>
       <div id="xml-view" hidden>
-        <div class="xml-head" data-doc="codex">
-          <button type="button" class="act-btn" id="xml-format">XML formatieren</button>
-          <p class="xml-note" id="xml-note">Der Entwurf zeigt den geladenen Auszug von fol. 1r. Änderungen aus Text und Inspector erscheinen im Werkzeug in dieser Quelle, hier nicht.</p>
-          <p class="xml-note" id="xml-format-note" role="status" hidden>Formatierung ist eine Änderung am ganzen Dokument und wird erst beim Speichern wirksam.</p>
-        </div>
         <pre class="xml" id="xml" data-doc="codex"></pre>
-        <p class="empty-note" data-doc="images" hidden>Die Quelle von Bildannotationen.xml ist nicht Teil des Auszugs, den der Entwurf geladen hat. Das Werkzeug zeigt hier ihr XML.</p>
+        <p class="empty-note" data-doc="images" hidden>Kein XML geladen.</p>
       </div>
     </section>
     <aside class="facs-pane" id="facs-pane" aria-label="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759" hidden>

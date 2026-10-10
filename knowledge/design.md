@@ -83,11 +83,11 @@ Zuletzt geöffnet is rendered only where the File System Access capability exist
 
 ### Document bar
 
-The document bar sits below the menu bar. Its left side holds the document chooser with the two entries Codex and Bildannotationen, the file name with the unsaved marker, and the navigation that fits the chosen document, folio and column a or b for the codex, miniature for the image annotations. The unsaved marker is a dot next to the file name, with the accessible name "ungesichert", and stays until a save of the current revision succeeds. The column switch is hidden in the XML view. The right side holds exactly two switches, Text|XML and Faksimile. The bar carries no register tab and no search field. Suchen (Ctrl+F) opens a field directly above the text area.
+The document bar sits below the menu bar. Its left side holds the document chooser with the two entries Codex and Bildannotationen, which names the document once and carries the file name as its tooltip, the unsaved marker directly after it, and the navigation that fits the chosen document, folio and column a or b for the codex, miniature for the image annotations. The unsaved marker is a dot next to the document chooser, with the accessible name "ungesichert", and stays until a save of the current revision succeeds. The column switch is hidden in the XML view. The right side holds exactly two switches, Text|XML and Faksimile. The bar carries no register tab and no search field. Suchen (Ctrl+F) opens a field directly above the text area.
 
 ### Text area
 
-The text area renders the chosen column as one continuous editable flow with a real caret, in the reading font. Manuscript line breaks are soft breaks, and each line begins with a faint line number in `--color-text-muted` in the margin, header lines with the marker "Kopfzeile". Markup appears as inline marks on the words, with renditions such as rubrication or initials in a form that adds a non-colour cue, and apparatus ranges as an underline with a small marker at the range end. Register chips follow the run of words they span, and chips, punctuation, milestones and line numbers are non-editable islands the caret passes over. A selection by mouse or Shift+Arrow snaps to whole words, a click on a line number selects the line, and the inspector follows the caret. The wireframe builds the flow with `contenteditable`, the product with a CodeMirror 6 view whose replace decorations hide the raw XML ([Specification](specification.md#text-view)).
+The text area renders the chosen column as one continuous editable flow with a real caret, in the reading font. Manuscript line breaks are soft breaks, and each line begins with a faint line number in `--color-text-muted` in the margin, header lines with the marker "Kopfzeile". Markup appears as inline marks on the words, with renditions such as rubrication or initials in a form that adds a non-colour cue, and apparatus ranges as an underline with a small marker at the range end. Register chips follow the run of words they span, and chips, punctuation, milestones and line numbers are non-editable islands the caret passes over. A selection by mouse or Shift+Arrow snaps to whole words, a click on a line number selects the line, and the inspector follows the caret. A range is shown by the native selection alone, continuous across the gaps between words; a per-word tint marks only the caret word, because two stacked highlights leave dark bars between the words. The wireframe builds the flow with `contenteditable`, the product with a CodeMirror 6 view whose replace decorations hide the raw XML ([Specification](specification.md#text-view)).
 
 ### Facsimile pane
 
@@ -109,7 +109,7 @@ The findings list opens in the same bottom area through "Befunde anzeigen" in th
 
 ### XML view
 
-The XML view shows the complete source in the same area as the text view, with the selection carried over. A toolbar above the source offers "XML formatieren", with a short note that the formatting changes the whole document and takes effect on save. The column switch of the document bar is hidden, because the source is not divided by column.
+The XML view shows the complete source in the same area as the text view, with the selection carried over. The view begins with the source and carries no toolbar. "XML formatieren" is reached through the menu Bearbeiten, and its consequence, a change to the whole document that takes effect on save, appears once in the notice bar when the action runs. The column switch of the document bar is hidden, because the source is not divided by column.
 
 ### Notice bar
 
@@ -206,7 +206,8 @@ Each view below is specified by the six points of the content and interaction hi
 
 - The selection survives the switch between Text and XML in both directions, and unfinished input stays in the inspector across the switch.
 - Escape closes in a fixed order: first an open autocomplete list, then an open menu, then the inspector, then the selection. Each step returns focus to the element that opened the closed layer.
-- The unsaved marker, a dot next to the file name, stays until a save of the current revision succeeds. "XML formatieren" sets it like any other edit.
+- The interface explains no limits of itself in sentences. A limitation of the wireframe is one badge "Wireframe" in the menu bar with a tooltip; the product shows only messages the user can act on.
+- The unsaved marker, a dot next to the document chooser, stays until a save of the current revision succeeds. "XML formatieren" sets it like any other edit.
 - The inspector follows the caret in the flow. After the user closes it, caret moves leave it closed until the next click or key in the text.
 - Edits in the flow stay inside one word. Moving text by drag, a space inside a word or a deletion across a word boundary is refused, and new, split or deleted words go through the inspector or the XML view.
 - A refused action (a wrap that would split an element, a duplicate register ID) states its reason at the inspector field that triggered it and leaves the source unchanged.

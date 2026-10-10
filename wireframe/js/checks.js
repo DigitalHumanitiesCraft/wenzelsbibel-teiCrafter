@@ -26,9 +26,7 @@ const TEI_ALL_MS = 2000;
 
 const CHECKS = ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"];
 // Wohlgeformtheit parses the excerpt as loaded (or formatted), not the model edits, and
-// only on request; its label says so wherever a result is shown.
-const RESULT_LABEL = { Wohlgeformtheit: "Wohlgeformtheit (geladener Auszug)" };
-const resultLabel = (check) => RESULT_LABEL[check] || check;
+// only on request. The header badge states that the wireframe works in memory.
 const SAVE_SET = ["Wohlgeformtheit", "TEI All", "Schematron editing"];
 
 // check => { findings, stale }. Findings hold positions and ids, never token objects,
@@ -107,7 +105,7 @@ function schematron(phase) {
     // Not in the project Schematron: the codex carries no register lists, so the .sch
     // cannot resolve a pointer. The wireframe resolves against its derived register.
     if (String(target ?? "").trim() && !known.has(`${String(type).toLowerCase()}|${target.trim()}`)) {
-      add("error", "register-target-known (Entwurf)", `Der Registerzeiger "${target.trim()}" (${type}) zeigt auf keinen Eintrag im Register. Entwurfsregel, nicht im Projekt-Schematron.`, r.at, path);
+      add("error", "register-target-known", `Der Registerzeiger "${target.trim()}" (${type}) zeigt auf keinen Eintrag im Register.`, r.at, path);
     }
   }
 
@@ -201,7 +199,7 @@ function wellFormed() {
   const doc = new DOMParser().parseFromString(`<excerpt>${head}${src}${tail}</excerpt>`, "application/xml");
   const err = doc.querySelector("parsererror");
   if (!err) return [];
-  return [{ doc: DOC, check: "Wohlgeformtheit", phase: null, role: "error", rule: "XML", message: (err.querySelector("div") || err).textContent.trim().split("\n")[0], where: "XML-Auszug", at: null, path: "/" }];
+  return [{ doc: DOC, check: "Wohlgeformtheit", phase: null, role: "error", rule: "XML", message: (err.querySelector("div") || err).textContent.trim().split("\n")[0], where: "XML", at: null, path: "/" }];
 }
 
 // Runs. TEI All and the save set are asynchronous and cancellable; the interface stays usable.
@@ -230,7 +228,7 @@ export async function runCheck(check) {
   if (findings.length) { renderBar(); return; }
   barState = null;
   renderBar();
-  const msg = `${resultLabel(check)}: ${check === "Wohlgeformtheit" ? "wohlgeformt" : "keine Befunde"}.`;
+  const msg = `${check}: ${check === "Wohlgeformtheit" ? "wohlgeformt" : "keine Befunde"}.`;
   if (CONFIRM_CLEAN) notify(msg); else announce(msg);
 }
 
@@ -258,7 +256,7 @@ export async function save() {
 function downloadLink() {
   if (downloadUrl) URL.revokeObjectURL(downloadUrl);
   downloadUrl = URL.createObjectURL(new Blob([state.data.xmlExcerpt], { type: "application/xml" }));
-  return el("a", { class: "act-btn", href: downloadUrl, download: DOWNLOAD_NAME, text: "Unbearbeiteten Auszug herunterladen" });
+  return el("a", { class: "act-btn", href: downloadUrl, download: DOWNLOAD_NAME, text: "Herunterladen" });
 }
 
 // Notice bar
@@ -278,8 +276,7 @@ function barContent() {
   const show = el("button", { type: "button", class: "act-btn", text: "Befunde anzeigen", onclick: showFindings });
   if (barState.kind === "save-ok") {
     return [
-      el("strong", { text: "Gespeichert (Entwurf: nichts geschrieben)." }),
-      el("span", { text: "Der Download enthält den XML-Auszug ohne die Wortänderungen dieser Sitzung." }),
+      el("strong", { text: "Gespeichert." }),
       downloadLink(),
       el("button", { type: "button", class: "act-btn", text: "Schließen", onclick: () => { barState = null; renderBar(); } }),
     ];
@@ -294,7 +291,7 @@ function barContent() {
   const fs = results.get(check).findings;
   const first = errors(fs)[0] || fs[0];
   const counts = errors(fs).length === fs.length ? plural(fs.length) : `${plural(fs.length)} (${errors(fs).length} Fehler, ${fs.length - errors(fs).length} Warnungen)`;
-  return [...nodes, el("strong", { text: `${resultLabel(check)}: ${counts}` }), el("span", { text: `${first.message} ${first.where}` }), show];
+  return [...nodes, el("strong", { text: `${check}: ${counts}` }), el("span", { text: `${first.message} ${first.where}` }), show];
 }
 
 // Findings list (F47): grouped per check, each finding with document, location, rule,
@@ -308,11 +305,10 @@ export function showFindings() {
     const r = results.get(check);
     if (!r) continue;
     const fs = r.findings;
-    const head = el("h3", { class: "findings-check" }, [resultLabel(check), el("span", { class: "context", text: fs.length ? `${plural(fs.length)}, ${errors(fs).length} Fehler${r.stale ? ", veraltet" : ""}` : `keine Befunde${r.stale ? ", veraltet" : ""}` })]);
+    const head = el("h3", { class: "findings-check" }, [check, el("span", { class: "context", text: fs.length ? `${plural(fs.length)}, ${errors(fs).length} Fehler${r.stale ? ", veraltet" : ""}` : `keine Befunde${r.stale ? ", veraltet" : ""}` })]);
     const group = el("section", { class: "findings-group" }, [head]);
     const phase = check.startsWith("Schematron") ? check.split(" ")[1] : null;
     if (phase) group.append(el("p", { class: "findings-scope", text: NOT_EVALUATED[phase] }));
-    if (check === "TEI All") group.append(el("p", { class: "findings-scope", text: "Im Entwurf simuliert; das Werkzeug prüft gegen das TEI-All-RelaxNG." }));
     if (fs.length) {
       const list = el("ul", { class: "findings" });
       for (const f of fs) {

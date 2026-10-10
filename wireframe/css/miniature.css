@@ -40,7 +40,8 @@
   }
 
   .tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
-  .tag {
+  /* Scoped to the list: the XML view's element names carry the class tag too. */
+  .tags .tag {
     display: inline-flex; align-items: center; gap: var(--space-xs); border: 1px solid var(--color-border); border-radius: 999px;
     padding-inline-start: var(--space-sm); font-size: var(--font-size-sm); background: var(--color-surface-sunken);
   }

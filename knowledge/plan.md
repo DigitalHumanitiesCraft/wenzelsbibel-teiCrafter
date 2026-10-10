@@ -36,7 +36,7 @@ The tool is finished enough when the edition team actually edits with it. Until 
 | Phase | Deliverable | Acceptance check | Blocker |
 | --- | --- | --- | --- |
 | 1 Knowledge base | `knowledge/` documents, `data/` added to `.gitignore`, fork `CLAUDE.md` and `README.md` | Documents follow the Promptotyping convention; every link resolves | Operator review |
-| 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data, frozen as a design instrument | The agreed layout and every workflow run in memory on fol. 1r; the walkthroughs under `wireframe/checks/` pass | None |
+| 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data, kept as the feedback instrument until phase 5b | The agreed layout and every workflow run in memory on fol. 1r; the walkthroughs under `wireframe/checks/` pass | None |
 | 3 Base refactor and merge | Refactor steps a to e in teiCrafter, merged into the fork | Base acceptance holds (teiCrafter `knowledge/plan.md`); the inherited checks workflow passes on the fork | None |
 | 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); the project Schematron `docs/schemas/wenzelsbibel.sch` as single source, named "Editionsregeln" in the workspace default schema set; the project vocabulary `docs/schemas/wenzelsbibel-vocabulary.json`; the [editorial layer](../editorial/README.md) with fixtures and the fixture check including the vocabulary comparison; the [findings snapshot](../snapshots/schematron-findings-2026-10-10.md) of the public data | Fixture check green, including equal value lists in Schematron and vocabulary; the editing phase accepts the published codex and image annotations unchanged | None |
 | 5a Base mechanisms in teiCrafter | Built in the base and merged: the inspector rendering forms from a field table, the register autocomplete over any register list, the notice bar and findings list over `validation-view.js` results, the CodeMirror flow view with its vendored bundle and "XML formatieren", and the `tei-document` seam between the legacy offset tree and `src/core` | Accepted against the base's own plan and checks (teiCrafter `knowledge/plan.md`); the merge leaves the inherited proofs green; the flow view keeps untouched bytes identical on the full codex | Operator decision on typing in the flow (specification F18) before the word commands; the base plan still lists inspector and autocomplete as an open decision |
@@ -47,7 +47,7 @@ The tool is finished enough when the edition team actually edits with it. Until 
 
 ### Phase 2 notes
 
-The wireframe is frozen. It receives no further features and no refactoring, and it is deleted once the real interface passes the demo workflow tests of phase 5b. What it leaves to the real build is recorded in the [first](../snapshots/wireframe-review-2026-10-10.md) and the [second](../snapshots/wireframe-review-2026-10-10-2.md) review snapshot.
+The wireframe is the instrument on which the operator gives interface feedback with the real fol. 1r data until the real interface exists. It takes corrections from that feedback, no new features and no refactoring, and each correction that concerns the real build goes into the specification or the design as a requirement. It is deleted once the real interface passes the demo workflow tests of phase 5b. What it leaves to the real build is recorded in the [first](../snapshots/wireframe-review-2026-10-10.md) and the [second](../snapshots/wireframe-review-2026-10-10-2.md) review snapshot.
 
 ### Phase 4 notes
 

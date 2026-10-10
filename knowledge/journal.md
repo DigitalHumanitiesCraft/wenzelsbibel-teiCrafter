@@ -21,6 +21,12 @@ related: [project, specification, plan, handoff]
 
 ## Entries
 
+### 2026-10-10 integrated First operator feedback round on the wireframe
+
+- Source: the operator's own test of the wireframe on fol. 1r (screenshots and questions of 2026-10-10), a headless Chromium measurement of long tasks per interaction, and the fix package of the same day.
+- Target: `wireframe/`, [design.md](design.md) (document bar, text area, XML view, interaction rules), [plan.md](plan.md) (phase 2), [CLAUDE.md](../CLAUDE.md).
+- Result: The freeze of the wireframe became the rule that it takes corrections from operator feedback but no features, and that each correction concerning the real build is recorded as a requirement. Four corrections entered: a range selection is shown by the native selection alone, because the per-word tint on top of it left dark bars in the gaps; the explanatory wireframe sentences gave way to one badge with a tooltip; the document bar names the document once with the file name as tooltip; the XML view begins with the source and "XML formatieren" lives in the menu with its consequence in the notice bar. The measurement found no cost in the selection itself but a 90 ms debounce, now one read per frame, and traced the slow switch to the XML view to a CSS collision that styled every element name as an inline-flex chip, now scoped; the remaining cost of the facsimile lies in OpenSeadragon's first tile upload.
+
 ### 2026-10-10 integrated Rule files under docs/schemas, one vocabulary source, tracked public excerpt
 
 - Source: operator decisions of 2026-10-10 after the repository analysis.

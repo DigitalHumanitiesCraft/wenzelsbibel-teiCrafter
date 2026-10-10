@@ -41,14 +41,16 @@ const normInput = (page) => page.getByRole("textbox", { name: "Normalisiert", ex
 // 1: XML view in Bildannotationen
 await scenario("F1", async () => {
   const page = await open();
+  check("F1 the select names the codex file in its title, no second name", (await page.getAttribute("#doc-select", "title")) === "codex-2759.xml" && !(await page.locator("#status-file").count()));
   await page.selectOption("#doc-select", "images");
   await page.waitForTimeout(150);
+  check("F1 the select title follows the document", (await page.getAttribute("#doc-select", "title")) === "Bildannotationen.xml");
   await page.click('[data-view="xml"]');
   await page.waitForTimeout(150);
   const xmlShown = await visible(page, "#xml");
   const note = await page.locator('#xml-view [data-doc="images"]').count() ? await page.locator('#xml-view [data-doc="images"]').innerText() : "";
   check("F1 XML in Bildannotationen shows no codex excerpt", !xmlShown);
-  check("F1 XML in Bildannotationen states the source is not extracted", note.includes("nicht Teil des Auszugs"), note);
+  check("F1 XML in Bildannotationen shows the plain empty state", note === "Kein XML geladen.", note);
   check("F1 column switch hidden", !(await visible(page, "#column-switch")));
   await page.click('[data-view="text"]');
   await page.waitForTimeout(150);
@@ -131,12 +133,17 @@ await scenario("F3", async () => {
 // 4 and 10: labels claim only what is checked
 await scenario("F4/10", async () => {
   const page = await open();
+  const badge = await page.getAttribute(".wireframe-badge", "title");
+  check("F4 the header badge states the in-memory scope once", await visible(page, ".wireframe-badge") && badge === "Entwurf im Speicher auf fol. 1r; schreibt keine Datei." && (await page.locator(".wireframe-badge").textContent()).includes(badge), badge);
   await page.click('[data-view="xml"]');
-  const note = await page.locator("#xml-note").innerText();
-  check("F4 XML note says the view shows the loaded excerpt, not model edits", /geladenen Auszug/.test(note) && /hier nicht/.test(note) && await visible(page, "#xml-note"), note);
+  check("F4 the XML view begins with the source, without a toolbar or note", !(await page.locator("#xml-view .xml-head, #xml-note, #xml-format").count()) && await page.evaluate(() => document.querySelector("#xml-view").firstElementChild.id === "xml"));
+  await menu(page, "Bearbeiten", "XML formatieren");
+  const f = await notice(page);
+  check("F4 XML formatieren from the menu commits and states its consequence in the notice bar", f.includes("wird erst beim Speichern wirksam") && await visible(page, "#status-unsaved"), f);
+  await page.keyboard.press("Control+z");
   await menu(page, "Prüfen", "Wohlgeformtheit");
   const n = await notice(page);
-  check("F10 well-formedness result names the loaded excerpt", n.includes("Wohlgeformtheit (geladener Auszug): wohlgeformt."), n);
+  check("F10 well-formedness result is stated plainly", n.includes("Wohlgeformtheit: wohlgeformt."), n);
   await page.context().close();
 });
 

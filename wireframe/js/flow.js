@@ -81,20 +81,30 @@ export function setColumn(i) {
 
 // Caret and selection mapping
 
+// Selection reads are coalesced to one per frame, so the highlight follows the next paint.
+// While the mouse button is held in the flow only the highlight follows; the "select"
+// event, which rebuilds the inspector, waits for the release.
+let frame = 0;
+let dragging = false;
+let dragBase; // state.sel before the drag's first read, undefined outside a drag
+const scheduleRead = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; readSelection(); }); };
+
 export function wireFlow() {
   const flow = $("#flow");
-  let timer = 0;
-  document.addEventListener("selectionchange", () => { clearTimeout(timer); timer = setTimeout(readSelection, 90); });
+  document.addEventListener("selectionchange", scheduleRead);
   flow.addEventListener("mousedown", (e) => {
     state.quiet = false;
     const ln = e.target.closest(".ln");
     if (ln) { e.preventDefault(); selectLine(ln.dataset.line); return; }
+    if (e.button === 0) { dragging = true; dragBase = undefined; }
     // A press inside a selection would start a native text drag; start a new selection instead.
     const sel = getSelection();
     if (!e.shiftKey && !sel.isCollapsed && inFlow(sel)) sel.collapseToStart();
   });
   flow.addEventListener("mouseup", () => snapSelection(false));
-  flow.addEventListener("keydown", (e) => { if (!["Escape", "Shift", "Control", "Alt", "Meta", "Tab"].includes(e.key)) state.quiet = false; });
+  // On the document, because a drag may end outside the flow; runs after the snap above.
+  document.addEventListener("mouseup", () => { if (dragging) { dragging = false; scheduleRead(); } });
+  flow.addEventListener("keydown", (e) => { dragging = false; if (!["Escape", "Shift", "Control", "Alt", "Meta", "Tab"].includes(e.key)) state.quiet = false; });
   flow.addEventListener("keyup", (e) => {
     if ((e.shiftKey && e.key.startsWith("Arrow")) || e.key === "Shift") snapSelection(true);
   });
@@ -133,7 +143,7 @@ function readSelection() {
   if (state.view !== "text" || !inFlow(sel) || state.quiet) return;
   const ks = rangeWords(sel.getRangeAt(0));
   if (!ks) return;
-  const prev = state.sel;
+  const prev = dragBase !== undefined ? dragBase : state.sel;
   const sameRange = prev && prev.from === ks[0] && prev.to === ks[1];
   const pending = state.pendingLine;
   state.pendingLine = null;
@@ -142,6 +152,8 @@ function readSelection() {
   const same = sameRange && (prev.line || null) === line;
   state.sel = { from: ks[0], to: ks[1], line };
   highlightSelection();
+  if (dragging) { if (dragBase === undefined) dragBase = prev; return; }
+  dragBase = undefined;
   flowEvents.dispatchEvent(new CustomEvent("select", { detail: { changed: !same } }));
 }
 
@@ -246,6 +258,10 @@ export function highlightSelection() {
   const words = selectedWords();
   const lines = new Set(words.map((w) => w.line));
   for (const w of words) w.node.classList.add("is-current");
+  // A range is shown by the native selection alone; a second, opaque tint per word
+  // would leave the gaps between words as dark bars. The word tint marks the caret word.
+  const native = getSelection();
+  $("#flow").classList.toggle("has-range", words.length > 1 || (!native.isCollapsed && inFlow(native)));
   for (const line of lines) {
     const ln = document.querySelector(`.ln[data-line="${line.id}"]`);
     if (ln) ln.classList.add("is-current");
