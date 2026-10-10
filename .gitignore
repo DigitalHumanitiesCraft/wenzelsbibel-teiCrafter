@@ -28,4 +28,4 @@ docs/data/editor/*/*
 !docs/data/editor/szd/*
 
 # Edition data and images stay local; see knowledge/project.md (rights boundary).
-data/
+/data/

@@ -23,6 +23,12 @@ This journal is the curated backward-looking provenance index of the project. Cu
 
 ## Entries
 
+### 2026-10-10 integrated Wireframe, flow spike, editorial layer and base merge
+
+- Source: the reworked wireframe under `wireframe/`, the spike under `prototypes/d-flow/` with its Node and browser checks, the editorial layer under `editorial/` with its fixture check and data findings, the base refactor merged from upstream (base commit 80313c0), and the feasibility study of the flowing editor (session scratchpad, measured on the full codex).
+- Target: [specification.md](specification.md), [design.md](design.md), [architecture.md](architecture.md), [data.md](data.md), [testing.md](testing.md), [integration.md](integration.md), [plan.md](plan.md).
+- Result: The operator replaced the line grid by a flowing text with caret and the permanent status line by a notice bar that appears only with something to act on; the facsimile uses OpenSeadragon over IIIF; an explicit "XML formatieren" action exists. The feasibility study measured that any design which reparses the whole codex per keystroke is out, and the spike proved on fol. 1r that CodeMirror replace decorations over the raw XML give byte-identical roundtrip, word-local typing with `@orig` in step, word snapping and structure-safe wrapping. The editorial layer holds the project Schematron in two phases; the editing phase accepts the published files unchanged, so word identifiers and register pointers moved to the review phase, which reports and never gates saving. The operator proposed the working model (GitLab repository, book files, formatted once, pull and push with a desktop client, pipeline check on every push), recorded in the specification for confirmation by the edition team. The ignore rule for the local data folder was corrected to `/data/` because `data/` also matched the application's `docs/data/`.
+
 ### 2026-10-10 integrated Register encoding follows the handbook
 
 - Source: operator decision in the session of 2026-10-10, after the finding that the codex already carries the handbook's typed `ref` on the words with bare target IDs, and the TEI P5 reference pages for `span`, `seg`, `rs` and att.canonical (read on 2026-10-10).

@@ -32,13 +32,13 @@ The meeting prototype covers the five workflows in [Epics and user stories](#epi
 - ODD customisation and generation
 - project ZIP package (export and restore of the linked collection as one archive)
 - Bible verse form and verse alignment
-- a findings surface beyond the status line and the findings list it opens
+- a findings surface beyond the notice bar and the findings list it opens
 - a keyboard shortcut scheme beyond browser and editor defaults, Escape and Ctrl+E
 - PAGE XML import
 - witness management
 - entry workspace
 
-Edition data (`codex-2759.xml`, `Bildannotationen.xml`, the register file, Transkribus exports) stay local and outside the repository. Technical access to the ONB IIIF image service implies no permission to store, redistribute or publish images or edition data. Data handling is defined in [Data](data.md), the external services in [Architecture](architecture.md), and the exchange with the base, the edition team and Oxygen in [Integration](integration.md).
+Edition data (`codex-2759.xml`, `Bildannotationen.xml`, the register file, Transkribus exports) stay outside this repository. The edition team's own repository and the way the tool works on it are described in [Working model](#working-model). Technical access to the ONB IIIF image service implies no permission to store, redistribute or publish images or edition data. Data handling is defined in [Data](data.md), the external services in [Architecture](architecture.md), and the exchange with the base, the edition team and Oxygen in [Integration](integration.md).
 
 ## Inherited invariants
 
@@ -66,7 +66,7 @@ Two roles use the tool, the project lead (Germanistik, PLUS) and the student ass
 
 As a student assistant, I want to open a folio of the codex and see the ONB facsimile beside the text, so that I can check the transcription against the manuscript.
 
-1. Choosing Codex, folio 1r and column a in the document bar shows the lines of column a, one manuscript line per row, starting with the header line PROLOGUS.
+1. Choosing Codex, folio 1r and column a in the document bar shows column a as one continuous flow, starting with the header line PROLOGUS, in which every manuscript line begins with its line number in the margin.
 2. Switching Faksimile on shows the IIIF image `00000010` of 1r and, with zones on, the outlines of the line zones of the page.
 3. Choosing column b shows the second column without reloading the document.
 
@@ -76,9 +76,9 @@ The story reads `pb/@n` and `pb/@facs` for the folio and its `surface`, the sequ
 
 As a student assistant, I want to click a line in the text or in the facsimile and edit the words of that line diplomatically and normalised, so that I correct Transkribus output where the manuscript shows it.
 
-1. Clicking the first text line of column a selects it, outlines its line zone in the facsimile and opens the inspector with the words `Hie`, `hebt`, `ſich`, `an`, `die`, `voꝛ`, `rede`, `vnd` and their normalised readings.
+1. Clicking the line number of the first text line of column a selects the line, outlines its line zone in the facsimile and opens the inspector with the words `Hie`, `hebt`, `ſich`, `an`, `die`, `voꝛ`, `rede`, `vnd` and their normalised readings.
 2. Clicking a line zone in the facsimile selects the same line in the text.
-3. Changing the normalised reading of `ſich` changes only `@norm` of that `w`, the status line shows the unsaved marker, and Undo restores the original bytes.
+3. Changing the normalised reading of `ſich` changes only `@norm` of that `w`, the document bar shows the unsaved marker, and Undo restores the original bytes.
 4. Changing the diplomatic reading of a simple word changes its text content and `@orig` together and leaves its `@xml:id` and every other attribute unchanged.
 5. For `merteín`, whose text contains `hi[@rend='rubrication']` and an `lb`, the diplomatic field offers the route to the XML view, and the normalised field remains editable.
 6. For `<w>Got</w>`, which has no `@orig` and `@norm`, entering a normalised reading adds `@norm` and changes nothing else.
@@ -115,10 +115,10 @@ As a student assistant, I want to link a word or a word sequence to a person, pl
 
 1. Selecting `Rotlebín`, `herren` or `merteín` shows the existing link to the person entry `Martin` as a chip over all three words and in the inspector's register field.
 2. Typing in the register field lists hits from all three registers, each with its type and ID, and an optional type filter narrows the list.
-3. Enter on a hit wraps the selected words in one `ref` with `@target` and `@type` in one undo step.
+3. Enter on a hit wraps the selected words in one `rs` with `@type` and `@ref` in one undo step.
 4. A selection that cannot be wrapped without splitting an existing element is refused with the reason, and the source stays unchanged.
 
-The story writes `<ref target="[ID]" type="person|folk|place">` around the word or words (handbook sections 1.4.19 to 1.4.21). The real data carries `<ref target="Martin" type="person">` with a bare ID, whereas the recommended form uses `#ID`. The target form is an open question.
+The story reads the handbook form `ref[@type][@target]` (handbook sections 1.4.19 to 1.4.21), which the real data carries as `<ref target="Martin" type="person">` with a bare ID, and writes the proposed form `rs[@type='person' or 'place' or 'folk'][@ref]` with the same values around the word or words ([Key decisions](#key-decisions)). The pointer syntax (`#ID` or `register.xml#ID`) is decided with the edition team.
 
 #### US3.2 Create a register entry from the text
 
@@ -126,7 +126,7 @@ As a student assistant, I want to create a missing register entry directly from 
 
 1. When no hit matches, "+ neu anlegen" opens a minimal form with type, ID and preferred name, prefilled from the selected text.
 2. Applying adds the entry to the register file and links the selection to it, and an ID that already exists is refused.
-3. Register, Verweise auf Eintrag anzeigen lists every `ref` pointing to the entry and jumps to each.
+3. Register, Verweise auf Eintrag anzeigen lists every register link pointing to the entry, in either form (`rs/@ref` or `ref/@target`), and jumps to each.
 
 The story writes `listPerson/person[@xml:id]/persName` and `listPlace/place[@xml:id]/placeName` in the separate register file. The list element for peoples is open.
 
@@ -168,13 +168,13 @@ The story reads `note[@type='text-relation'][@subtype='content']` and `note[@typ
 
 As the project lead, I want to run well-formedness, TEI All and the project Schematron and read the findings in plain words, so that I know whether a file meets the project rules before it leaves the tool.
 
-1. Well-formedness is shown at the status line after each pause in editing, and deleting an end tag in the XML view shows the error with its line.
-2. Prüfen, TEI All runs in the background, the interface stays usable, and the status line shows valid, invalid, outdated or unavailable.
-3. Prüfen, Schematron editing and Schematron review each report their phase result separately.
-4. Clicking the status line opens the findings list, and choosing a finding selects its location in the text or XML view.
-5. An edit after a run marks the result outdated.
+1. Well-formedness is checked after each pause in editing. Deleting an end tag in the XML view shows the notice bar with the reason and a jump to the place, and the bar disappears once the document is well-formed again.
+2. Prüfen, TEI All runs in the background, and the interface stays usable.
+3. Prüfen, Schematron editing and Schematron review each report their phase result separately. A run with findings shows the notice bar with the check, the number of findings, the first message and the action "Befunde anzeigen".
+4. "Befunde anzeigen" opens the findings list in the bottom area, and choosing a finding selects its location in the text or XML view.
+5. An edit after a run makes its result outdated, and the findings list says so.
 
-The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron with the phases `editing` and `review`.
+The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron with the phases `editing` and `review` ([Data](data.md#schema-set)).
 
 #### US5.2 Save as file
 
@@ -182,7 +182,7 @@ As a student assistant, I want to save my work as an XML file, so that the editi
 
 1. Datei, Speichern runs the configured schema set when no current result exists and writes the file only when every schema passes.
 2. In Chromium with a writable handle the file is written in place, and in Firefox the same bytes are offered as a download.
-3. When a schema fails, nothing is written, the status line names the failed schema, and the unsaved marker stays.
+3. When a schema fails, nothing is written, the notice bar names the failed schema with its findings, and the unsaved marker stays.
 4. Saving an unchanged file returns the original bytes.
 
 ## Functional requirements
@@ -195,9 +195,9 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 - F2 Datei, Öffnen opens one XML file through the file picker in Chromium and Firefox.
 - F3 Datei, Projekt öffnen opens a project folder where the browser offers directory access and otherwise accepts several files through file input. It assigns codex, image annotations and register file by the project manifest or the built-in detection (TEI types `wenzelsbibel-transcription` and `wenzelsbibel-registers`, PID pattern `o:wen.`).
 - F4 Datei, Zuletzt geöffnet lists recently opened native handles and is rendered only where the File System Access capability exists.
-- F5 Bearbeiten, Rückgängig and Wiederholen step through the active document's history, each step restoring the exact earlier source string.
+- F5 Bearbeiten, Rückgängig and Wiederholen step through the active document's history, each step restoring the exact earlier source string. For edits and wraps in the flow this is proven in `prototypes/d-flow`.
 - F6 Bearbeiten, Suchen opens a search field above the text that searches word text in the text view and the source in the XML view.
-- F7 Ansicht switches between Text and XML, toggles Faksimile, Zonen and Inspector, and switches between Zeilenweise and Fließtext.
+- F7 Ansicht switches between Text and XML and toggles Faksimile, Zonen and Auswahl (the inspector for the current selection). The text view has one rendering, the flow of F14, so Ansicht offers no switch between line-by-line and running text.
 - F8 Register offers Personen, Orte and Völker öffnen, Eintrag anlegen and Verweise auf Eintrag anzeigen.
 - F9 Prüfen offers Wohlgeformtheit, TEI All, Schematron editing, Schematron review and Befundliste.
 - F10 Hilfe offers Transkriptionsrichtlinie, which opens the published Transkriptionshandbuch, and Über, which names the tool, its version, its teiCrafter base and its licence.
@@ -205,27 +205,30 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 ### Document bar
 
 - F11 The document chooser offers Codex and Bildannotationen. Switching checkpoints the current document first and keeps it active when the checkpoint fails.
-- F12 For the codex the bar offers folio and column a or b, for the image annotations the miniature. The choice is reflected in the page address so that reload and browser history restore it.
+- F12 For the codex the bar offers folio and column a or b, for the image annotations the miniature. The choice is reflected in the page address so that reload and browser history restore it. The column switch is hidden in the XML view, which shows the whole document.
 - F13 The bar's right side carries only the switch Text or XML and the switch Faksimile on or off.
 
 ### Text view
 
-- F14 The text view renders the chosen column line by line as in the manuscript, each row starting at an `lb`, with a column marker and the line position. Header lines (`fw[@ana='header']`) are marked as such.
-- F15 Fließtext renders the same column as running text with visible line-break marks, and the selection persists across the switch.
-- F16 A click selects a word, a drag or Shift+click extends the selection to a word sequence, and a click on the line position selects the line.
+- F14 The text view renders the chosen column as one continuous editable flow with a real caret. Manuscript line breaks (`lb`) are soft breaks, each line carries a faint line number in the margin, and header lines (`fw[@ana='header']`) carry the marker "Kopfzeile". In the product the flow is a CodeMirror 6 view with replace decorations over the raw XML, so the caret moves through the canonical source while the markup stays hidden.
+- F15 Markup appears as inline marks on the words. Register chips, punctuation, milestones and line numbers are non-editable islands that the caret passes over.
+- F16 A click places the caret in a word and selects it. A selection by mouse or by Shift+Arrow snaps to whole words, so each keyboard step adds or drops one word, and a click on a line number selects the line. The inspector follows the caret and the selection. Selection snapping is proven in `prototypes/d-flow`.
 - F17 Register links appear as chips coloured by type with type and ID as text, apparatus ranges as marks, and `hi/@rend` renditions in a form that does not rely on colour alone.
-- F18 The text view never changes the source. Only inspector actions and XML edits do.
+- F18 Whether typing in the flow writes to the source is an open operator decision ([Open questions](#open-questions)). The recommendation is yes, limited to words without inner markup, with `@orig` kept in step where it equalled the word text. Until the decision, inspector actions and XML edits are the agreed write paths.
+- F53 Opening a document in the flow view and saving it without an edit returns byte-identical source, for LF and CRLF line endings (proven in `prototypes/d-flow`).
+- F54 Where typing writes to the source (F18), an edit changes only the visible text of one word and, where `@orig` equalled that text before the edit, `@orig`, and every other byte stays identical. A space inside a word, the characters `<` and `&`, an edit that would touch a tag or cross a word boundary, and emptying a word are refused with the reason. Splitting, joining and deleting words are word commands of their own. Everything in this requirement except the word commands is proven in `prototypes/d-flow`.
 
 ### XML view
 
 - F19 The XML view shows the complete document source, scrolled to and selecting the element that corresponds to the text selection, and a cursor position maps back to the text selection on the switch.
-- F20 The inspector shows the element under the cursor and, for `w`, `ref`, `app` and image-annotation `item`, the same form as in the text view.
+- F20 The inspector shows the element under the cursor and, for `w`, register links (`rs` or `ref`), `app` and image-annotation `item`, the same form as in the text view.
 - F21 Ctrl+E on a selection opens a short list of the elements the manifest allows at that position, and choosing one wraps the selection when the wrap keeps the document well-formed.
+- F56 "XML formatieren", offered in Bearbeiten and in the XML view, formats the whole document deterministically. Empty elements become self-closing, indentation is two spaces with one element per line, elements that carry text stay on one line so that mixed content and the transcription remain unchanged, and whitespace-only text nodes are dropped. The formatting is an explicit edit of the whole document, is one undo step and sets the unsaved marker. How `xml:space="preserve"` is honoured is open.
 
 ### Facsimile pane
 
-- F22 The pane shows the IIIF image of the current page, resolved through the ONB template `https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2/info.json`, with zoom and pan.
-- F23 With Zonen on, the pane overlays the page's zones and distinguishes line zones, text regions, miniature regions and marginal image regions.
+- F22 The pane shows the IIIF image of the current page in OpenSeadragon, vendored from the base under `docs/vendor/openseadragon/`, with the `info.json` resolved through the ONB template `https://iiif.onb.ac.at/images/REPO/8977428/{stem}.jp2/info.json` as tile source, and offers zoom and pan.
+- F23 With Zonen on, the pane overlays the page's zones as one SVG layer in image coordinates, which scales with the zoom, and distinguishes line zones, text regions, miniature regions and marginal image regions. Line zones are small at the fit-to-pane zoom, which is an open accessibility point on target size ([Design](design.md#accessibility-minima)).
 - F24 Clicking a line zone selects that line in the text, and selecting a line or word outlines its line zone.
 - F25 Clicking a miniature zone opens the image-annotation record whose `@corresp` points to it. Editing activates Bildannotationen through the document switch of F11.
 - F26 When the image cannot be loaded, the pane states the reason, and text and inspector remain fully usable.
@@ -246,7 +249,8 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 ### Register autocomplete and entry creation
 
 - F37 The register field searches persons, places and peoples together, shows type and ID with each hit, and accepts an optional type filter.
-- F38 Enter on a hit wraps the selection in `ref[@target][@type]`, and a sequence of sibling words is wrapped as one `ref`.
+- F38 Enter on a hit wraps the selected whole words in one `rs[@type][@ref]` by inserting exactly one start and one end tag. Line breaks, punctuation, anchors, milestones and whole inline elements such as `supplied` or `hi` may lie between the words, and removing the wrapper restores the original bytes (proven in `prototypes/d-flow`). Existing links in the form `ref[@type][@target]` are read and shown in the same way.
+- F55 A selection that would cut an enclosing element, such as a `hi`, a marginal `seg` or an existing `ref`, is refused with a reason that names the element, and the source stays unchanged (proven in `prototypes/d-flow`).
 - F39 "+ neu anlegen" creates an entry with type, ID and preferred name in the register file, refuses an existing ID and links the selection in the same step.
 - F40 Verweise auf Eintrag anzeigen lists all references to an entry across the loaded documents with a jump to each.
 
@@ -256,27 +260,27 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 - F42 Existing comments covering the selection are listed with type and both notes, and their note text is editable.
 - F43 Existing types, languages and anchors keep their encoded values when a comment is edited.
 
-### Validation and status line
+### Validation and notice bar
 
-- F44 The status line shows well-formedness, the TEI All result, the Schematron phase result and the unsaved marker as text, each in its own segment.
-- F45 Well-formedness is checked after each pause in editing.
-- F46 TEI All and Schematron run on request outside the main thread, can be cancelled, and report valid, invalid, outdated or unavailable.
-- F47 Clicking the status line opens the findings list in the bottom area, with each finding naming document, location, rule and message and selecting its location on choice.
+- F44 The editor has no permanent status line or footer. Check results appear in a notice bar above the inspector, and only when there is something to act on (F45, F46, F51).
+- F45 Well-formedness is checked after each pause in editing. When it breaks, the notice bar states the reason and offers a jump to the place, and it disappears once the document is well-formed again.
+- F46 TEI All and Schematron run on explicit request from the Prüfen menu, outside the main thread, and can be cancelled. A run with findings shows the notice bar with the check, the number of findings, the first message and the action "Befunde anzeigen". A run that cannot execute states that the check is unavailable and why. Whether a run without findings shows a short visible confirmation is open ([Open questions](#open-questions)), and every result is announced to assistive technology.
+- F47 "Befunde anzeigen" and Prüfen, Befundliste open the findings list in the bottom area, with each finding naming document, location, rule and message and selecting its location on choice. The list states when an edit after the run has made its results outdated.
 - F48 Each finding names its location in folio, column and line where the location lies in the text, and Schematron findings use the message text of the project Schematron.
 
 ### Save
 
 - F49 Datei, Speichern runs the schema set when no current result exists and writes only after every schema has passed for the exact bytes.
 - F50 With a writable native handle Save writes in place after checking the file on disk for external changes, and otherwise it offers a download of the same bytes.
-- F51 A failed schema writes nothing, names the failed schema at the status line and keeps the unsaved marker. How the work is preserved in that case is an open question.
-- F52 The unsaved marker stays until a save of the current revision succeeds.
+- F51 A failed schema writes nothing, shows the notice bar with the failed schema and its findings, and keeps the unsaved marker. How the work is preserved in that case is an open question.
+- F52 The unsaved marker is a dot next to the file name in the document bar and stays until a save of the current revision succeeds.
 
 ## Non-functional requirements
 
 - N1 The tool runs in current Chromium and Firefox without a backend. ICONCLASS and the ONB image service are the only network services it calls.
 - N2 Interface labels are German, while code, identifiers and documentation are English.
 - N3 Accessibility minima are acceptance criteria and are defined in [Design](design.md#accessibility-minima).
-- N4 Edition data and images stay on the user's machine and in the browser, and nothing is uploaded or committed.
+- N4 The tool uploads nothing. Edition data and images stay on the user's machine and in the browser, and edition data enter version control only through the edition team's own repository ([Working model](#working-model)), never through this one.
 - N5 Opening and editing the full codex stays responsive, and schema validation never blocks typing.
 
 ## Key decisions
@@ -290,15 +294,20 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 | Shortcut scheme | 2026-10-10 | No shortcut scheme beyond browser and editor defaults (Ctrl+Z, Ctrl+Y, Ctrl+F, Ctrl+S), Escape and Ctrl+E. | A scheme the team has to learn is a cost before the workflows are accepted. |
 | Interface language | 2026-10-10 | German interface labels. | The edition team and the handbook work in German. |
 | Inspector position | 2026-10-10 | A bottom inspector instead of a third column. | Text and facsimile need the width, and the inspector serves both views as one component. |
-| Check feedback | 2026-10-10 | Results at the status line with a findings list and no check line per field. | Per-field lines add standing noise, while the status line keeps one place for the state. |
+| Check feedback | 2026-10-10 | No permanent status line. The unsaved marker is a dot next to the file name, and a notice bar above the inspector appears only when well-formedness is broken or an explicit check returned findings, with "Befunde anzeigen" opening the findings list. No check line per field. | A permanent status line and per-field lines add standing noise, while a notice that appears only when something needs action keeps the attention on the text. |
+| Text view | 2026-10-10 | One continuous editable flow per column with a real caret, built in the product as a CodeMirror 6 view with replace decorations over the raw XML. Line numbers replace the switch between line-by-line and running text. | The spike in `prototypes/d-flow` showed on fol. 1r that such a view keeps untouched bytes identical and edits word text without touching tags, and one rendering keeps line reference and reading flow together. |
+| Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. | The team must be able to save the existing data, while the review findings on the data ([Data](data.md#schema-set)) need editorial decisions first. |
 
 ## Open questions
 
 Questions for the operator:
 
-2. Save rule on schema failure: offer a working-copy action in the Datei menu next to the finding when a schema fails (recommendation), or allow a confirmed unvalidated save.
-3. Default text rendering: Zeilenweise as default (recommendation, because the team works from Transkribus line by line) or Fließtext.
-4. Inspector height: a fixed default share of the window with drag (recommendation) or remembered per user.
+1. Save rule on schema failure: offer a working-copy action in the Datei menu next to the finding when a schema fails (recommendation), or allow a confirmed unvalidated save.
+2. Inspector height: a fixed default share of the window with drag (recommendation) or remembered per user.
+3. Typing in the flow (F18): whether typing writes to the source. Recommendation yes, limited to words without inner markup, with `@orig` kept in step where it equalled the word text. The spike accepts a wider case, typing inside one text run of a word with inner markup such as a ligature `hi` as long as no tag is touched, so the decision also settles whether that case stays.
+4. Clean check: whether a check without findings shows a short visible confirmation. Recommendation a brief confirmation that dismisses itself, in addition to the announcement to assistive technology.
+5. `xml:space` in "XML formatieren" (F56): whether elements under `xml:space="preserve"` are left untouched (recommendation) or the formatting is refused for such documents.
+6. Target size of line zones in the facsimile at fit-to-pane zoom (F23): whether a larger hit area around each zone or a zoom-to-line action satisfies the accessibility minimum.
 
 Questions for the edition team:
 
@@ -307,6 +316,24 @@ Questions for the edition team:
 3. Which roles use the tool and with which permissions (project lead, student assistants, others).
 4. Whether the comment sigle stays as trailing text such as `(MK)` or moves to `@resp`.
 5. Whether linking needs unlinking and relinking in the prototype, since the agreed scope names linking and entry creation only.
+6. Whether the team adopts the [Working model](#working-model), including the split of the codex into book files.
+
+## Working model
+
+This section records the operator's proposal for how the edition team works with the tool. It is to be confirmed with the edition team and is not yet built.
+
+- The edition data live in a Git repository on the GitLab instance of the university. This repository holds the tool, and the data stay in the edition repository.
+- The tool runs from its published address without installation and opens the local clone of the edition repository through the folder access of a Chromium browser. Firefox lacks that folder access and falls back to file input and download, so the working model assumes Chromium.
+- The codex is split into book files with a shared apparatus and a shared register. This is the open file-topology point of [Editorial guidelines](editorial-guidelines.md#open-ratification-points), now with a reason, because one file for the whole codex makes Git conflicts likely whenever two people work in it, and every validation runs over the whole codex. A shared apparatus file moves anchor resolution across files, which a Schematron cannot see, so that check would probably move to the tool's project checks and the pipeline ([Data](data.md#schema-set)).
+- The files are formatted once with one element per line (F56), so that later diffs stay small and line-based merges work.
+- Each person has a responsibility range, such as a set of books, and simultaneous editing of the same file is not supported.
+- Before work each person pulls, after work commits and pushes, with a Git desktop client. The tool itself performs no Git operation.
+- A GitLab pipeline validates every push against TEI All and the `review` phase of the project Schematron and publishes a findings report.
+- On a save with edits the tool adds a `change` entry to `revisionDesc` (planned, not yet a requirement).
+- The browser working copy and local recovery are machine-local and do not travel with the repository.
+- The images stay at the ONB and are loaded through IIIF.
+
+The one-time preparation (splitting the codex, formatting, seeding the register, setting up the pipeline) is ordered in [Plan](plan.md#phases).
 
 ## Acceptance scenarios
 
@@ -314,11 +341,11 @@ Each scenario is one narrative for the meeting demo on fol. 1r, run with the loc
 
 | Workflow | Narrative and observable outcome |
 | --- | --- |
-| 1 Transcribe | The user opens the project folder, chooses Codex, 1r, column a, and switches the facsimile on. The first text line "Hie hebt ſich an die voꝛ rede vnd" is clicked, its line zone lights up in the image, and the inspector lists the words. The normalised reading of `ſich` is corrected and undone, then clicking the line zone of the next line selects "der pꝛologus vber das buch" in the text. |
+| 1 Transcribe | The user opens the project folder, chooses Codex, 1r, column a, and switches the facsimile on. The line number of the first text line "Hie hebt ſich an die voꝛ rede vnd" is clicked, its line zone lights up in the image, and the inspector lists the words. The normalised reading of `ſich` is corrected and undone, then clicking the line zone of the next line selects "der pꝛologus vber das buch" in the text. |
 | 2 Comment | The user selects the second `got` in "O Got got", sees the existing comment beginning "Die doppelte Apostrophe ... (MK)" with its English counterpart, then selects another word, creates a comment with type `comment_edition`, a German and an English note and the sigle, and finds the new `app` and both anchors in the XML view with the selection still on the word. |
-| 3 Register | The user selects `Rotlebín` and sees the chip for person `Martin` spanning "Rotlebín herren merteín" across the line break. On another name the user types in the register field, chooses a hit by type and ID, and the word is wrapped in `ref`. For a missing name "+ neu anlegen" creates the entry and links it, and Verweise auf Eintrag anzeigen lists the new reference. |
+| 3 Register | The user selects `Rotlebín` and sees the chip for person `Martin` spanning "Rotlebín herren merteín" across the line break. On another name the user types in the register field, chooses a hit by type and ID, and the word is wrapped in `rs` with `@type` and `@ref`. For a missing name "+ neu anlegen" creates the entry and links it, and Verweise auf Eintrag anzeigen lists the new reference. |
 | 4 Miniature | The user clicks the miniature zone over the initial O, the inspector shows `miniatures_01` "Anfangs-Initiale (O) zum Prolog: Gott auf dem Thron" with artist BA and the ICONCLASS entry `11C21(+0)`. A lookup for a further notation fills German and English labels, and choosing the text relation opens the codex at "Hie" with the prologue range marked. |
-| 5 Validate and save | The user runs TEI All and Schematron editing, reads the status line, opens the findings list and jumps to a finding. Saving an unchanged file writes identical bytes. After an edit that breaks a schema rule, Save writes nothing and the status line names the failed schema. |
+| 5 Validate and save | The user runs TEI All and Schematron editing from the Prüfen menu, and the text stays unobstructed while no finding needs action. Schematron review shows the notice bar with the number of findings and the first message, "Befunde anzeigen" opens the list, and choosing a finding jumps to its word. Saving an unchanged file writes identical bytes. After an edit that breaks a schema rule, Save writes nothing, the notice bar names the failed schema, and the dot next to the file name stays. |
 
 ## Related
 

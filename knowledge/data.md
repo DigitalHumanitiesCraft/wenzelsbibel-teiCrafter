@@ -62,13 +62,14 @@ The relation between the files is directed. The image annotations and the regist
 | Image item | Artist sigla in its own header | `listPerson[@type='artists']/person/@corresp` | `#BA` → `persName[@xml:id='BA']` |
 | Image item | Register entry | `listPerson[@type='related']/person/@corresp`, `listPlace[@type='related']/place/@corresp` | `#Gott`, `#Kanaan` |
 | Image item | Bibliography in its own `back` | `@resp` | `#JT`, `#KS` → `listBibl/bibl[@xml:id]` |
-| Codex word | Register entry (handbook form, present in the data) | `ref[@type][@target]` around the words | `<ref target="Martin" type="person">` |
-| Codex word range | Register entry (teiCrafter form) | `standOff/spanGrp[@type='register-links']/span` with `@from`, `@to`, `@ana` | `registers.xml#entry-id` |
+| Codex word | Register entry (handbook form, present in the data, read by the tool) | `ref[@type][@target]` around the words | `<ref target="Martin" type="person">` |
+| Codex word | Register entry (proposed form, written by the tool) | `rs[@type][@ref]` around the words | `<rs type="person" ref="#Martin">`, pointer syntax open |
+| Codex word range | Register entry (base teiCrafter form, not used in this project) | `standOff/spanGrp[@type='register-links']/span` with `@from`, `@to`, `@ana` | `registers.xml#entry-id` |
 | Codex apparatus | Codex text | `app/@from`, `app/@to` | `#start_42597` → `anchor[@xml:id='start_42597']` |
 | Codex text | Facsimile | `pb/@facs`, `lb/@facs`, `seg/@facs`, `fw/@facs`, `milestone/@facs` | `#page_32494516`, `#region_1639399488602_10l1`, `#line_1639401326021_84` |
 | Codex header | Codex divisions | `msItem/locus/@target` | `#Transition0`, `#GenLat` |
 
-Pointer syntax is not uniform: the codex writes register targets as bare tokens, the image file as `#`-fragments, and teiCrafter as a file-relative fragment. Which form the register links take is part of the open register decision in [editorial guidelines](editorial-guidelines.md#open-ratification-points).
+Pointer syntax is not uniform. The codex writes register targets as bare tokens, the image file as `#`-fragments, and the base teiCrafter as a file-relative fragment. The tool writes `rs[@type][@ref]` and reads `ref[@type][@target]` ([specification](specification.md#key-decisions)), and the pointer syntax of `@ref` is an open ratification point in [editorial guidelines](editorial-guidelines.md#open-ratification-points).
 
 ### Transkribus zone IDs as the bridge
 
@@ -112,7 +113,7 @@ The current teiCrafter form keeps three lists in the top-level `standOff` of `re
 | Places | `listPlace/place[@xml:id]` | `placeName` | `idno[@type]` |
 | Peoples | `listOrg[@type='peoples']/org[@type='people'][@xml:id]` | `orgName` | `idno[@type]` |
 
-The handbook-conforming target form keeps the register as a separate file but links from the codex through `ref[@type='person'|'folk'|'place']` on the words, as the data already does, so that the register entry IDs equal the `ref/@target` values (`Martin`, `Ägypten`, `Israeliten`) and the image-file fragments (`#Gott`, `#Kanaan`). The existing values in both files are the seed vocabulary for a first register. The operator decided on 2026-10-10 that links stay inline on the words; the written form proposed to the edition team is `rs[@type][@ref]` with the same values, and the tool reads the existing `ref[@target]` form as well. Which list element holds peoples and which pointer syntax applies (`#ID` or `register.xml#ID`) are decided with the edition team ([editorial guidelines](editorial-guidelines.md#open-ratification-points)).
+The project keeps the register as a separate file and links from the codex inline on the words, as the handbook rules and the data already do with `ref[@type='person'|'folk'|'place']`, so that the register entry IDs equal the link values (`Martin`, `Ägypten`, `Israeliten`) and the image-file fragments (`#Gott`, `#Kanaan`). The existing values in both files are the seed vocabulary for a first register. The tool writes the proposed form `rs[@type][@ref]` with the same values and reads the existing `ref[@type][@target]` form as well. Which list element holds peoples and which pointer syntax applies (`#ID` or `register.xml#ID`) are decided with the edition team ([editorial guidelines](editorial-guidelines.md#open-ratification-points)).
 
 ### Project manifest
 
@@ -125,19 +126,22 @@ The handbook-conforming target form keeps the register as a separate file but li
 | `markup` | the elements `hi`, `foreign`, `title`, `num`, `supplied`, `surplus`, `corr`, `sic`, `del`, `add`, `unclear`, `damage`, each without a value list |
 | `indices` | `persons` (`listPerson`), `places` (`listPlace`), `peoples` (no list type), with authority registers GND, GeoNames, Wikidata |
 | `views` | `diplomatic`, `bible-verse`, `image-annotation` |
-| `schema` | absent; the default schema set comes from code in `wenzels-profile.js` |
+| `schema` | absent; the workspace registry applies the default schema set of the workspace object in `docs/js/projects/wenzelsbibel/index.js` |
 
-The planned manifest declares the schema set through `schema.schemas` (TEI All RelaxNG plus `wenzelsbibel.sch`), which removes the code default, and gains value lists for the markup actions from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies). The manifest change is part of the base refactor described in [plan](plan.md) and [architecture](architecture.md).
+The served manifest stays without a schema, because a user-granted project folder resolves schema paths only inside that folder, so a manifest cannot point to a schema shipped with the application (decided in the base refactor, step d). A project folder of its own, such as a clone of the edition repository in the [working model](specification.md#working-model), can carry the project Schematron and declare it in `schema.schemas` with folder-relative paths, as `editorial/README.md` shows. A declared schema wins over the workspace default. Value lists for the markup actions from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies) are still to be added to the manifest.
 
 ### Schema set
 
 | Schema | Location | Scope |
 |---|---|---|
 | TEI All RelaxNG, TEI P5 4.11.0 | `docs/schemas/tei-p5-4.11.0/tei_all.rng`, vendored | All three files |
-| `wenzelsbibel-editorial.sch` | `docs/schemas/`, inherited from upstream | ISO Schematron with `queryBinding="xslt1"` (XPath 1.0), phases `editing` (default, requires a TEI root) and `review` (image records, artist references, ICONCLASS labels, text ranges); covers image annotations only |
-| `wenzelsbibel.sch` | planned under `editorial/` | Same phase model, extended to the codex and register vocabularies of the editorial guidelines |
+| `wenzelsbibel.sch` | `editorial/`, the project's source of truth | ISO Schematron with `queryBinding="xslt1"` (XPath 1.0), TEI namespace, phases `editing` (default) and `review`, German messages; covers codex, image annotations and register links. The rules are listed in `editorial/README.md` |
+| Published copy of `wenzelsbibel.sch` | planned under `docs/js/projects/wenzelsbibel/`, guarded by an equality check | The copy the published editor can reach ([architecture](architecture.md#build-and-deployment)) |
+| `wenzelsbibel-editorial.sch` | `docs/schemas/`, inherited from the base | The base draft for image annotations. It is still the Schematron in the workspace default schema set and is replaced by the published copy |
 
-The legacy app runs RelaxNG in a browser worker and raw ISO Schematron with XPath 1.0 in the page ([upstream data](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/knowledge/data.md)); keeping the project Schematron at XPath 1.0 lets the same file run in Oxygen ([integration](integration.md)). Cross-file targets (zones, ranges, register entries) are resolved by the tool's companion checks, because the Schematron sees one document at a time.
+The `editing` phase holds only what a save must never break and accepts the published codex and image annotations unchanged. For that reason the rules `w-id` (words with readings carry an `xml:id`) and `register-pointer` (register pointers are not empty) run in the `review` phase, because the published codex violates both. The `review` phase adds the handbook vocabularies, the apparatus and register checks and the completeness rules for image annotations, and reports values that the data uses but the handbook does not name as warnings. It is a report and never gates saving. The base runtime makes a result invalid on any finding, warnings included, so the tool runs `editing` as the save gate and `review` on request. The findings of a review run over the public data are recorded with their counts as a dated snapshot in `editorial/data-findings.md`.
+
+The legacy app runs RelaxNG in a browser worker and raw ISO Schematron with XPath 1.0 in the page ([upstream data](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/knowledge/data.md)). Keeping the project Schematron at XPath 1.0 lets the same file run in the browser, in Oxygen ([integration](integration.md)) and with lxml in the fixture check ([testing](testing.md)). The anchor rules `app-anchors-resolve` and `app-order` are slow in XPath 1.0, because every lookup scans the text, and took about 90 seconds in lxml on the full codex on 2026-10-10. Precompiled XSLT with keys, or anchor resolution in the tool's project checks, is the upgrade path. Cross-file targets (zones, ranges, register entries) are resolved by the tool's companion checks, because the Schematron sees one document at a time.
 
 ## Fixtures
 
@@ -147,7 +151,9 @@ The legacy app runs RelaxNG in a browser worker and raw ISO Schematron with XPat
 | Tier files `tier1-1folio.xml`, `tier2-5folio.xml`, `tier3-20folio.xml` | `test/fixtures-synthetic/tiers/` | Synthetic content with a CC0 statement; their manifests name `codex-2759.xml` as `derivedFrom`, which does not match the file content |
 | `Bilderfassung-synthetic.sch`, `tiers/Bilderfassung.sch` | `test/fixtures-synthetic/` | Small synthetic Schematron stand-ins, not the missing original |
 | `wenzelsbibel-synthetic-codex.xml` | `docs/data/editor/` | Synthetic sample for the start page |
-| fol. 1r extraction (`fol-1r.json`) | Local working material, not in the repository | Generated by a script from the public ONB TEI: columns, lines and tokens with their markup, apparatus entries anchored on the page, register IDs from the image file, miniature `miniatures_01`, zones and the IIIF base URL; input for the wireframe |
+| `editorial/fixtures/` | `editorial/`, listed in `fixtures/index.json` | One hand-built pass and one fail document per Schematron rule, CC0, single words of edition text at most |
+| `fol1r.xml` | `prototypes/d-flow/fixture/`, tracked | An excerpt of fol. 1r from the public ONB TEI of the codex with its CC BY 4.0 header, used by the flow spike's checks. As a tracked excerpt of real edition data it departs from the storage rule below, and whether it stays is an operator decision |
+| fol. 1r extraction (`fol-1r.json`) | `data/wireframe/`, local and ignored | Generated by a script from the public ONB TEI: columns, lines and tokens with their markup, apparatus entries anchored on the page, register IDs from the image file, miniature `miniatures_01`, zones and the IIIF base URL; input for the wireframe |
 
 The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies; tests of those need either new synthetic twins built from the [controlled vocabularies](editorial-guidelines.md#controlled-vocabularies) or opt-in runs against the local real files ([testing](testing.md)).
 
@@ -156,13 +162,13 @@ The synthetic twins model surfaces, zones, words and simple `standOff` notes. Th
 - The edition data cover the prologue, paratexts and the books Genesis to Josua. Further books are not part of the TEI files; how they will be added is undecided.
 - No register file exists in the edition data. Register identity rests on the ID strings in `ref/@target` and `@corresp`; no authority identifiers are attached.
 - The original project Schematron `Bilderfassung.sch` is missing. According to the DHCraft specification the project's copy of `Bildannotationen.xml` references it together with TEI All; the copy served by the ONB carries no `xml-model` processing instruction.
-- The data contain inconsistencies a review phase will report: the artist pointer `#STW` resolves to no sigla; `#ICONCLASS` resolves to no element; some statistical ranges are empty (`#range(,)`) or truncated; some `ref` elements lack `@target`; one `ref` has `type="Person"`; the `msItem/locus` targets `#Prologue`, `#Gen` and `#Transition2` match no `div/@xml:id` (the divisions are `Prologus`, `Genesis`, `Transition2.1`).
+- The data contain inconsistencies that the `review` phase reports, recorded with their counts in `editorial/data-findings.md`. Among them are apparatus types outside the guidelines, apparatus pointers that resolve to no anchor, words with readings but without `xml:id`, and register pointers with spaces. The artist pointer `#STW` resolves to no sigla; `#ICONCLASS` resolves to no element; some statistical ranges are empty (`#range(,)`) or truncated; some `ref` elements lack `@target`; one `ref` has `type="Person"`; the `msItem/locus` targets `#Prologue`, `#Gen` and `#Transition2` match no `div/@xml:id` (the divisions are `Prologus`, `Genesis`, `Transition2.1`).
 - `w/@norm` is present throughout, but its production rules are not documented.
 - Image access through IIIF is technical only. Storing or redistributing images or edition data needs the rights holders' permission.
 
 ## Storage and rights
 
-Real edition data stay outside every repository. In a working copy they belong in a local `data/` folder, which the planned `.gitignore` excludes; the current `.gitignore` of the fork does not yet list `data/`. The inherited rule that ignores `docs/data/editor/*/*` except manifest, README and NOTICE keeps the manifest tracked and any local payload out. The public header licence CC BY 4.0 is not treated as clearance, because the licence for a project copy is recorded as unresolved; the tool and its fixtures therefore ship only synthetic data, and the fol. 1r extraction stays local.
+Real edition data stay outside this repository. In a working copy they belong in a local `data/` folder, which the `.gitignore` excludes. The pattern is written without a leading slash and therefore also matches `docs/data/`, so a new file there is ignored unless it is added explicitly, while the files already tracked there stay tracked. Under the [working model](specification.md#working-model) the edition data live in the edition team's own repository on the university's GitLab. The inherited rule that ignores `docs/data/editor/*/*` except manifest, README and NOTICE keeps the manifest tracked and any local payload out. The public header licence CC BY 4.0 is not treated as clearance, because the licence for a project copy is recorded as unresolved; the tool and its fixtures therefore ship only synthetic data, and the fol. 1r extraction stays local. The spike excerpt `prototypes/d-flow/fixture/fol1r.xml` is the one exception in the repository and awaits the operator's decision.
 
 ## Examples
 
