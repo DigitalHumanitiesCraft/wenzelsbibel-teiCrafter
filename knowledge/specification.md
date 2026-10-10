@@ -267,13 +267,14 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 - F44 The editor has no permanent status line or footer. A notice bar below the toolbar overlays the work area without shifting the layout, appears only with something to show, and shows two classes of notice and nothing else. Standing notices stay until their cause is gone:
   1. A broken well-formedness, with the reason and a jump to the place (F45).
   2. The findings of a requested check, including the checks a save runs, with the route to the findings list, or the reason why a check cannot run (F46, F51).
+  3. A running check, with its cancel action, while it runs (F46).
 
   Transient notices dismiss themselves:
-  3. The confirmation of a clean requested check (F46).
-  4. The confirmation of a completed save, naming the document (F49, F50).
-  5. The name of the step that Rückgängig or Wiederholen restored (F5).
-  6. The reason of a refused keystroke in the flow or of a refused toolbar action, for keystrokes at most once per second (F18, F33, F54).
-  7. The consequence of "XML formatieren", a change to every line of the document, at the moment it runs (F56).
+  4. The confirmation of a clean requested check (F46).
+  5. The confirmation of a completed save, naming the document (F49, F50).
+  6. The name of the step that Rückgängig or Wiederholen restored (F5).
+  7. The reason of a refused keystroke in the flow or of a refused toolbar action, for keystrokes at most once per second (F18, F33, F54).
+  8. The consequence of "XML formatieren", a change to every line of the document, at the moment it runs (F56).
 
   A refused entry in a popover field states its reason at that field instead.
 - F45 Well-formedness is checked after each pause in editing. When it breaks, the notice bar states the reason and offers a jump to the place, and it disappears once the document is well-formed again.
