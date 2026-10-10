@@ -21,11 +21,15 @@
         <option value="codex">Codex 2759</option>
         <option value="images">Bildannotationen</option>
       </select>
+      <span class="file" role="status">
+        <span id="status-file">codex-2759.xml</span>
+        <span class="unsaved" id="status-unsaved" title="Ungesicherte Änderungen" hidden><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span>
+      </span>
       <div class="pager" id="pager">
         <button type="button" id="prev-folio" aria-label="Vorheriges Folio">◀</button>
         <span class="folio" id="folio-label">fol. 1r</span>
         <button type="button" id="next-folio" aria-label="Nächstes Folio">▶</button>
-        <div class="segmented" role="group" aria-label="Spalte">
+        <div class="segmented" role="group" aria-label="Spalte" id="column-switch">
           <button type="button" class="seg-btn is-active" data-column="0">a</button>
           <button type="button" class="seg-btn" data-column="1">b</button>
         </div>
@@ -42,21 +46,28 @@
 
   <main class="work" id="work">
     <section class="text-pane" id="text-pane" aria-label="Text">
-      <div class="lines" id="lines"></div>
-      <pre class="xml" id="xml" hidden></pre>
-    </section>
-    <aside class="facs-pane" id="facs-pane" aria-label="Faksimile" hidden>
-      <div class="facs-frame" id="facs-frame">
-        <img id="facs-img" alt="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759">
-        <svg id="zones" aria-hidden="true"></svg>
+      <div class="flow" id="flow" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="false" aria-label="Text"></div>
+      <div class="minis" id="minis" hidden></div>
+      <div id="xml-view" hidden>
+        <div class="xml-head">
+          <button type="button" class="act-btn" id="xml-format">XML formatieren</button>
+          <p class="xml-note" id="xml-note" role="status" hidden>Formatierung ist eine Änderung am ganzen Dokument und wird erst beim Speichern wirksam.</p>
+        </div>
+        <pre class="xml" id="xml"></pre>
       </div>
+    </section>
+    <aside class="facs-pane" id="facs-pane" aria-label="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759" hidden>
+      <div class="facs-frame" id="facs-frame"></div>
       <div class="facs-controls">
         <label><input type="checkbox" id="zones-toggle" checked> Zonen</label>
       </div>
     </aside>
   </main>
 
-  <section class="inspector" id="inspector" aria-label="Auswahl" hidden>
+  <section class="notice-bar" id="notice" aria-live="polite" hidden></section>
+  <p class="visually-hidden" id="announce" aria-live="polite"></p>
+
+  <section class="inspector" id="inspector" aria-labelledby="inspector-title" hidden>
     <div class="inspector-head">
       <h2 id="inspector-title">Wort</h2>
       <button type="button" class="link-btn" id="inspector-xml">XML-Stelle</button>
@@ -65,14 +76,8 @@
     <div class="inspector-body" id="inspector-body"></div>
   </section>
 
-  <footer class="statusline" id="statusline">
-    <button type="button" class="status" id="status-wf">Wohlgeformt</button>
-    <button type="button" class="status" id="status-rng">TEI All</button>
-    <button type="button" class="status" id="status-sch">Schematron editing</button>
-    <span class="status-unsaved" id="status-unsaved" hidden>ungesichert</span>
-    <span class="status-file" id="status-file">codex-2759.xml</span>
-  </footer>
-
+  <!-- Vendored viewer, classic script so the module below finds window.OpenSeadragon. -->
+  <script src="../docs/vendor/openseadragon/openseadragon.min.js"></script>
   <script type="module" src="wireframe.js"></script>
 </body>
 </html>
