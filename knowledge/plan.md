@@ -37,7 +37,7 @@ This plan orders the work from the knowledge base to a published prototype that 
 | 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data | The agreed layout (menu bar, document bar, text with facsimile, bottom inspector, status line) shows fol. 1r with its ONB image | The fol. 1r extraction must be copied into the ignored `data/` folder |
 | 3 Base refactor and merge | Refactor steps a to e in teiCrafter, merged into the fork | Base acceptance holds (see teiCrafter `knowledge/plan.md`); after the merge, `node test/verify.mjs` is green in the fork | Push of the base refactor to GitHub by the operator, or a temporary fetch from the local base clone |
 | 4 Editorial layer | Divergence list completed in [editorial-guidelines](editorial-guidelines.md); `editorial/wenzelsbibel.sch` with phases; one positive and one negative fixture per rule; published copy and equality check | Fixture check green; manifest schema set validates the synthetic codex | Operator decision on register encoding |
-| 5 Interface rebuild | New `editor.html` shell: menu bar, document bar, bottom inspector, register autocomplete, status line and findings list, `ref` encoding once decided; `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; Biome clean | Register encoding decision (phase 4) |
+| 5 Interface rebuild | New `editor.html` shell: menu bar, document bar, bottom inspector, register autocomplete, status line and findings list, inline register links (`rs[@type][@ref]` written, `ref[@target]` read); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; Biome clean | None |
 | 6 Verification with real files | Real-file run and demo protocol under `snapshots/` | All five workflows on the real codex, image annotations and registers; output passes the gate; untouched bytes identical | Edition files are on the operator's other machine |
 | 7 Publication | GitHub repository, push, Pages from `main:/docs` | The published start page and editor load and open a user-supplied file | Operator action: `gh` is not authenticated in this environment; repository creation and push stay with the operator |
 
@@ -71,7 +71,7 @@ Legend: completed, in progress, pending.
 
 | Decision | Needed before | Recommendation |
 | --- | --- | --- |
-| Register encoding: typed `ref` on the words (handbook) or stand-off register links | Phase 4 | Handbook form |
+| Written form of register links (`rs[@type][@ref]` proposed) and pointer syntax | Edition team meeting; the prototype writes the proposed form meanwhile | Proposed form |
 | List element for peoples in the register file | Phase 4 | Open |
 | Whether inspector and autocomplete become base components | Phase 5 (does not block it) | Generic components in the base |
 | Published copy of `editorial/wenzelsbibel.sch` under `docs/` with an equality check | Phase 4 | Copy plus check, no build step |

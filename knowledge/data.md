@@ -112,7 +112,7 @@ The current teiCrafter form keeps three lists in the top-level `standOff` of `re
 | Places | `listPlace/place[@xml:id]` | `placeName` | `idno[@type]` |
 | Peoples | `listOrg[@type='peoples']/org[@type='people'][@xml:id]` | `orgName` | `idno[@type]` |
 
-The handbook-conforming target form keeps the register as a separate file but links from the codex through `ref[@type='person'|'folk'|'place']` on the words, as the data already does, so that the register entry IDs equal the `ref/@target` values (`Martin`, `Ägypten`, `Israeliten`) and the image-file fragments (`#Gott`, `#Kanaan`). The existing values in both files are the seed vocabulary for a first register. Which list element holds peoples and which pointer syntax applies are open; the decision is pending with the operator and then with the edition team ([editorial guidelines](editorial-guidelines.md#open-ratification-points)).
+The handbook-conforming target form keeps the register as a separate file but links from the codex through `ref[@type='person'|'folk'|'place']` on the words, as the data already does, so that the register entry IDs equal the `ref/@target` values (`Martin`, `Ägypten`, `Israeliten`) and the image-file fragments (`#Gott`, `#Kanaan`). The existing values in both files are the seed vocabulary for a first register. The operator decided on 2026-10-10 that links stay inline on the words; the written form proposed to the edition team is `rs[@type][@ref]` with the same values, and the tool reads the existing `ref[@target]` form as well. Which list element holds peoples and which pointer syntax applies (`#ID` or `register.xml#ID`) are decided with the edition team ([editorial guidelines](editorial-guidelines.md#open-ratification-points)).
 
 ### Project manifest
 

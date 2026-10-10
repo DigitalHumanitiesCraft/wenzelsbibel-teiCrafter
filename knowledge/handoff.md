@@ -23,14 +23,6 @@ This process inbox holds received deltas awaiting integration. Verify each sourc
 
 ## Open handoff items
 
-### Register encoding per handbook
-
-- Received: 2026-10-10
-- Source: transcription handbook of the edition, sections 1.4.19 to 1.4.21, and the real codex (fol. 1r carries `<ref target="Martin" type="person">` around three words).
-- Target: [editorial-guidelines.md](editorial-guidelines.md), [specification.md](specification.md), [data.md](data.md), the register model in the project folder once the base refactor has landed.
-- Context: The handbook links words to register entries with a typed `ref` (person, folk, place). The base implements register links as stand-off spans and peoples as organisations. Recommendation to the operator is to follow the handbook. Until the operator decides, the documents describe both forms and mark the decision as open.
-- Operator point: decide the register encoding.
-
 ### Operator actions for the repository
 
 - Received: 2026-10-10

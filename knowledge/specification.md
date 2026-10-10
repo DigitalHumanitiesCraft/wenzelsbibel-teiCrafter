@@ -286,7 +286,7 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 | Base of the fork | 2026-10-10 | The fork derives from the legacy application under `docs/`, and the source-first core under `src/` stays a parallel line upstream. | The legacy app already implements the Wenzelsbibel forms, the facsimile, the schema set and the save gate, while the new core has no application shell yet. |
 | Fork mechanism | 2026-10-10 | A Git fork with the upstream remote, merging base changes, with no npm package for now. | Generic mechanisms are refactored in the base and reach the fork by merge without a packaging step. |
 | Rule source | 2026-10-10 | The project's Transkriptionshandbuch is the rule source, and the DHCraft TEI specification is a derived draft. | The handbook is the edition team's published and practised rule set, and the real data follows it. |
-| Register encoding | 2026-10-10 | Pending, with the recommendation of a typed `ref` on the words as in the handbook. | The data on fol. 1r already carries the handbook form, which the base's stand-off `spanGrp` model does not read. |
+| Register encoding | 2026-10-10 | Register links are inline on the words, as the handbook rules, and the base's stand-off `spanGrp[@type='register-links']` is not used for this project. The tool reads the handbook form `ref[@type][@target]` with bare IDs and the `#ID` form of the image annotations. The written form is proposed to the edition team as `rs[@type='person' or 'place' or 'folk'][@ref]`, because `@ref` of att.canonical is the TEI attribute for pointing a name at its canonical entry, while `ref` is a hyperlink element whose `@target` serves another purpose. Until the team decides, the prototype writes the proposed form and reads both; the pointer form (`#ID` or `register.xml#ID`) is decided with the team. | The codex already carries thousands of handbook-form references. The proposal changes only the element and attribute name, keeps every value, and can be applied to the existing data in one deterministic run. |
 | Shortcut scheme | 2026-10-10 | No shortcut scheme beyond browser and editor defaults (Ctrl+Z, Ctrl+Y, Ctrl+F, Ctrl+S), Escape and Ctrl+E. | A scheme the team has to learn is a cost before the workflows are accepted. |
 | Interface language | 2026-10-10 | German interface labels. | The edition team and the handbook work in German. |
 | Inspector position | 2026-10-10 | A bottom inspector instead of a third column. | Text and facsimile need the width, and the inspector serves both views as one component. |
@@ -296,7 +296,6 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 
 Questions for the operator:
 
-1. Register encoding: adopt the handbook's typed `ref` on the words (recommendation yes), and if so write `@target` as `#ID` or as the bare ID the data carries.
 2. Save rule on schema failure: offer a working-copy action in the Datei menu next to the finding when a schema fails (recommendation), or allow a confirmed unvalidated save.
 3. Default text rendering: Zeilenweise as default (recommendation, because the team works from Transkribus line by line) or Fließtext.
 4. Inspector height: a fixed default share of the window with drag (recommendation) or remembered per user.

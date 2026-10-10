@@ -23,6 +23,12 @@ This journal is the curated backward-looking provenance index of the project. Cu
 
 ## Entries
 
+### 2026-10-10 integrated Register encoding follows the handbook
+
+- Source: operator decision in the session of 2026-10-10, after the finding that the codex already carries the handbook's typed `ref` on the words with bare target IDs, and the TEI P5 reference pages for `span`, `seg`, `rs` and att.canonical (read on 2026-10-10).
+- Target: [specification.md](specification.md) (Key decisions), [editorial-guidelines.md](editorial-guidelines.md), [data.md](data.md), later the register model of the project folder.
+- Result: Register links stay inline on the words as the handbook rules; the base's stand-off `spanGrp` links are not used for this project. The operator judged the handbook's `ref/@target` imprecise, because `ref` is a hyperlink element, and the written form proposed to the edition team is `rs[@type][@ref]`, with `@ref` from att.canonical as the attribute TEI provides for pointing a name at its canonical entry. The tool reads both forms. The handoff item is closed; the team's decision on the written form and the pointer syntax is an open ratification point.
+
 ### 2026-10-10 integrated Repository founded as a derived version of teiCrafter
 
 - Source: session of 2026-10-10 in the operator's vault (operator decisions), the teiCrafter repository at commit b2a057d, the public transcription handbook of the Wenzelsbibel edition, the public TEI of Codex 2759 and the image annotations on the edition server of the Austrian National Library.

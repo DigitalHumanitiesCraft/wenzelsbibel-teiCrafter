@@ -126,7 +126,7 @@ Only the header is encoded as `fw` in the data; every other region type is a `se
 
 | Phenomenon | Handbook encoding | Real data | teiCrafter | Divergence and open decision |
 |---|---|---|---|---|
-| Person | `<ref target="[ID]" type="person">` around the words; Transkribus property `firstname` holds the ID, recorded in a register (1.4.19) | Yes. fol. 1r: `<ref target="Martin" type="person">` wraps three words of the name Mertein Rotleb | `spanGrp[@type='register-links']/span` with `@from`, `@to` and `@ana="registers.xml#id"` in the codex `standOff` | Different mechanism. Operator decision pending, recommendation: follow the handbook |
+| Person | `<ref target="[ID]" type="person">` around the words; Transkribus property `firstname` holds the ID, recorded in a register (1.4.19) | Yes. fol. 1r: `<ref target="Martin" type="person">` wraps three words of the name Mertein Rotleb | `spanGrp[@type='register-links']/span` with `@from`, `@to` and `@ana="registers.xml#id"` in the codex `standOff` | Different mechanism. Decided 2026-10-10: inline on the words; written form `rs[@type][@ref]` proposed to the edition team, see open ratification points |
 | People | `<ref target="[ID]" type="folk">` (1.4.20) | Yes (codex): `<ref target="Philister" type="folk">` | Same span mechanism; entries as `listOrg[@type='peoples']/org[@type='people']` | Mechanism as above; the list element for peoples is open |
 | Place | `<ref target="[ID]" type="place">` (1.4.21) | Yes (codex): `<ref target="Ägypten" type="place">` | Same span mechanism; entries as `listPlace/place` | Mechanism as above |
 
@@ -200,7 +200,7 @@ The following values are the input for `editorial/wenzelsbibel.sch` and for the 
 
 | Point | State | Effect on encoding | Decides |
 |---|---|---|---|
-| Register encoding | Handbook and data use `ref[@type]` on the words; teiCrafter uses `spanGrp[@type='register-links']`. Recommendation: follow the handbook | Determines the register action, the pointer syntax (bare ID, `#ID` or `registers.xml#ID`) and the Schematron reference check | Operator for the tool, then the edition team |
+| Register encoding | Handbook and data use `ref[@type][@target]` on the words; teiCrafter used `spanGrp[@type='register-links']`. Decided on 2026-10-10: inline on the words, stand-off spans not used. Proposal to the edition team: `rs[@type][@ref]`, because `@ref` (att.canonical) is the TEI attribute that points a name at its canonical entry, whereas `ref` is a hyperlink element with `@target`; the values stay, only element and attribute name change | Determines the written form, the pointer syntax (`#ID` or `register.xml#ID`) and the Schematron reference check; the tool reads both forms | Edition team |
 | List element for peoples | The handbook says only "Register"; teiCrafter uses `listOrg[@type='peoples']`; the image file puts peoples into `listPerson` | Shape of `registers.xml` and of the image form | Edition team |
 | `Bilderfassung.sch` | Referenced by the image annotations according to the DHCraft specification, found neither in the material nor on the ONB server | The project Schematron is a new draft, not a reconstruction | Edition team, if the file can be recovered |
 | Rules marked "Noch nicht umgesetzt" | `del[@type='erasure']`, `damage/@agent`, `add/@place` already occur in the data | Ratify as implemented and fix their value lists | Edition team |
