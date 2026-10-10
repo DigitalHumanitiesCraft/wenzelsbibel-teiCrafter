@@ -21,7 +21,7 @@ related: [project, specification, data, design, editorial-guidelines, testing, i
 
 # Architecture
 
-wenzelsbibel-teiCrafter is the teiCrafter legacy editor under `docs/` plus a Wenzelsbibel project layer, derived by a Git fork that keeps merging the base permanently. teiCrafter is the product, and every generic mechanism is built there and merged in. The fork changes three zones and leaves the generic editor untouched, so every base improvement arrives through an ordinary merge. Requirements live in [specification](specification.md), the interface in [design](design.md), the editorial rules in [editorial-guidelines](editorial-guidelines.md).
+wenzelsbibel-teiCrafter is the teiCrafter legacy editor under `docs/` plus a Wenzelsbibel project layer, derived by a Git fork that keeps merging the base permanently. teiCrafter is the product, and every generic mechanism is built there and merged in. The fork changes only its own zones and leaves the generic editor untouched, so every base improvement arrives through an ordinary merge. Requirements live in [specification](specification.md), the interface in [design](design.md), the editorial rules in [editorial-guidelines](editorial-guidelines.md).
 
 ## Derivation model
 
@@ -34,19 +34,20 @@ The repository is a Git clone of teiCrafter with two remotes.
 
 Base changes enter with `git fetch upstream` and `git merge upstream/main`. The fork carries its own knowledge base in place of the base's `knowledge/` folder, so a merge that touches a base knowledge file produces a modify/delete conflict, which is always resolved by keeping the deletion (`git rm` the file). On a conflict in `CLAUDE.md` the fork's version holds. Base knowledge is read in the base repository and never copied here.
 
-The fork changes three zones.
+The fork changes these zones.
 
 | Zone | Content | Merge behaviour |
 | --- | --- | --- |
-| Shell: `docs/index.html`, `docs/editor.html` (planned) | The fork's start page and the editor page with the new interface. Both files are still identical to the base; `editor.html` links the project stylesheet `js/projects/wenzelsbibel/wenzels-workspace.css` as merged from the base | Once the fork changes them, conflicts with base edits to these two files are resolved in favour of the fork, then base changes that matter (new script or stylesheet links) are carried over by hand |
+| Shell: `docs/index.html`, `docs/editor.html` and a help page (all planned) | The fork's start page, the editor page with the new interface and the German help page, built in phase 5b ([design](design.md#start-page)). The two existing files are still identical to the base, and `editor.html` links the project stylesheet `js/projects/wenzelsbibel/wenzels-workspace.css` as merged from the base | Once the fork changes them, conflicts with base edits to these files are resolved in favour of the fork, then base changes that matter (new script or stylesheet links) are carried over by hand |
 | Project folder: `docs/js/projects/wenzelsbibel/` | The Wenzelsbibel specialisation after the base refactor | The base owns the folder's existence; the fork changes its content, so conflicts are local to this folder |
 | Editorial layer: `docs/schemas/wenzelsbibel.sch`, `docs/schemas/wenzelsbibel-vocabulary.json` and `editorial/` | Tool-neutral rules: the project Schematron and the project vocabulary as single sources under `docs/schemas/`, and in `editorial/` the `fixtures/` with `index.json`, `check_fixtures.py`, and `README.md` with the phases and the Oxygen and teiCrafter bindings | Fork-only files, no conflicts; the base writes other files in `docs/schemas/` but never these two |
+| Repository wiring: `package.json`, `playwright.fork.config.js`, `.github/workflows/fork-checks.yml`, and the fork's lines in `README.md`, `CITATION.cff`, `codemeta.json`, `.gitignore`, `test/README.md`, `test/acceptance/BROWSER-CHECKS.md` and `prototypes/index.html` | The fork's name and metadata, the scripts `check:fork` and `test:e2e:fork`, the addition of `wireframe` to `check:biome`, the fork Playwright configuration and workflow, the `/data/` ignore rule, and links that replace base reports | The two fork-only files have no conflicts. In the shared files a conflict is resolved by hand, keeping the fork's lines and carrying over base script or dependency changes |
 
-Everything else stays as merged from the base: `docs/js/editor/`, `docs/css/style.css` with the design tokens, the rest of `docs/schemas/` including the vendored TEI All RelaxNG, `docs/vendor/`, `src/`, `pipeline/`, the build and test configuration. Of `prototypes/` only `d-flow/` and `index.html` are present. Fork-only files (the fork browser tests, `wireframe/`, the flow spike `prototypes/d-flow/`) avoid conflicts because the base never writes them.
+Everything else stays as merged from the base: `docs/js/editor/`, `docs/css/style.css` with the design tokens, the rest of `docs/schemas/` including the vendored TEI All RelaxNG, `docs/vendor/`, `src/`, `pipeline/`, and the build and test configuration `vite.config.js`, `playwright.config.js`, `biome.json`, `jsconfig.json` and `tsconfig.json`. Of `prototypes/` only `d-flow/` and `index.html` are present. Fork-only files (the fork browser tests, `wireframe/`, the flow spike `prototypes/d-flow/`) avoid conflicts because the base never writes them.
 
 ## Current state
 
-The fork equals the base after its refactor (upstream commit `80313c0`, merged as `3c0b71f`) plus the fork's own knowledge base, the wireframe, the flow spike and the editorial layer. The specialisation lives in the project folder and reaches the generic editor only through the workspace registry ([components](#components)). One trace of the project remains in a generic place: the built-in example entries in `editor-app.js` name the Wenzelsbibel example files. The base draft `docs/schemas/wenzelsbibel-editorial.sch` and its twin under `public/schemas/` are base files that the workspace no longer references; they stay until the base removes them. The served manifest `docs/data/editor/wb-codex/teicrafter.project.json` declares no schema, so the workspace default set applies ([data](data.md#project-manifest)). The new interface is not built yet. The interaction model is settled in `wireframe/`, which takes corrections from operator feedback, and the flow editing in the spike `prototypes/d-flow/` ([plan](plan.md)).
+The fork equals the base after its refactor (upstream commit `80313c0`, merged as `3c0b71f`) plus the fork's own knowledge base, the wireframe, the flow spike and the editorial layer. The specialisation lives in the project folder and reaches the generic editor only through the workspace registry ([components](#components)). No project trace remains in the generic editor. The built-in example `wb` lives in the project folder's `index.js`, and the inherited shell pages name it in the Load menu of `editor.html` and as an example card in `index.html`. The base draft `docs/schemas/wenzelsbibel-editorial.sch` and its twin under `public/schemas/` are base files that the fork's workspace no longer references; they stay until the base removes them. The served manifest `docs/data/editor/wb-codex/teicrafter.project.json` declares no schema, so the workspace default set applies ([data](data.md#project-manifest)). The new interface is not built yet. The interaction model is settled in `wireframe/`, which takes corrections from operator feedback, and the flow editing in the spike `prototypes/d-flow/` ([plan](plan.md)).
 
 ## Stack
 
@@ -57,8 +58,8 @@ The fork equals the base after its refactor (upstream commit `80313c0`, merged a
 | libxml2-wasm in a module worker for RelaxNG | Inherited validation runtime of the base |
 | Browser XPath 1.0 for raw Schematron | No SaxonJS dependency; the editorial layer is written to that subset |
 | One hand-edited JSON file for the controlled vocabularies, `docs/schemas/wenzelsbibel-vocabulary.json` | One source for the value lists of the project modules, which read it in the browser without a build step, and for the Schematron, whose lists the fixture check compares with it |
-| OpenSeadragon, vendored under `docs/vendor/openseadragon/` | Facsimile viewer that takes the IIIF `info.json` as tile source; zones as one SVG overlay in image coordinates |
-| CodeMirror 6 for the flow view, built in the base and vendored there as a prebuilt bundle for the legacy app (planned) | Replace decorations over the raw XML give a caret in the canonical string with the markup hidden, proven in `prototypes/d-flow`; a vendored bundle keeps the published app free of a build step |
+| OpenSeadragon, vendored under `docs/vendor/openseadragon/` | Facsimile viewer that takes the IIIF `info.json` as tile source. The inherited viewer places one rectangular overlay per zone's bounding box, and the SVG zone layer of F23 is base work of phase 5a |
+| CodeMirror 6 for the flow view and the XML view, built in the base and vendored there as a prebuilt bundle for the legacy app (planned) | Replace decorations over the raw XML give a caret in the canonical string with the markup hidden, proven in `prototypes/d-flow`; a vendored bundle keeps the published app free of a build step |
 | German interface text, English code and documentation | The edition team and its handbook work in German |
 
 ## Components
@@ -76,7 +77,7 @@ Generic editor, `docs/js/editor/`, merged from the base and not edited in the fo
 | `project-manifest.js` | Manifest validation; `workspace` is checked against registered names |
 | `schema-set.js`, `schema-validation.js`, worker client and worker, `validation-view.js` | Ordered schema set, RelaxNG in the worker, raw Schematron in the page, results bound to session and revision |
 | `facsimile.js`, `project-profiles.js` | OpenSeadragon viewer, IIIF resolution from the manifest template |
-| `source-view.js` | XML view of the canonical source |
+| `source-view.js` | XML view of the canonical source, a textarea over coloured tokens, which the new shell replaces by the CodeMirror XML view of phase 5a |
 | `staged-input.js`, `working-copy.js`, `session-recovery.js` | Unfinished-input ownership, portable working copy, IndexedDB recovery; the staged mode name comes from the registry |
 | `project-documents.js` | Linked file collection (codex, image annotations, registers) with separate sources, schemas and dirty states |
 | `output-controller.js` | Save gate: every effective schema must pass for the exact bytes |
@@ -90,31 +91,32 @@ Project folder, `docs/js/projects/wenzelsbibel/`:
 
 | Module | Purpose |
 | --- | --- |
-| `index.js` | Exports the workspace object: detection profile (TEI types `wenzelsbibel-registers`, `wenzelsbibel-transcription`, PID pattern `^o:wen\.`, ONB IIIF template), default schema set, panel, staged mode, draft TEI type, flags (model features off) |
+| `index.js` | Exports the workspace object: detection profile (TEI types `wenzelsbibel-registers`, `wenzelsbibel-transcription`, PID pattern `^o:wen\.`, ONB IIIF template), default schema set, panel, staged mode, draft TEI type, flags (model features off), the built-in example `wb` for local development hosts |
 | `wenzels-text-model.js` | Words with `@orig` and `@norm`, stand-off apparatus with anchors, register references |
 | `wenzels-image-model.js` | Image-annotation records, codex index for text relations |
-| `wenzels-register-model.js` | Persons, places and peoples in the separate register file |
+| `wenzels-register-model.js` | Persons, places and peoples in the separate register file. It still writes the base's stand-off register links, which phase 5b replaces by inline links |
 | `wenzels-project-checks.js` | Cross-file checks that Schematron cannot perform (register targets, image-to-codex pointers) |
-| `wenzels-form.js`, `wenzels-workspace.js`, `wenzels-workspace.css` | Staged form ownership, the base workspace panel, project-specific style rules |
-| Schematron and vocabulary | The default schema set in `index.js` names `docs/schemas/wenzelsbibel.sch`, the single source of the project Schematron, as "Editionsregeln". The project modules read their value lists from `docs/schemas/wenzelsbibel-vocabulary.json` ([data](data.md#controlled-vocabulary)) |
+| `wenzels-form.js`, `wenzels-workspace.js`, `wenzels-workspace.css` | The inherited project panel of the base shell, with staged form ownership and project-specific style rules. Phase 5b replaces it by the new shell and deletes it ([plan](plan.md#phase-5b-notes)) |
+| Schematron and vocabulary | The default schema set in `index.js` names `docs/schemas/wenzelsbibel.sch`, the single source of the project Schematron, as "Editionsregeln". The vocabulary `docs/schemas/wenzelsbibel-vocabulary.json` gives each value a German label, and the project modules of the new shell read values and labels from it ([data](data.md#controlled-vocabulary)). Today only the apparatus types are read |
 
-Components of the new shell. The base builds each mechanism and the fork composes it with its project data in `docs/js/projects/wenzelsbibel/` ([plan](plan.md), phases 5a and 5b):
+Components of the new shell. The base builds each mechanism, as the one list of [phase 5a mechanisms](integration.md#phase-5a-mechanisms) states, and the fork composes it with its project data in `docs/js/projects/wenzelsbibel/` ([plan](plan.md), phases 5a and 5b). The table shows where each component's project part lives.
 
 | Component | Built in the base | Kept in the fork |
 | --- | --- | --- |
-| Toolbar | A two-row toolbar component with disabled-with-reason actions and the WAI-ARIA toolbar keyboard pattern | German labels, the action set, document chooser (codex, image annotations), folio, column and miniature navigation |
-| Popover at the selection | A component anchored at the selection, rendering forms from a field table, with a bottom-sheet variant for narrow screens | The field tables for word, sequence, line and element |
-| Side panel | A right-column panel sharing its column with the facsimile through a segmented switch | The lists and the image-annotation form |
+| Toolbar | A two-row toolbar component with disabled-with-reason actions, menu buttons and the WAI-ARIA toolbar keyboard pattern | German labels, the action set, document chooser (codex, image annotations), folio, column and miniature navigation |
+| Popover at the selection | A component anchored at the selection, rendering forms from a field table with one Anwenden and one Abbrechen, with a bottom-sheet variant for narrow screens | The field tables for word, sequence, line and element |
+| Side panel | A right-column panel sharing its column with the facsimile through a segmented switch, rendering lists and forms | The lists and the image-annotation form |
 | Register autocomplete | A component over any list in a register file | Register types and German labels |
 | Flow view | The CodeMirror module hosted by the legacy app, with its vendored bundle, decorations over words, wrap and word commands, and "XML formatieren" | The mark tables |
-| Notice bar and findings list | Logic over `validation-view.js` results | German labels |
+| XML view | A CodeMirror XML view in the same bundle, replacing `source-view.js` in the new shell, with the display-only folding of `xml:id` and `facs`, selection mapping and Ctrl+E | The label "IDs anzeigen" |
+| Notice bar and findings list | A notice service fed by validation results, the flow view and editor actions, and the findings list over `validation-view.js` results | German labels and message texts |
 | `tei-document` seam | The bridge between the legacy offset tree and `src/core` (see below) | Nothing |
 
 A generic component built in the fork would have to be offered to the base and replaced by the base version later, so the fork builds none. The base's plan still lists the inspector (now the popover) and autocomplete as an open decision, which this repository's decision settles from its side.
 
-Whether the new `editor.html` composes the generic controllers through `editor-app.js` or through a fork-specific composition module is open. `editor-app.js` assembles the base shell's DOM, so a separate composition module in the project folder that reuses session, validation, facsimile, recovery and output controllers is the likely path (inference from the module structure, to be confirmed while building phase 5b).
+Whether the new `editor.html` composes the generic controllers through `editor-app.js` or through a fork-specific composition module is open. `editor-app.js` assembles the base shell's DOM and calls `createPanel` for every registered workspace, so a separate composition module in the project folder that reuses session, validation, facsimile, recovery and output controllers is the likely path (inference from the module structure, to be confirmed while building phase 5b).
 
-The flow view has two integration seams. The spike parses with the source-first core's `src/core/tei-document.js`, whereas the legacy app holds its canonical string in `docs/js/editor/tei-document.js`, so the module either works on the legacy offset tree or carries the core parser in its bundle. CodeMirror keeps its own undo history, while `editor-session.js` owns revisions, history and the dirty savepoint, so each flow transaction has to become one session revision and undo has to be handed over to the session. Both seams are base work ([plan](plan.md), phase 5a).
+The flow view has two integration seams. The spike parses with the source-first core's `src/core/tei-document.js`, whereas the legacy app holds its canonical string in `docs/js/editor/tei-document.js`, so the module either works on the legacy offset tree or carries the core parser in its bundle. CodeMirror keeps its own undo history, while `editor-session.js` owns revisions, history and the dirty savepoint, so each flow transaction has to become one session revision and undo has to be handed over to the session. Today a splice through the legacy offset tree reparses the whole document, which the feasibility study ruled out per keystroke, so the session seam has to commit flow edits without a whole-document parse on each keystroke. Both seams are base work ([plan](plan.md), phase 5a).
 
 ## Data flow
 
@@ -126,18 +128,18 @@ caret or selection in the flow view (word, word sequence, line, zone) or cursor 
   -> project model computes the edit (text, register or image model)
   -> splice through tei-document, new canonical string, EditorSession revision
   -> re-render of text view, popover, facsimile overlay
-  -> validation: RelaxNG in the worker, Schematron in the page, bound to the revision
-  -> notice bar when well-formedness breaks or a requested check has findings;
+  -> validation: RelaxNG in the worker, Schematron in the page until phase 5a moves it off the main thread
+  -> notice bar with the notices of F44;
      Save passes the output gate only when every schema result is valid
 ```
 
 | Workflow | Modules involved |
 | --- | --- |
-| 1 Page, facsimile, word edit | Toolbar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; popover word fields write `w/@orig` and `w/@norm` through the text model; typing in the flow would write word text and `@orig` once the operator decides it ([specification](specification.md#text-view)) |
-| 2 Apparatus comment | Selection of a word range; the text model inserts empty anchors and an `app` with `@from`/`@to` and bilingual notes with sigle in the stand-off apparatus |
+| 1 Page, facsimile, word edit | Toolbar navigation over the navigation model; `facsimile.js` with the IIIF template and Transkribus zone polygons; zone and line selection in both directions; popover word fields write `w/@orig` and `w/@norm` through the text model; typing in the flow writes word text and `@orig`, and word commands split, join and delete words ([specification](specification.md#text-view)) |
+| 2 Apparatus comment | Selection of a word or a word range; the text model inserts empty anchors and an `app` with `@from`/`@to` and bilingual notes with sigle in the stand-off apparatus |
 | 3 Register link | Autocomplete over the register file held in the project collection; the selected words are wrapped inline in `rs[@type][@ref]`, and existing `ref[@type][@target]` links are read ([specification](specification.md#key-decisions)); a new entry is written to the register file as a companion edit |
 | 4 Miniature | Zone selection opens the image-annotation form in the side panel; image model edits the record; `iconclass-lookup.js` fills German and English labels; the codex index resolves the text relation |
-| 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the bottom area; `output-controller.js` writes the file |
+| 5 Validate and save | `validation-view.js` with TEI All and the project Schematron; findings list in the side panel; `output-controller.js` writes the file |
 
 ## External services
 
@@ -154,7 +156,7 @@ The tool runs in the browser without a backend. Edition files are opened from th
 
 ## Accessibility
 
-The base's automated Axe floor and keyboard paths apply to inherited views. The new shell components need the same: reachable by keyboard, Esc closes the popover, Ctrl+E on a selection opens the list of allowed elements, `lang="de"` on the interface. Manual keyboard and screen-reader review of the new shell is open.
+The base's automated Axe floor and keyboard paths apply to inherited views. The new shell components need the same: reachable by keyboard, Escape in the order of [design](design.md#interaction-rules), Ctrl+E on a selection opens the list of allowed elements, `lang="de"` on the interface. The [interface acceptance layer](testing.md#interface-acceptance-layer) checks them, and a manual keyboard and screen-reader review of the new shell is open.
 
 ## Repository structure
 
@@ -166,14 +168,14 @@ The base's automated Axe floor and keyboard paths apply to inherited views. The 
 | `docs/schemas/` | The vendored TEI All RelaxNG and the base draft as merged from the base, plus the fork's `wenzelsbibel.sch` and `wenzelsbibel-vocabulary.json` |
 | `test/` | Inherited proofs and browser tests plus the fork's demo workflow tests |
 | `snapshots/` | Dated reports: the Schematron findings on the public data, the wireframe reviews, later the demo protocol and test runs with real files |
-| `wireframe/` | Frozen wireframe with fol. 1r in which every workflow runs in memory with undo; `js/` modules, `css/` per feature using the base tokens from `src/ui/tokens.css`, `checks/` browser walkthroughs, `extract_data.py`, which generates the fol. 1r extraction from the public TEI files; not published, and deleted once the demo workflow tests pass ([plan](plan.md)) |
+| `wireframe/` | Wireframe with fol. 1r in which every workflow runs in memory with undo, taking corrections from operator feedback; `js/` modules, `css/` per feature using the base tokens from `src/ui/tokens.css`, `checks/` browser walkthroughs, `extract_data.py`, which generates the fol. 1r extraction from the public TEI files; not published, and deleted once the demo workflow tests pass ([plan](plan.md)) |
 | `data/` | Local edition files and extractions, ignored by git |
 | `prototypes/d-flow/` | Fork-only spike of the flow view (CodeMirror decorations over raw TEI on fol. 1r) with its Node and browser checks; `fixture/fol1r.xml` is the tracked public excerpt, with its attribution in `fixture/NOTICE.md` ([data](data.md#storage-and-rights)) |
 | `prototypes/` | `d-flow/` only, with the inherited dev server configuration and an index page that lists it |
-| `.github/workflows/` | The inherited `checks.yml`, unchanged, and the fork-only `fork-checks.yml` |
+| `.github/workflows/` | The inherited `checks.yml`, identical to the base, which runs the inherited browser suites against the base shell, and the fork-only `fork-checks.yml` ([testing](testing.md#known-exceptions-and-limits)) |
 | `src/`, `pipeline/`, `public/` | Inherited from the base, unchanged; `src/` and `public/` serve the spike, the typecheck and the inherited checks |
 
-The base's `reports/` folder and its prototypes `a-code`, `b-focus` and `c-hybrid` are absent in the fork. A base merge that changes them produces a modify/delete conflict, resolved by keeping the deletion as for the base knowledge files.
+The base's `reports/` folder, its prototypes `a-code`, `b-focus` and `c-hybrid`, its `.claude/workflows/wb-roundtrip-eval.js` and its issue templates `.github/ISSUE_TEMPLATE/eval-*.md` are absent in the fork. A base merge that changes them produces a modify/delete conflict, resolved by keeping the deletion as for the base knowledge files.
 
 ## Build and deployment
 

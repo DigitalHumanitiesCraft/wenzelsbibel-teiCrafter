@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-The editor is served from `docs/`. Open a local copy of the edition files from a `data/` folder next to the repository root; that folder is ignored by Git. Checks run with `npm run check:fork` and `node test/verify.mjs`, see [knowledge/testing.md](knowledge/testing.md).
+The editor is served from `docs/`. Open a local copy of the edition files from a `data/` folder at the repository root, which Git ignores. Checks run with `npm run check:fork` and `node test/verify.mjs`, see [knowledge/testing.md](knowledge/testing.md).
 
 ## Rights
 

@@ -62,9 +62,9 @@ The relation between the files is directed. The image annotations and the regist
 | Image item | Artist sigla in its own header | `listPerson[@type='artists']/person/@corresp` | `#BA` → `persName[@xml:id='BA']` |
 | Image item | Register entry | `listPerson[@type='related']/person/@corresp`, `listPlace[@type='related']/place/@corresp` | `#Gott`, `#Kanaan` |
 | Image item | Bibliography in its own `back` | `@resp` | `#JT`, `#KS` → `listBibl/bibl[@xml:id]` |
-| Codex word | Register entry (handbook form, present in the data, read by the tool) | `ref[@type][@target]` around the words | `<ref target="Martin" type="person">` |
+| Codex word | Register entry (handbook form, present in the data, read by the new shell from phase 5b) | `ref[@type][@target]` around the words | `<ref target="Martin" type="person">` |
 | Codex word | Register entry (proposed written form, see [specification](specification.md#key-decisions)) | `rs[@type][@ref]` around the words | `<rs type="person" ref="#Martin">`, pointer syntax open |
-| Codex word range | Register entry (base teiCrafter form, not used in this project) | `standOff/spanGrp[@type='register-links']/span` with `@from`, `@to`, `@ana` | `registers.xml#entry-id` |
+| Codex word range | Register entry (base teiCrafter form, still written by the inherited register model of the project folder until phase 5b replaces it by the inline form) | `standOff/spanGrp[@type='register-links']/span` with `@from`, `@to`, `@ana` | `registers.xml#entry-id` |
 | Codex apparatus | Codex text | `app/@from`, `app/@to` | `#start_42597` → `anchor[@xml:id='start_42597']` |
 | Codex text | Facsimile | `pb/@facs`, `lb/@facs`, `seg/@facs`, `fw/@facs`, `milestone/@facs` | `#page_32494516`, `#region_1639399488602_10l1`, `#line_1639401326021_84` |
 | Codex header | Codex divisions | `msItem/locus/@target` | `#Transition0`, `#GenLat` |
@@ -85,7 +85,7 @@ Transkribus generated the identifiers that connect text, layout and image. They 
 | Line break | `lb_42528` | `lb/@xml:id` |
 | Apparatus anchor | `start_42597`, `end_42599` | `anchor/@xml:id` |
 
-A word ID is formed from a line ID plus a token index, which is an inference from the pattern. The line part of a word ID does not reliably match the line on which the word now stands: on fol. 1r the word "Hie" has the ID `region_1639399488602_10l3_0` but follows `<lb facs="#region_1639399488602_10l1"/>`. The position of a word is therefore taken from the preceding `lb/@facs`, never parsed from its ID.
+A word ID is formed from a line ID plus a token index, which is an inference from the pattern. The line part of a word ID does not reliably match the line on which the word now stands: on fol. 1r the word "Hie" has the ID `region_1639399488602_10l3_0` but follows `<lb facs="#region_1639399488602_10l1"/>`. The position of a word is therefore taken from the `lb/@facs` that precedes its first character, never parsed from its ID ([codex text](#codex-text-and-standoff-apparatus)).
 
 ### Facsimile and IIIF resolution
 
@@ -96,6 +96,8 @@ The manifest's resolver of type `iiif-image-template` takes the file stem of `gr
 ### Codex text and standOff apparatus
 
 The body is divided into `div` elements for the prologue, paratexts and the books Genesis to Josua, with chapters and verses as `div[@xml:id='Genesis.1']` and `l[@xml:id='Genesis.1.1']`. Within paragraphs, `pb`, `cb` and `lb` are empty markers, and every word is a `w` with `@xml:id`, `@orig` and `@norm`. Inline phenomena (highlighting, corrections, regions, register references) wrap the words as described in [editorial guidelines](editorial-guidelines.md).
+
+An `lb` also stands inside a `w` where a word runs over a line end, as in `mer<lb/>teín` on fol. 1r (see [Examples](#examples)). Such a word belongs to the line on which it begins, the line of the `lb` that precedes its first character, and selecting that line includes the whole word. The real build follows this rule for line numbers, line selection, the popover's line state and the facsimile outline.
 
 The apparatus is a single `standOff/listApp`. Each `app` carries `@type`, `@from` and `@to` and holds two notes, `note[@xml:lang='de']` and `note[@xml:lang='en']`, whose text ends with the author sigle in parentheses. The anchors are empty elements placed in the text flow, between words or inside a `w`. Apparatus entries never point at `w/@xml:id`.
 
@@ -123,12 +125,12 @@ The project keeps the register as a separate file and links from the codex inlin
 |---|---|
 | `workspace` | `wenzelsbibel`, which selects the specialised interface |
 | `imageResolver` | `iiif-image-template` with the ONB template above |
-| `markup` | the elements `hi`, `foreign`, `title`, `num`, `supplied`, `surplus`, `corr`, `sic`, `del`, `add`, `unclear`, `damage`, each without a value list |
+| `markup` | the elements `hi`, `foreign`, `title`, `num`, `supplied`, `surplus`, `corr`, `sic`, `del`, `add`, `unclear`, `damage`, each without a value list and with an English label |
 | `indices` | `persons` (`listPerson`), `places` (`listPlace`), `peoples` (no list type), with authority registers GND, GeoNames, Wikidata |
 | `views` | `diplomatic`, `bible-verse`, `image-annotation` |
 | `schema` | absent; the workspace registry applies the default schema set of the workspace object in `docs/js/projects/wenzelsbibel/index.js` |
 
-The served manifest stays without a schema, because a user-granted project folder resolves schema paths only inside that folder, so a manifest cannot point to a schema shipped with the application (decided in the base refactor, step d). A project folder of its own, such as a clone of the edition repository in the [working model](integration.md#working-model), can carry the project Schematron and declare it in `schema.schemas` with folder-relative paths, as `editorial/README.md` shows. A declared schema wins over the workspace default. The value lists of the markup actions come from the [controlled vocabulary](#controlled-vocabulary), which the project modules read.
+The served manifest stays without a schema, because a user-granted project folder resolves schema paths only inside that folder, so a manifest cannot point to a schema shipped with the application (decided in the base refactor, step d). A project folder of its own, such as a clone of the edition repository in the [working model](integration.md#working-model), can carry the project Schematron and declare it in `schema.schemas` with folder-relative paths, as `editorial/README.md` shows. A declared schema wins over the workspace default. The manifest is base material outside the fork's zones, and the base shell reads its `markup` and `indices`. The new shell takes the value lists and German labels of the markup actions from the [controlled vocabulary](#controlled-vocabulary), and the `bible-verse` view lies outside the scope ([specification](specification.md#purpose-and-scope)).
 
 ### Schema set
 
@@ -144,10 +146,10 @@ The project Schematron keeps to XPath 1.0, so that the same file runs in the bro
 
 ### Controlled vocabulary
 
-[`docs/schemas/wenzelsbibel-vocabulary.json`](../docs/schemas/wenzelsbibel-vocabulary.json) is the one hand-edited source of the controlled value lists. It holds the apparatus types, `hi/@rend`, `supplied/@reason`, `surplus/@reason`, `del/@type`, `foreign/@xml:lang`, `num/@type`, `note/@type`, `fw/@ana`, `seg/@ana` and the register types, and gives each value its source (handbook or data) and a German label. Two consumers depend on it.
+[`docs/schemas/wenzelsbibel-vocabulary.json`](../docs/schemas/wenzelsbibel-vocabulary.json) is the one hand-edited source of the controlled value lists. It holds the apparatus types, `hi/@rend`, `supplied/@reason`, `surplus/@reason`, `del/@type`, `foreign/@xml:lang`, `num/@type`, `note/@type`, `fw/@ana`, `seg/@ana` and the register types, and gives each list a German caption and each value its source (handbook or data) and a German label. Each caption and label names its own source, the wording of the Transkriptionshandbuch, a label the wireframe showed or a working label that awaits the edition team. Two consumers depend on it.
 
-- The fixture check `editorial/check_fixtures.py` fails when a value list of the project Schematron differs from the JSON ([testing](testing.md#test-strategy)).
-- The project modules under `docs/js/projects/wenzelsbibel/` read their value lists and labels from it.
+- The fixture check `editorial/check_fixtures.py` fails when a value list of the project Schematron, in a rule test or in the German message that repeats it, differs from the JSON, and when a caption or label is missing ([testing](testing.md#test-strategy)).
+- The project modules of the new shell under `docs/js/projects/wenzelsbibel/` read values and labels from it. Today only the apparatus types are read, by the text model for new comments, and the other lists follow in phase 5b.
 
 The wireframe keeps its own lists. Why a value is accepted, reported or open is argued against the handbook in [editorial guidelines](editorial-guidelines.md#controlled-vocabularies).
 
@@ -158,12 +160,14 @@ The wireframe keeps its own lists. Why a value is accepted, reported or open is 
 | `wb-synthetic-folio.xml`, `wb-dual-reading.xml`, `synthetic-codex.xml` | `test/fixtures-synthetic/` | Hand-authored structural twins, CC0, no ONB data |
 | Tier files `tier1-1folio.xml`, `tier2-5folio.xml`, `tier3-20folio.xml` | `test/fixtures-synthetic/tiers/` | Synthetic content with a CC0 statement; their manifests name `codex-2759.xml` as `derivedFrom`, which does not match the file content |
 | `Bilderfassung-synthetic.sch`, `tiers/Bilderfassung.sch` | `test/fixtures-synthetic/` | Small synthetic Schematron stand-ins, not the missing original |
-| `wenzelsbibel-synthetic-codex.xml` | `docs/data/editor/` | Synthetic sample for the start page |
+| `wenzelsbibel-synthetic-codex.xml` | `docs/data/editor/` | Synthetic fallback of the built-in example `wb`, which only the inherited base shell offers on local development hosts, and the fork's new shell shows it nowhere |
 | `editorial/fixtures/` | `editorial/`, listed in `fixtures/index.json` | Hand-built Schematron fixtures, CC0, under the rules of the [editorial layer](../editorial/README.md) |
-| `fol1r.xml` | `prototypes/d-flow/fixture/`, tracked, with [`NOTICE.md`](../prototypes/d-flow/fixture/NOTICE.md) beside it | Excerpt of fol. 1r from the public ONB TEI of the codex, used by the flow spike's checks; a publicly published and licensed excerpt under the storage rule below, with the CC BY 4.0 attribution of its header in the NOTICE |
+| `fol1r.xml` | `prototypes/d-flow/fixture/`, tracked, with [`NOTICE.md`](../prototypes/d-flow/fixture/NOTICE.md) beside it | Excerpt of fol. 1r from the public ONB TEI of the codex, the material of the flow spike's checks and the fork's example and demo material ([specification](specification.md#key-decisions)); a publicly published and licensed excerpt under the storage rule below, with the CC BY 4.0 attribution of its header in the NOTICE |
 | fol. 1r extraction (`fol-1r.json`) | `data/wireframe/`, local and ignored | Input for the wireframe, generated by the tracked script `wireframe/extract_data.py` from the public ONB TEI of the codex and the image annotations, whose docstring describes the extraction |
 
-The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies; tests of those need either new synthetic twins built from the [controlled vocabulary](#controlled-vocabulary) or opt-in runs against the local real files ([testing](testing.md)).
+The synthetic twins model surfaces, zones, words and simple `standOff` notes. They contain neither `listApp` with anchors, nor typed `ref`, nor `hi`, so they cannot exercise the handbook vocabularies. The demo workflow tests of phase 5b therefore run on the fol. 1r excerpt, and the real-file run of phase 6 runs them again on the local real files ([testing](testing.md)).
+
+The excerpt holds the text of fol. 1r with its words, renditions, anchors and the register link to `Martin`. It lacks the facsimile surface with its zones, the apparatus entries that point into the page, the image-annotation items of the page and a register file. Phase 5b adds the first three from the same public files, each excerpt with its NOTICE, and how the demo tests get a register file is an [open decision](plan.md#open-decisions-and-dependencies), because the edition data contain none.
 
 ## Limits
 

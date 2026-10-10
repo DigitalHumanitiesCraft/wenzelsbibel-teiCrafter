@@ -51,12 +51,42 @@ docs/schemas/ (TEI All now, project ODD later, wenzelsbibel.sch, wenzelsbibel-vo
 | Direction | Content |
 | --- | --- |
 | Consumed | Generic editor under `docs/js/editor/`, the workspace registry, the manifest contract (`teicrafter.project.json` with `workspace`, `imageResolver`, `markup`, `indices`, `views` and the schema set), the vendored TEI All RelaxNG, the Schematron runtime, the design tokens in `docs/css/style.css` |
-| Not changed in the fork | Generic editor modules, the manifest validator, the token sheet, `src/`, the build and test configuration files. A needed change goes to the base first and arrives by merge |
-| Built in the base for the fork | The toolbar, the popover at the selection rendering forms from a field table, the side panel, the autocomplete over register lists, the notice bar and findings list, the CodeMirror flow view with its vendored bundle, the `tei-document` seam between the legacy offset tree and `src/core`, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, the removal of the base draft `wenzelsbibel-editorial.sch` from `docs/schemas/` and `public/schemas/`, and fixes for bugs found here |
+| Not changed in the fork | Generic editor modules, the manifest validator, the token sheet, `src/`, and the base build and test configuration (`vite.config.js`, `playwright.config.js`, `biome.json`, `jsconfig.json`, `tsconfig.json`). A needed change goes to the base first and arrives by merge. The fork's own scripts in `package.json`, `playwright.fork.config.js` and `.github/workflows/fork-checks.yml` are fork zones ([architecture](architecture.md#derivation-model)) |
+| Built in the base for the fork | The mechanisms of phase 5a listed below, and fixes for bugs found here |
 
 The fork stays a derivation of teiCrafter permanently. Every generic mechanism is built in the base and arrives by merge, and the fork keeps only its vocabularies, Schematron, field tables, German labels and the shell composition ([architecture](architecture.md#components)). The fork's requirements reach the base as a handoff that the operator writes into the base's `knowledge/handoff.md`; the base processes it under its own plan.
 
-Two base tokens in `docs/css/style.css` fall below the text contrast minimum of [design](design.md#accessibility-minima) against white: `--color-review` (about 2.9:1, computed from the token value), which the base uses for the unsaved marker, and `--color-orgName` (about 4.3:1), which the wireframe uses for XML attribute names. The point for the base is to darken both or to add text variants. Until the base changes them, the fork uses `--color-problem` or `--color-link` for the unsaved dot and `--color-text-secondary` for XML attribute names.
+#### Phase 5a mechanisms
+
+This is the one list of what the base builds for the fork in phase 5a. The [plan](plan.md#phases) and the [component table](architecture.md#components) refer to it.
+
+- A two-row toolbar with disabled-with-reason actions, menu buttons for value lists and check sets, and the WAI-ARIA toolbar keyboard pattern.
+- A popover at the selection that renders forms from a field table, with one Anwenden and one Abbrechen per popover and a bottom-sheet variant for narrow screens.
+- A side panel that shares the right column with the facsimile and renders lists and forms from a field table.
+- A register autocomplete over any register list.
+- A notice bar and a findings list, fed by validation results, the flow view and editor actions, with the notice kinds of F44 ([specification](specification.md#validation-and-notice-bar)).
+- The CodeMirror flow view hosted by the legacy app, with its vendored bundle under `docs/vendor/`, the word commands of F18, wrap and unwrap, and "XML formatieren" (F56).
+- A CodeMirror XML view in the same bundle, replacing the textarea overlay of `source-view.js`, with the display-only folding of `xml:id` and `facs` and the switch "IDs anzeigen" (F57), selection mapping (F19) and Ctrl+E (F21).
+- Search in the flow view and the XML view (F6), where the base does not have it.
+- The facsimile zone layer, with the zones' polygons drawn as one SVG layer styled by zone type, a line-zone click selecting the line and a line selection outlining its zone (F23, F24), and the navigation state in the page address (F12), where the base does not have them.
+- The `tei-document` seam between the legacy offset tree and `src/core`.
+- The `EditorSession` seam, in which each flow transaction becomes one session revision and undo is handed over to the session, without a parse of the whole codex per keystroke ([architecture](architecture.md#components)).
+- The decision how "XML formatieren" treats elements under `xml:space="preserve"`, where the recommendation is to leave them untouched.
+- Text contrast for `--color-review` and `--color-orgName`, by darkening them or adding text variants ([design](design.md#accessibility-minima)).
+- Schematron diagnostics from the raw runtime and the compiled path that carry the assert or report `@id` as rule and `@role` as severity, so that the findings list can name the rule (F47).
+- Schematron evaluated off the main thread and cancellable (F46, N5).
+- Phase selection for a Schematron entry in the schema set.
+- Every message the base generates taken from a table the project supplies, so that the fork shows its messages in German.
+- The removal of the base draft `wenzelsbibel-editorial.sch` from `docs/schemas/` and `public/schemas/`, together with what depends on it in the base: the default schema set and panel schema of the base's Wenzelsbibel module, the proof `test/proofs/wenzels_project_controls_check.mjs` and the suite `test/e2e/wenzelsbibel-schema.spec.js`.
+- The remaining flow packages of the [plan](plan.md#phase-5-notes), with the load test on the full codex.
+
+The contract form of this handoff, with the schema of the field table, the interfaces of popover and side panel and the message table, follows in a later step.
+
+The flow view and the XML view may consume `src/core` and `src/editor` through the vendored bundle, as the flow spike already does. This conflicts with the rule of the base's plan that the source-first rebuild under `src/` writes nothing into `docs/`, which is an open decision for the base: either that rule admits the vendored bundle, or both views work on the legacy offset tree.
+
+The base's own start page shows the entry "New from text (LLM)", because `docs/js/index-app.js` checks only the global model setting and ignores the workspace flag `modelFeatures: false`. This is an item for the base handoff, independent of the fork's own start page.
+
+The text contrast point arises because two base tokens in `docs/css/style.css` fall below the minimum of [design](design.md#accessibility-minima) against white: `--color-review` (about 2.9:1, computed from the token value), which the base uses for the unsaved marker, and `--color-orgName` (about 4.3:1), which the wireframe uses for XML attribute names. The fork's interim colours are stated in the design.
 
 ### Edition team at PLUS
 
@@ -73,7 +103,7 @@ This is the operator's proposal for how the edition team works with the tool. It
 
 - The edition data live in a Git repository on the GitLab instance of the university. This repository holds the tool, and the data stay in the edition repository.
 - The tool runs from its published address without installation and opens the local clone of the edition repository through the folder access of a Chromium browser. Firefox lacks that folder access and falls back to file input and download, so the working model assumes Chromium.
-- The codex is split into book files with a shared apparatus and a shared register. This is the open file-topology point of [editorial guidelines](editorial-guidelines.md#open-ratification-points), now with a reason, because one file for the whole codex makes Git conflicts likely whenever two people work in it, and every validation runs over the whole codex. A shared apparatus file moves anchor resolution across files, which a Schematron cannot see, so that check would probably move to the tool's project checks and the pipeline.
+- The codex is split into book files with a shared apparatus and a shared register. This is the open file-topology point of [editorial guidelines](editorial-guidelines.md#open-ratification-points), now with a reason, because one file for the whole codex makes Git conflicts likely whenever two people work in it, and every validation runs over the whole codex. A shared apparatus file moves anchor resolution across files, which a Schematron cannot see, so that check would probably move to the tool's project checks and the pipeline. Phase 5b composes the document chooser and the apparatus write from the project's file list, so that the split changes data and not code ([plan](plan.md#phase-5b-notes)).
 - The files are formatted once with one element per line ("XML formatieren"), so that later diffs stay small and line-based merges work.
 - Each person has a responsibility range, such as a set of books, and simultaneous editing of the same file is not supported.
 - Before work each person pulls, after work commits and pushes, with a Git desktop client. The tool itself performs no Git operation.
@@ -113,12 +143,11 @@ The rules and the two phases, `editing` as the save gate and `review` as a repor
 
 ## Open points and input gaps
 
-- Register encoding: the written form and the pointer syntax of the decision in [specification](specification.md#key-decisions) await the edition team's ratification.
+- Encoding questions for the edition team, among them the register encoding, the list element for peoples and the missing original Schematron `Bilderfassung.sch`, are the [open ratification points](editorial-guidelines.md#open-ratification-points) of the editorial guidelines.
 - Working model: the [proposal](#working-model) needs the edition team's confirmation.
-- Which list element in the register file carries peoples. The handbook says only "Register".
 - Licence of the edition data for project storage. The public TEI header declares CC BY 4.0; the operator's vault records the question as unresolved, so working copies are treated as local material, and only a published and licensed excerpt with a NOTICE is tracked ([data](data.md#storage-and-rights)).
-- The original project Schematron `Bilderfassung.sch` referenced in `Bildannotationen.xml` is not available.
-- Roles of the users in the edition team, to be confirmed by the edition team.
+- Roles of the users in the edition team, an [open question](specification.md#open-questions) of the specification.
+- The src boundary of the flow and XML views, an open decision for the base ([phase 5a mechanisms](#phase-5a-mechanisms)).
 
 ## Pitfalls
 

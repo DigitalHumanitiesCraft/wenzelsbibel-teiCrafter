@@ -60,6 +60,9 @@ The knowledge base follows the Promptotyping Documents convention of the operato
 
 ## Terms
 
+Arbeitsleiste
+: The two-row toolbar of the editor, the single entry point for commands, see design.
+
 Base
 : The teiCrafter repository and its legacy application under `docs/`, from which this repository derives and merges.
 
@@ -70,7 +73,7 @@ Codex
 : Codex 2759 of the Austrian National Library, and the TEI file `codex-2759.xml` that encodes it word by word with facsimile zones and a stand-off apparatus.
 
 Editionsregeln
-: The interface name of the project Schematron `docs/schemas/wenzelsbibel.sch` in the workspace default schema set.
+: The interface name of the project Schematron `docs/schemas/wenzelsbibel.sch` in the workspace default schema set. In Prüfen its `editing` phase reads "Editionsregeln" and its `review` phase "Editionsregeln, Bericht", both working labels until the operator confirms them.
 
 Handbook
 : The edition's published Transkriptionshandbuch (version February 2025), the rule source for the encoding, see editorial-guidelines.
@@ -82,10 +85,13 @@ Project folder
 : The folder in the base that holds the Wenzelsbibel specialisation, `docs/js/projects/wenzelsbibel/`.
 
 Project vocabulary
-: The hand-edited file `docs/schemas/wenzelsbibel-vocabulary.json`, the single source of the controlled value lists with source and German label per value, see data.
+: The hand-edited file `docs/schemas/wenzelsbibel-vocabulary.json`, the single source of the controlled value lists, which gives each value its source and a German label and from which the project modules of the new shell read values and labels, see data.
 
 Register
 : The shared file of persons, places and peoples that words in the codex and items in the image annotations refer to.
+
+Seitenleiste
+: The side panel that shares the right column with the facsimile and holds lists and large forms, see design.
 
 Workspace registry
 : The mechanism in the base through which a project folder registers its workspace, replacing hard-wired references.
