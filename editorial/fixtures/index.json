@@ -1,0 +1,492 @@
+[
+  {
+    "rule": "tei-root",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "pass",
+    "file": "tei-root.pass.xml"
+  },
+  {
+    "rule": "tei-root",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "fail",
+    "file": "tei-root.fail.xml"
+  },
+  {
+    "rule": "w-id",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "w-id.pass.xml"
+  },
+  {
+    "rule": "w-id",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "w-id.fail.xml"
+  },
+  {
+    "rule": "app-from-to",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "pass",
+    "file": "app-from-to.pass.xml"
+  },
+  {
+    "rule": "app-from-to",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "fail",
+    "file": "app-from-to.fail.xml"
+  },
+  {
+    "rule": "register-type",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "pass",
+    "file": "register-type.pass.xml"
+  },
+  {
+    "rule": "register-type",
+    "phase": "editing",
+    "severity": "error",
+    "expected": "fail",
+    "file": "register-type.fail.xml"
+  },
+  {
+    "rule": "register-pointer",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "register-pointer.pass.xml"
+  },
+  {
+    "rule": "register-pointer",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "register-pointer.fail.xml"
+  },
+  {
+    "rule": "hi-rend-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "hi-rend-known.pass.xml"
+  },
+  {
+    "rule": "hi-rend-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "hi-rend-known.fail.xml"
+  },
+  {
+    "rule": "hi-rend-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "hi-rend-data-only.pass.xml"
+  },
+  {
+    "rule": "hi-rend-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "hi-rend-data-only.fail.xml"
+  },
+  {
+    "rule": "supplied-reason-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "supplied-reason-known.pass.xml"
+  },
+  {
+    "rule": "supplied-reason-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "supplied-reason-known.fail.xml"
+  },
+  {
+    "rule": "supplied-reason-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "supplied-reason-data-only.pass.xml"
+  },
+  {
+    "rule": "supplied-reason-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "supplied-reason-data-only.fail.xml"
+  },
+  {
+    "rule": "surplus-reason-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "surplus-reason-known.pass.xml"
+  },
+  {
+    "rule": "surplus-reason-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "surplus-reason-known.fail.xml"
+  },
+  {
+    "rule": "del-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "del-type-known.pass.xml"
+  },
+  {
+    "rule": "del-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "del-type-known.fail.xml"
+  },
+  {
+    "rule": "del-type-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "del-type-data-only.pass.xml"
+  },
+  {
+    "rule": "del-type-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "del-type-data-only.fail.xml"
+  },
+  {
+    "rule": "foreign-lang-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "foreign-lang-known.pass.xml"
+  },
+  {
+    "rule": "foreign-lang-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "foreign-lang-known.fail.xml"
+  },
+  {
+    "rule": "num-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "num-type-known.pass.xml"
+  },
+  {
+    "rule": "num-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "num-type-known.fail.xml"
+  },
+  {
+    "rule": "note-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "note-type-known.pass.xml"
+  },
+  {
+    "rule": "note-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "note-type-known.fail.xml"
+  },
+  {
+    "rule": "fw-ana-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "fw-ana-known.pass.xml"
+  },
+  {
+    "rule": "fw-ana-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "fw-ana-known.fail.xml"
+  },
+  {
+    "rule": "seg-ana-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "seg-ana-known.pass.xml"
+  },
+  {
+    "rule": "seg-ana-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "seg-ana-known.fail.xml"
+  },
+  {
+    "rule": "seg-ana-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "seg-ana-data-only.pass.xml"
+  },
+  {
+    "rule": "seg-ana-data-only",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "seg-ana-data-only.fail.xml"
+  },
+  {
+    "rule": "app-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "app-type-known.pass.xml"
+  },
+  {
+    "rule": "app-type-known",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "app-type-known.fail.xml"
+  },
+  {
+    "rule": "app-anchors-resolve",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "app-anchors-resolve.pass.xml"
+  },
+  {
+    "rule": "app-anchors-resolve",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "app-anchors-resolve.fail.xml"
+  },
+  {
+    "rule": "app-sameas-unanchored",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "app-sameas-unanchored.pass.xml"
+  },
+  {
+    "rule": "app-sameas-unanchored",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "app-sameas-unanchored.fail.xml"
+  },
+  {
+    "rule": "app-order",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "app-order.pass.xml"
+  },
+  {
+    "rule": "app-order",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "app-order.fail.xml"
+  },
+  {
+    "rule": "register-pointer-syntax",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "register-pointer-syntax.pass.xml"
+  },
+  {
+    "rule": "register-pointer-syntax",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "register-pointer-syntax.fail.xml"
+  },
+  {
+    "rule": "register-type-case",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "pass",
+    "file": "register-type-case.pass.xml"
+  },
+  {
+    "rule": "register-type-case",
+    "phase": "review",
+    "severity": "warning",
+    "expected": "fail",
+    "file": "register-type-case.fail.xml"
+  },
+  {
+    "rule": "image-title",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-title.pass.xml"
+  },
+  {
+    "rule": "image-title",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-title.fail.xml"
+  },
+  {
+    "rule": "image-description",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-description.pass.xml"
+  },
+  {
+    "rule": "image-description",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-description.fail.xml"
+  },
+  {
+    "rule": "image-folio",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-folio.pass.xml"
+  },
+  {
+    "rule": "image-folio",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-folio.fail.xml"
+  },
+  {
+    "rule": "image-artist",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-artist.pass.xml"
+  },
+  {
+    "rule": "image-artist",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-artist.fail.xml"
+  },
+  {
+    "rule": "image-short-description",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-short-description.pass.xml"
+  },
+  {
+    "rule": "image-short-description",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-short-description.fail.xml"
+  },
+  {
+    "rule": "image-height",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-height.pass.xml"
+  },
+  {
+    "rule": "image-height",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-height.fail.xml"
+  },
+  {
+    "rule": "image-artist-resolves",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-artist-resolves.pass.xml"
+  },
+  {
+    "rule": "image-artist-resolves",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-artist-resolves.fail.xml"
+  },
+  {
+    "rule": "iconclass-target",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "iconclass-target.pass.xml"
+  },
+  {
+    "rule": "iconclass-target",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "iconclass-target.fail.xml"
+  },
+  {
+    "rule": "iconclass-label-de",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "iconclass-label-de.pass.xml"
+  },
+  {
+    "rule": "iconclass-label-de",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "iconclass-label-de.fail.xml"
+  },
+  {
+    "rule": "iconclass-label-en",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "iconclass-label-en.pass.xml"
+  },
+  {
+    "rule": "iconclass-label-en",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "iconclass-label-en.fail.xml"
+  },
+  {
+    "rule": "image-range-syntax",
+    "phase": "review",
+    "severity": "error",
+    "expected": "pass",
+    "file": "image-range-syntax.pass.xml"
+  },
+  {
+    "rule": "image-range-syntax",
+    "phase": "review",
+    "severity": "error",
+    "expected": "fail",
+    "file": "image-range-syntax.fail.xml"
+  }
+]

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt><title>Fixture foreign-lang-known (pass)</title></titleStmt>
+      <publicationStmt><p>Synthetic test fixture for editorial/wenzelsbibel.sch, CC0. Structure modelled on Codex 2759, no edition text beyond single words.</p></publicationStmt>
+      <sourceDesc><p>Synthetic.</p></sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div type="book" xml:id="Genesis">
+        <p ana="paragraph">
+          <lb facs="#region_1000_10l1" xml:id="lb_1"/>
+          <foreign xml:lang="lat">
+          <w norm="x" orig="x" xml:id="region_1000_10l1_1">x</w>
+          </foreign>
+        </p>
+      </div>
+    </body>
+  </text>
+</TEI>

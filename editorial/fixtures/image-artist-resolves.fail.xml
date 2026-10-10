@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt><title>Fixture image-artist-resolves (fail)</title></titleStmt>
+      <editionStmt>
+        <edition>Synthetic image annotations</edition>
+        <respStmt>
+          <resp>Painters</resp>
+          <persName xml:id="BA"><name>Balaam-Meister</name></persName>
+          <persName xml:id="ES"><name>Esra-Meister</name></persName>
+        </respStmt>
+      </editionStmt>
+      <publicationStmt><p>Synthetic test fixture for editorial/wenzelsbibel.sch, CC0. Structure modelled on the Wenzelsbibel image annotations.</p></publicationStmt>
+      <sourceDesc><p>Synthetic.</p></sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div type="codex-2759">
+        <list subtype="miniatures" type="image-annotations">
+          <item corresp="#Image_1000_76" xml:id="miniatures_01">
+            <title resp="#JT">Initiale O: Gott auf dem Thron</title>
+            <note anchored="true" resp="#JT" subtype="short" type="description">Gott thront zwischen Engeln.</note>
+            <note anchored="true" resp="#JT" type="description">Gott sitzt auf einer Bank, Engel halten ein Ehrentuch.</note>
+            <dimensions><height unit="line">14</height></dimensions>
+            <ref n="4-17" target="1ra" type="folio"/>
+            <listPerson resp="#JT" type="artists"><head>Künstlerzuweisung</head><person corresp="#STW"/></listPerson>
+            <listPerson type="related"><head>Relevante Personen</head><person corresp="#Gott"/></listPerson>
+            <listRef>
+              <ref corresp="https://iconclass.org/11C21(+0)" resp="#ICONCLASS" type="iconclass-label">
+                <desc xml:lang="de">Gottvater als junger Mann</desc>
+                <desc xml:lang="en">God the Father as young man</desc>
+              </ref>
+            </listRef>
+            <objectType rend="initial_historisiert">Historisierte Initiale (O)</objectType>
+            <note anchored="true" corresp="#range(region_1000_10l1_0, region_1000_10l2_3)" resp="editor" subtype="statistic" type="text-relation">fol. 1r Z. 1 bis Z. 2</note>
+          </item>
+        </list>
+        <list subtype="margins" type="image-annotations">
+          <item corresp="#Image_1000_16" xml:id="margins_01">
+            <title>Drache</title>
+            <note anchored="true" resp="editor" type="description">Ein Drache sitzt auf der Ranke.</note>
+            <ref target="1r" type="folio"/>
+            <listPerson resp="#JT" type="artists"><head>Künstlerzuweisung</head><person corresp="#BA"/></listPerson>
+            <note anchored="true" resp="editor" subtype="statistic" type="text-relation"/>
+          </item>
+          <item corresp="#Image_1000_12" sameAs="#margins_01" xml:id="margins_02"/>
+        </list>
+      </div>
+    </body>
+  </text>
+</TEI>

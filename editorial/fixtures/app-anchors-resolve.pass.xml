@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt><title>Fixture app-anchors-resolve (pass)</title></titleStmt>
+      <publicationStmt><p>Synthetic test fixture for editorial/wenzelsbibel.sch, CC0. Structure modelled on Codex 2759, no edition text beyond single words.</p></publicationStmt>
+      <sourceDesc><p>Synthetic.</p></sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <standOff>
+    <listApp>
+      <app from="#start_1" to="#end_1" type="comment_edition">
+        <note xml:lang="de">Synthetischer Kommentar. (XX)</note>
+        <note xml:lang="en">Synthetic comment. (XX)</note>
+      </app>
+    </listApp>
+  </standOff>
+  <text>
+    <body>
+      <div type="book" xml:id="Genesis">
+        <p ana="paragraph">
+          <lb facs="#region_1000_10l1" xml:id="lb_1"/>
+          <w norm="got" orig="got" xml:id="region_1000_13l1_0"><anchor xml:id="start_1"/>got<anchor xml:id="end_1"/></w>
+        </p>
+      </div>
+    </body>
+  </text>
+</TEI>
