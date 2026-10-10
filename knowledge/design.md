@@ -113,15 +113,7 @@ The XML view shows the complete source in the same area as the text view, with t
 
 ### Notice bar
 
-The editor has no permanent status line and no footer. A notice bar above the inspector appears only when there is something to act on, and it is a live region for assistive technology.
-
-| Occasion | Content | Action |
-| --- | --- | --- |
-| Well-formedness broken | The reason in words and its place | Jump to the place. The bar disappears once the document is well-formed again |
-| Explicit check from Prüfen with findings | Check and phase, number of findings, the first message with its place | "Befunde anzeigen" opens the findings list in the bottom area |
-| Save refused by a failed schema | The failed schema and its findings | "Befunde anzeigen" |
-
-A check without findings leaves no bar and is announced to assistive technology. Whether it also shows a short visible confirmation is an open operator question, and the recommendation is a brief confirmation that dismisses itself ([Specification](specification.md#open-questions)). The bar carries no per-field check line and no standing counter.
+The notice bar sits directly above the inspector across the full width of the editor, with the message first and its action at the end. It takes its colours from the state tokens above, states check and result in words as the second channel, and is a live region for assistive technology. When it appears and what it shows and offers is defined in [Specification](specification.md#validation-and-notice-bar). The last wireframe below shows it above an open findings list.
 
 ### Wireframes
 
@@ -206,7 +198,7 @@ Labels beyond the agreed menu entries, such as Diplomatisch, Normalisiert, Anwen
 
 ## Content and interaction hierarchy
 
-Each view below is specified by the six points of the interface yardstick (user task, primary objects, first-decision information, optional depth, navigation targets and addressable states, wide and narrow rendering).
+Each view below is specified by the six points of the content and interaction hierarchy from the UI practice document that the action layer names (user task, primary objects, first-decision information, optional depth, navigation targets and addressable states, wide and narrow rendering).
 
 ### Text view
 
@@ -267,7 +259,6 @@ Each view below is specified by the six points of the interface yardstick (user 
 - The selection survives the switch between Text and XML in both directions, and unfinished input stays in the inspector across the switch.
 - Escape closes in a fixed order: first an open autocomplete list, then an open menu, then the inspector, then the selection. Each step returns focus to the element that opened the closed layer.
 - The unsaved marker, a dot next to the file name, stays until a save of the current revision succeeds. "XML formatieren" sets it like any other edit.
-- A broken well-formedness or a check with findings shows the notice bar, and its findings list jumps to each location. A clean check leaves the text unobstructed.
 - The inspector follows the caret in the flow. After the user closes it, caret moves leave it closed until the next click or key in the text.
 - Edits in the flow stay inside one word. Moving text by drag, a space inside a word or a deletion across a word boundary is refused, and new, split or deleted words go through the inspector or the XML view.
 - A refused action (a wrap that would split an element, a duplicate register ID) states its reason at the inspector field that triggered it and leaves the source unchanged.
@@ -282,18 +273,20 @@ The wide layout places text and facsimile side by side with the inspector below 
 
 These minima are acceptance criteria for every view and are checked in the browser tests of [Testing](testing.md).
 
-1. Text and interface elements reach a contrast of at least 4.5:1 against their background, measured on the rendered views.
+1. Text and interface elements reach a contrast of at least 4.5:1 against their background, measured on the rendered views. Two base tokens fail this as text colours: `--color-review`, which the base uses for the unsaved marker, and `--color-orgName`, which the wireframe uses for XML attribute names. Until the base changes them ([upstream point](integration.md#base-teicrafter)), the fork colours the unsaved dot with `--color-problem` or `--color-link` and XML attribute names with `--color-text-secondary`. The folk chip keeps `--color-orgName` for its outline only and sets its text in `--color-text`.
 2. Every focusable element shows a visible focus indicator.
 3. Interactive targets measure at least 24 by 24 CSS pixels, including chips, line numbers and menu entries. Line zones in the facsimile fall below this at the fit-to-pane zoom, and how they meet it is an open point ([Specification](specification.md#open-questions)).
 4. Menu bar, document bar, text selection (word, sequence, line), inspector and autocomplete are fully operable by keyboard.
 5. Escape closes the topmost layer and returns focus to its origin.
 6. Status changes (well-formedness, validation results including a clean check that shows no bar, save) are announced to assistive technology through the notice bar's live region, and no state relies on colour alone.
 7. Animations and smooth scrolling are disabled under `prefers-reduced-motion`.
+8. Every view stays usable at 200 percent browser zoom without loss of content or function and without horizontal page scrolling.
+9. Input fields use a font size of at least 16 CSS pixels.
 
 ## Start page
 
-The fork's start page (`docs/index.html`) states the tool's purpose in one German sentence, namely that it edits the TEI files of the Wenzelsbibel edition locally in the browser against the project's transcription rules. Its primary path is two actions, Projekt öffnen and Datei öffnen, followed by Zuletzt geöffnet where the browser supports it. It carries no marketing copy, no feature list and no counters. Licence and the link to the teiCrafter base sit in a plain footer line.
+The fork's start page is planned and will replace `docs/index.html`, which is still the base's start page, as `docs/editor.html` is still the base's editor shell ([architecture](architecture.md#derivation-model)). The start page states the tool's purpose in one German sentence, namely that it edits the TEI files of the Wenzelsbibel edition locally in the browser against the project's transcription rules. Its primary path is two actions, Projekt öffnen and Datei öffnen, followed by Zuletzt geöffnet where the browser supports it. It carries no marketing copy, no feature list and no counters. Licence and the link to the teiCrafter base sit in a plain footer line.
 
 ## Action layer
 
-The action layer of the fork, [CLAUDE.md](../CLAUDE.md), takes this document as its source of design values and translates them into instructions for coding agents. Rules for the content of interface text follow the global UI practice yardstick that the action layer names.
+The action layer of the fork, [CLAUDE.md](../CLAUDE.md), takes this document as its source of design values and translates them into instructions for coding agents. Views and interface text are accepted against the checklist of the UI practice document that the action layer names.

@@ -16,7 +16,7 @@ After this file read `knowledge/INDEX.md`, then `knowledge/handoff.md`, then the
 | interface or interaction work | `knowledge/design.md` |
 | modules, the merge path from the base or deployment | `knowledge/architecture.md` |
 | what is checked and what is not claimed | `knowledge/testing.md` |
-| the boundary to the base, the edition team or Oxygen | `knowledge/integration.md` |
+| the boundary to the base, the edition team or Oxygen, or the working model | `knowledge/integration.md` |
 | what comes next | `knowledge/plan.md` |
 
 ## Working rules
@@ -30,22 +30,23 @@ After this file read `knowledge/INDEX.md`, then `knowledge/handoff.md`, then the
 
 ## Design principles
 
-Read `knowledge/design.md` before generating or changing interface or interface text. Derived from it:
+Read `knowledge/design.md` before generating or changing interface or interface text. Views and interface text are accepted against the Abnahmecheck of the vault document "UI-Praxis für agentisch erzeugte Frontends" (operator's vault, `Coding/Webentwicklung/`), the acceptance checklist for every view. Derived from both:
 
 - The human decides. Offer no model proposals in this project; the toggle stays off.
 - Use the base's design tokens only; introduce no raw colour.
 - Label controls in German by their function, consistently across views.
-- Show the manuscript line as the reading unit; keep the selection across the Text and XML switch.
+- Render each column as one continuous flow, the reading unit; use the manuscript line as the reference unit for line numbers, facsimile linking and line selection; keep the selection across the Text and XML switch.
 - Render no control that cannot work in the detected browser; end a failed capability check in a working alternative.
-- State the reason of a failed check at the status line and in the findings list; keep the unsaved marker until saved.
+- Keep no permanent status line. Show the notice bar only when well-formedness breaks or a requested check has findings, with the reason and the route to the findings list; keep the unsaved dot next to the file name until a save succeeds.
 
 ## Scope
 
-Decided in `knowledge/specification.md`: the prototype for the first meeting shows five workflows and nothing else. Out of scope are an ODD, the project package, the Bible-verse form, a findings list beyond the status line, a keyboard shortcut scheme, the PAGE import, witness management and the entry workspace. Edition data and images are never committed and never redistributed.
+The prototype for the first meeting shows five workflows and nothing else; its scope and exclusions are decided in `knowledge/specification.md` (Purpose and scope). Edition data and images are never committed and never redistributed.
 
 ## Tools
 
-- Commands: `npm install`, `npm run dev` (serves `docs/`), `npm run test:e2e` (Playwright against the served legacy app), `node test/verify.mjs` (proofs and contract checks), `npm run check:biome`. See `knowledge/testing.md` for which run is required before a commit.
+- Commands: `npm install`, `npm run dev` (serves `docs/`), `npm run test:e2e` (the inherited Playwright suites against the Vite build in `dist/`, per `playwright.config.js`), `npm run test:e2e:fork` (the fork's `wb-demo-` suites through the allow-list in `playwright.fork.config.js`), `node test/verify.mjs` (proofs and contract checks), `npm run check:biome`.
+- Required before a commit: `python editorial/check_fixtures.py` (fixture check), `node prototypes/d-flow/check.mjs` (spike check), `npm run typecheck:src`, `python -m ruff check editorial`, plus the inherited gate `node test/verify.mjs`. `fork-checks.yml` runs the first four on GitHub; `knowledge/testing.md` holds the full list.
 - Conventions: code, identifiers, comments, commit messages and knowledge documents in English; interface labels in German. No emojis. No em or en dashes as punctuation. Commit messages imperative, one line, body only where the diff does not explain itself.
 - Git: `upstream` is DigitalHumanitiesCraft/teiCrafter, `origin` is DigitalHumanitiesCraft/wenzelsbibel-teiCrafter. Merge the base with `git fetch upstream` and `git merge upstream/main`; on a conflict in the base's former `knowledge/` files keep the deletion. Push, tags and releases stay with the operator.
-- Data: `data/` is ignored. Never add edition files or images to the repository.
+- Data: `/data/` at the repository root is ignored, `docs/data/` is not affected. Never add edition files or images to the repository.

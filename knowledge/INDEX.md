@@ -20,7 +20,7 @@ related: [project, editorial-guidelines, data, specification, design, architectu
 
 # wenzelsbibel-teiCrafter Knowledge Base
 
-This knowledge base documents the editing environment derived from teiCrafter for the Wenzelsbibel edition, for the coding agents that build it, for the operator and for the edition team that reviews it. It holds the rules the tool fulfils, what it must do, how it is built and how it is checked. The project status lives in the operator's vault, the base's own knowledge in the teiCrafter repository, and the edition data outside every repository.
+This knowledge base documents the editing environment derived from teiCrafter for the Wenzelsbibel edition, for the coding agents that build it, for the operator and for the edition team that reviews it. It holds the rules the tool fulfils, what it must do, how it is built and how it is checked. The operator's vault holds the project status and coordination, [plan](plan.md) the phase tracker, the teiCrafter repository the base's own knowledge, and the edition data stay outside every repository.
 
 ## Documents
 
@@ -33,7 +33,7 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 | [design.md](design.md) | Design | How does the interface look and behave? | the interface or its interaction rules change |
 | [architecture.md](architecture.md) | Architecture | How is the derived tool built and kept mergeable with the base? | a module, the merge path or the deployment changes |
 | [testing.md](testing.md) | Quality Assurance | What is guaranteed, what is not, how is it checked? | a test layer or a claim changes |
-| [integration.md](integration.md) | Integration | What does this repository exchange with the base, the edition team and Oxygen? | a contract changes |
+| [integration.md](integration.md) | Integration | What does this repository exchange with the base, the edition team and Oxygen, and under which working model? | a contract changes |
 | [plan.md](plan.md) | Planning | What comes next and in which order? | a phase is accepted, finished or dropped |
 | [journal.md](journal.md) | Provenance | Which transitions were integrated, rejected or corrected? | after a coherent transition |
 | [handoff.md](handoff.md) | Handoff | Which received inputs await integration? | an input arrives or is processed |
@@ -42,10 +42,10 @@ This knowledge base documents the editing environment derived from teiCrafter fo
 
 - `knowledge/` holds the maintained documents above, including `handoff.md` as the process inbox.
 - `editorial/` holds the tool-neutral project layer: the project Schematron `wenzelsbibel.sch`, its fixtures, the fixture check, the dated findings snapshot and a README with the rule table and the tool bindings. Oxygen and this tool are meant to read the same files from here.
-- `docs/` holds the published application, inherited from the base, with the start page and editor shell of this repository.
+- `docs/` holds the published application, inherited from the base; the start page and editor shell of this repository are planned there ([architecture](architecture.md#derivation-model)).
 - `wireframe/` holds the static wireframe with fol. 1r, served locally and not published.
 - `prototypes/d-flow/` holds the spike of the flow view with its Node and browser checks.
-- `snapshots/` is planned for dated reports such as the demo protocol and test runs with the real files; it does not exist yet.
+- `snapshots/` is the place for dated reports such as the demo protocol and test runs with the real files.
 - `data/` is ignored by Git and holds the edition files on a machine that has them.
 
 ## Reading paths

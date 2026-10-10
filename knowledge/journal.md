@@ -23,6 +23,12 @@ This journal is the curated backward-looking provenance index of the project. Cu
 
 ## Entries
 
+### 2026-10-10 integrated Cleanup after the audits of the derived repository
+
+- Source: two read-only audits of base and derived repository against the real files, the usability review of the wireframe, and the cleanup packages of the same day (inherited material, knowledge condensation, wireframe revision).
+- Target: repository metadata and workflows, [INDEX.md](INDEX.md), [architecture.md](architecture.md), [testing.md](testing.md), [plan.md](plan.md), [specification.md](specification.md), [integration.md](integration.md), [design.md](design.md), [data.md](data.md), [editorial-guidelines.md](editorial-guidelines.md), [project.md](project.md), the action layer, `wireframe/` and `snapshots/wireframe-review-2026-10-10.md`.
+- Result: The base's reports and its three viewer prototypes were removed from this repository, the citation and package metadata name the derived tool, a fork workflow runs the fixture check, the spike check, the typechecks and ruff, and an allow-list Playwright configuration is prepared for the fork's own suites. Every fact now has one owning document: the register decision in the specification, the notice bar behaviour in the specification and its appearance in the design, the working model in the integration contract as the exchange with the edition team, the Schematron phases in the editorial README. The guidelines absorbed the data findings of the review run, among them the further apparatus types, nested references and the empty range form. The wireframe revision removed the retired view switch, aligned the markup vocabulary with the specification, added the line state and apply and cancel for the normalised reading, intercepts the save shortcut, meets the contrast and input-size minima, makes the autocomplete keyboard-operable and labels every control without function as such; the review snapshot records what remains for the real build.
+
 ### 2026-10-10 integrated Wireframe, flow spike, editorial layer and base merge
 
 - Source: the reworked wireframe under `wireframe/`, the spike under `prototypes/d-flow/` with its Node and browser checks, the editorial layer under `editorial/` with its fixture check and data findings, the base refactor merged from upstream (base commit 80313c0), and the feasibility study of the flowing editor (session scratchpad, measured on the full codex).

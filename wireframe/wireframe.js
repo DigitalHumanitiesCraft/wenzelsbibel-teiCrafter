@@ -7,32 +7,40 @@ const DATA_URL = "../data/wireframe/fol-1r.json";
 const OSD_IMAGES = "../docs/vendor/openseadragon/images/";
 const IIIF_WIDTH = 900;
 const SVG_NS = "http://www.w3.org/2000/svg";
+// Answer of every control the wireframe does not implement, so no label promises more than it does.
+const STUB = "Im Entwurf noch ohne Funktion.";
 
 const MENUS = [
-  { label: "Datei", items: ["Öffnen …", "Projektordner öffnen …", "-", ["Speichern", "Strg+S"], "Arbeitskopie sichern", "-", "Zuletzt geöffnet"] },
+  { label: "Datei", items: ["Öffnen …", "Projektordner öffnen …", "-", ["Speichern", "Strg+S"], "-", "Zuletzt geöffnet"] },
   { label: "Bearbeiten", items: [["Rückgängig", "Strg+Z"], ["Wiederholen", "Strg+Y"], "-", ["Suchen", "Strg+F"], "-", "Apparatkommentar zur Auswahl", ["Element für Auswahl …", "Strg+E"], "-", "XML formatieren"] },
-  { label: "Ansicht", items: [["Text", ""], ["XML", ""], "-", "Faksimile", "Zonen", "Auswahl", "-", "Zeilenweise", "Fließtext"] },
+  { label: "Ansicht", items: [["Text", ""], ["XML", ""], "-", "Faksimile", "Zonen", "Auswahl"] },
   { label: "Register", items: ["Personen", "Orte", "Völker", "-", "Eintrag anlegen …", "Verweise auf Eintrag anzeigen"] },
   { label: "Prüfen", items: ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review", "-", "Befundliste"] },
   { label: "Hilfe", items: ["Transkriptionsrichtlinie", "Über"] },
 ];
 
-// Handbook vocabularies (editorial-guidelines.md); the real tool reads them from the manifest.
+// Menu entries the wireframe performs; every other entry answers with STUB.
+const WORKING = new Set(["Ansicht/Text", "Ansicht/XML", "Ansicht/Faksimile", "Ansicht/Zonen", "Ansicht/Auswahl", "Bearbeiten/XML formatieren", "Prüfen/Schematron review", "Prüfen/Befundliste"]);
+
+// The five markup actions of F32 with the handbook values (editorial-guidelines.md,
+// controlled vocabularies); the real tool reads them from the manifest. Tilgung
+// covers surplus/@reason and del/@type. Data-only values such as erasure_point stay
+// out until the edition team ratifies them.
 const MARKUP = [
-  { label: "Hervorhebung", values: ["rubrication", "inkRed", "gold", "initial", "initial_historisiert"] },
-  { label: "Ergänzung", values: ["text_intervention", "switch", "damage"] },
-  { label: "Überschuss", values: ["diplography", "decor", "text_erasure", "switch", "instruction_note"] },
-  { label: "Tilgung", values: ["del", "erasure", "erasure_point"] },
-  { label: "Fremdsprache", values: ["lat", "cze"] },
-  { label: "Zahl", values: ["chapter"] },
+  { label: "Hervorhebung", groups: [["hi/@rend", ["rubrication", "inkRed", "gold", "initial", "initial_historisiert", "border_decoration"]]] },
+  { label: "Ergänzung", groups: [["supplied/@reason", ["text_intervention", "switch", "damage"]]] },
+  { label: "Tilgung", groups: [["surplus/@reason", ["Diplography", "decor", "text_erasure", "switch", "instruction_note"]], ["del/@type", ["erasure", "redemption_point"]]] },
+  { label: "Fremdsprache", groups: [["foreign/@xml:lang", ["lat", "cze"]]] },
+  { label: "Zahl", groups: [["num/@type", ["chapter"]]] },
 ];
 
 const TYPE_LABEL = { person: "Person", place: "Ort", folk: "Volk" };
 
 const state = {
-  data: null, column: 0, view: "text", facs: false, running: false,
+  data: null, column: 0, view: "text", facs: false,
   words: [],          // rendered words of the current column: { tok, line, lineNo, node }
-  sel: null,          // { from, to } indices into state.words
+  sel: null,          // { from, to, line } indices into state.words; line is set in the state "Zeile"
+  pendingLine: null,  // line chosen by line number or zone, confirmed once the selection arrives
   quiet: false,       // inspector closed by the user; caret moves do not reopen it until the next click or key
   appsByWord: new Map(), xmlSource: "", findings: null, viewer: null, diplo: null,
 };
@@ -95,7 +103,12 @@ function buildMenus() {
   }
   document.addEventListener("click", (e) => { if (!e.target.closest(".menus") && !e.target.closest(".act")) closeMenus(); });
   // Capture phase, so the facsimile viewer's own key handling cannot swallow Escape.
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") onEscape(e); }, true);
+  // Strg+S and Strg+E belong to Speichern and Element für Auswahl; without the
+  // interception the browser would open its own save dialog or address bar.
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") onEscape(e);
+    else if ((e.ctrlKey || e.metaKey) && !e.altKey && ["s", "e"].includes(e.key.toLowerCase())) { e.preventDefault(); notify(STUB); }
+  }, true);
 }
 
 function closeMenus() {
@@ -103,12 +116,12 @@ function closeMenus() {
 }
 
 function menuAction(menu, label) {
+  if (!WORKING.has(`${menu}/${label}`)) { notify(STUB); return; }
   if (menu === "Ansicht") {
     if (label === "Text" || label === "XML") setView(label.toLowerCase());
     if (label === "Faksimile") setFacs(!state.facs);
     if (label === "Zonen") { const t = $("#zones-toggle"); t.checked = !t.checked; toggleZones(t.checked); }
     if (label === "Auswahl") $("#inspector").hidden ? (state.sel && openInspector()) : closeInspector();
-    if (label === "Zeilenweise" || label === "Fließtext") { state.running = label === "Fließtext"; $("#flow").classList.toggle("is-running", state.running); }
   }
   if (menu === "Bearbeiten" && label === "XML formatieren") formatXml();
   if (menu === "Prüfen") runCheck(label);
@@ -117,7 +130,7 @@ function menuAction(menu, label) {
 // Agreed order: autocomplete, menus, inspector, selection. Each step closes one layer.
 function onEscape(e) {
   const ac = document.querySelector(".ac-list:not([hidden])");
-  if (ac) { ac.hidden = true; e.preventDefault(); return; }
+  if (ac) { ac.closeList(); e.preventDefault(); return; }
   if (document.querySelector('.menus [aria-expanded="true"], .act > [aria-expanded="true"]')) {
     const origin = document.querySelector('.menus [aria-expanded="true"], .act > [aria-expanded="true"]');
     closeMenus(); origin.focus(); return;
@@ -269,8 +282,14 @@ function readSelection() {
   if (state.view !== "text" || !inFlow(sel) || state.quiet) return;
   const ks = rangeWords(sel.getRangeAt(0));
   if (!ks) return;
-  const same = state.sel && state.sel.from === ks[0] && state.sel.to === ks[1];
-  state.sel = { from: ks[0], to: ks[1] };
+  const prev = state.sel;
+  const sameRange = prev && prev.from === ks[0] && prev.to === ks[1];
+  const pending = state.pendingLine;
+  state.pendingLine = null;
+  // The state "Zeile" holds while the selection still covers exactly that line.
+  const line = pending && pending.from === ks[0] && pending.to === ks[1] ? pending.id : (sameRange && prev.line) || null;
+  const same = sameRange && (prev.line || null) === line;
+  state.sel = { from: ks[0], to: ks[1], line };
   highlightSelection();
   if (!same || $("#inspector").hidden) openInspector(); else refreshTitle();
 }
@@ -319,8 +338,11 @@ function placeCaret(k) {
 function selectLine(lineId) {
   const ks = state.words.filter((w) => w.line.id === lineId).map((w) => Number(w.node.dataset.k));
   if (!ks.length) return;
+  state.quiet = false;
+  state.pendingLine = { id: lineId, from: ks[0], to: ks[ks.length - 1] };
   $("#flow").focus({ preventScroll: true });
   setWordRange(ks[0], ks[ks.length - 1]);
+  state.words[ks[0]].node.scrollIntoView({ block: "nearest" });
 }
 
 // Editing stays inside one word: every input is handled here, so the browser
@@ -440,12 +462,16 @@ function initFacsimile() {
     frame.append(el("img", { src: `${image.iiif}/full/${IIIF_WIDTH},/0/default.jpg`, alt: "" }), svg);
     return;
   }
+  const loading = el("p", { class: "facs-loading", role: "status", text: "Faksimile wird geladen …" });
+  frame.append(loading);
   const viewer = window.OpenSeadragon({
     element: frame, prefixUrl: OSD_IMAGES, tileSources: `${image.iiif}/info.json`,
     showNavigationControl: true, gestureSettingsMouse: { clickToZoom: false }, crossOriginPolicy: "Anonymous",
   });
   viewer.addHandler("open", () => {
+    loading.remove();
     viewer.addOverlay({ element: svg, location: viewer.viewport.imageToViewportRectangle(0, 0, image.width, image.height) });
+    fitColumn(true);
     highlightSelection();
   });
   // The viewer captures the pointer, so polygons never receive the click; hit-test instead.
@@ -456,6 +482,34 @@ function initFacsimile() {
   });
   viewer.addHandler("open-failed", () => frame.replaceChildren(el("p", { class: "empty-note", text: "Das Faksimile konnte vom Bildserver der ÖNB nicht geladen werden. Text und Inspector bleiben nutzbar." })));
   state.viewer = viewer;
+}
+
+// Bounding box of the current column in image pixels: the zones its lines point to,
+// widened by every text region whose horizontal centre lies inside them.
+function columnBox() {
+  const { zones } = state.data;
+  const byId = new Map(zones.map((z) => [z.id, z]));
+  const box = (list) => {
+    const pts = list.flatMap((z) => z.points.trim().split(/\s+/).map((p) => p.split(",").map(Number)));
+    if (!pts.length) return null;
+    const xs = pts.map((p) => p[0]);
+    const ys = pts.map((p) => p[1]);
+    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+  };
+  const col = columns()[state.column];
+  const lineBox = col && box(col.lines.map((l) => byId.get((l.facs || "").replace("#", ""))).filter((z) => z && z.points));
+  if (!lineBox) return null;
+  const regions = zones.filter((z) => z.type === "TextRegion" && z.points && (() => { const b = box([z]); const cx = (b.x0 + b.x1) / 2; return cx >= lineBox.x0 && cx <= lineBox.x1; })());
+  return box([...regions, { points: `${lineBox.x0},${lineBox.y0} ${lineBox.x1},${lineBox.y1}` }]);
+}
+
+function fitColumn(immediately = false) {
+  const viewer = state.viewer;
+  const b = state.data && columnBox();
+  if (!viewer || !viewer.world.getItemCount() || !b) return;
+  const pad = 120;
+  const rect = viewer.viewport.imageToViewportRectangle(b.x0 - pad, b.y0 - pad, b.x1 - b.x0 + 2 * pad, b.y1 - b.y0 + 2 * pad);
+  viewer.viewport.fitBounds(rect, immediately || matchMedia("(prefers-reduced-motion: reduce)").matches);
 }
 
 function zoneLayer() {
@@ -490,8 +544,8 @@ function jumpToLine(zoneId) {
   if (ci < 0) return;
   if (state.view !== "text") setView("text");
   if (ci !== state.column) setColumn(ci);
-  const k = state.words.findIndex((w) => (w.line.facs || "").replace("#", "") === zoneId);
-  if (k >= 0) placeCaret(k);
+  const line = columns()[ci].lines.find((l) => (l.facs || "").replace("#", "") === zoneId);
+  if (line) selectLine(line.id);
 }
 
 // Controls
@@ -505,8 +559,11 @@ function wireControls() {
   $("#inspector-xml").addEventListener("click", () => setView(state.view === "xml" ? "text" : "xml"));
   $("#xml-format").addEventListener("click", formatXml);
   $("#doc-select").addEventListener("change", (e) => switchDocument(e.target.value));
-  $("#prev-folio").disabled = true;
-  $("#next-folio").disabled = true;
+  document.addEventListener("click", (e) => { if (!e.target.closest(".register")) for (const l of document.querySelectorAll(".ac-list:not([hidden])")) l.closeList(); });
+  // The autocomplete list is fixed to the viewport, so it follows its field on scroll and resize.
+  const follow = () => { const l = document.querySelector(".ac-list:not([hidden])"); if (l) placeList(l); };
+  document.addEventListener("scroll", follow, true);
+  addEventListener("resize", follow);
 }
 
 function setColumn(i) {
@@ -515,6 +572,7 @@ function setColumn(i) {
   closeInspector();
   renderFlow();
   highlightSelection();
+  fitColumn();
 }
 
 function setView(view) {
@@ -550,13 +608,15 @@ function openInspector() {
   refreshTitle();
   const body = $("#inspector-body");
   body.replaceChildren();
+  hideNote();
   state.diplo = null;
+  if (state.sel.line) { body.append(lineSection(words)); return; }
   if (words.length === 1) {
     const tok = words[0].tok;
     const mixed = (tok.rend || []).includes("ligature") || /\n/.test(tok.text || "");
     const fields = el("div", { class: "fields" }, [
       field("Diplomatisch", tok.orig ?? tok.text ?? "", mixed ? "Enthält Binnen-Markup, Bearbeitung in der XML-Ansicht" : ""),
-      field("Normalisiert", tok.norm ?? "", tok.norm === undefined ? "Kein @norm im Bestand" : ""),
+      normField(tok),
     ]);
     state.diplo = fields.querySelector("input");
     body.append(fields);
@@ -577,7 +637,9 @@ function refreshTitle() {
   const at = (w) => (w.lineNo === "Kopfzeile" ? "Kopfzeile" : `Z. ${w.lineNo}`);
   const text = (w) => w.node.textContent;
   const title = $("#inspector-title");
-  if (words.length === 1) {
+  if (state.sel.line) {
+    title.replaceChildren(`${first.lineNo === "Kopfzeile" ? "Kopfzeile" : `Zeile ${first.lineNo}`}, fol. ${state.data.folio} ${"ab"[state.column]}`);
+  } else if (words.length === 1) {
     title.replaceChildren("Wort ", el("q", { text: text(first) }), el("span", { class: "context", text: `fol. ${state.data.folio} ${"ab"[state.column]} ${at(first)}` }));
   } else {
     const span = first.lineNo === last.lineNo ? at(first) : `${at(first)} bis ${at(last)}`;
@@ -591,11 +653,54 @@ function field(label, value, note) {
   return f;
 }
 
+// Normalisiert is applied explicitly; Diplomatisch mirrors the flow live instead.
+function normField(tok) {
+  const f = field("Normalisiert", tok.norm ?? "", tok.norm === undefined ? "Kein @norm im Bestand" : "");
+  const input = f.querySelector("input");
+  const apply = () => {
+    const value = input.value.trim();
+    if (value === (tok.norm ?? "")) { inspectorNote("Keine Änderung an der normalisierten Lesung."); return; }
+    tok.norm = value;
+    input.value = value;
+    markUnsaved();
+    inspectorNote(`Normalisierte Lesung „${value}“ übernommen.`);
+  };
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } });
+  const buttons = el("div", { class: "field-actions" }, [
+    el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { input.value = tok.norm ?? ""; hideNote(); } }),
+    el("button", { type: "button", class: "act-btn is-primary", text: "Anwenden", onclick: apply }),
+  ]);
+  // The buttons sit outside the label, so a click on them does not refocus the input.
+  return el("div", { class: "field-group" }, [f, buttons]);
+}
+
+// State "Zeile" (F31, US1.2): the line's words with their normalised readings; a chip opens "Wort".
+function lineSection(words) {
+  const zone = (words[0].line.facs || "").replace("#", "");
+  const sec = el("div", { class: "line-state" }, [
+    el("p", { class: "line-zone" }, [el("span", { text: "Zone " }), el("code", { text: zone || "keine" })]),
+  ]);
+  const list = el("ul", { class: "line-words", "aria-label": "Wörter der Zeile" });
+  for (const w of words) {
+    const k = Number(w.node.dataset.k);
+    const norm = w.tok.norm;
+    list.append(el("li", {}, [el("button", {
+      type: "button", class: "word-chip", "aria-label": `${w.node.textContent}, normalisiert ${norm ?? "ohne @norm"}`,
+      onclick: () => { $("#flow").focus({ preventScroll: true }); setWordRange(k, k); },
+    }, [el("span", { class: "dip", text: w.node.textContent }), el("span", { class: norm === undefined ? "norm is-missing" : "norm", text: norm ?? "ohne @norm" })])]));
+  }
+  sec.append(list);
+  return sec;
+}
+
 function markupAction(m) {
   const wrap = el("div", { class: "act" });
   const btn = el("button", { type: "button", "aria-haspopup": "true", "aria-expanded": "false", text: `${m.label} ▾` });
   const list = el("ul", { class: "menu-list", role: "menu", hidden: "" });
-  for (const v of m.values) list.append(el("li", { role: "none" }, [el("button", { class: "menu-item", type: "button", role: "menuitem", text: v, onclick: () => { closeMenus(); markUnsaved(); } })]));
+  for (const [attr, values] of m.groups) {
+    list.append(el("li", { class: "menu-caption", role: "presentation", text: attr }));
+    for (const v of values) list.append(el("li", { role: "none" }, [el("button", { class: "menu-item", type: "button", role: "menuitem", text: v, onclick: () => { closeMenus(); notify(STUB, true); } })]));
+  }
   btn.addEventListener("click", () => { const open = btn.getAttribute("aria-expanded") === "true"; closeMenus(); if (!open) { btn.setAttribute("aria-expanded", "true"); list.hidden = false; } });
   wrap.append(btn, list);
   return wrap;
@@ -616,27 +721,85 @@ function registerSection(ref) {
   const sec = el("div", { class: "register" });
   sec.append(el("div", { class: "group-title", text: "Register" }));
   const linked = el("div", { class: "linked" });
-  if (ref) linked.append(chipFor(`${ref.type}|${ref.target}`), el("button", { class: "link-btn", type: "button", text: "Verknüpfung lösen", onclick: markUnsaved }));
+  if (ref) linked.append(chipFor(`${ref.type}|${ref.target}`), el("button", { class: "link-btn", type: "button", text: "Verknüpfung lösen", onclick: () => notify(STUB, true) }));
   else linked.append(el("span", { class: "empty-note", text: "Nicht verknüpft" }));
   sec.append(linked);
   const typeSel = el("select", { "aria-label": "Registertyp" }, [el("option", { value: "", text: "Alle" }), ...Object.entries(TYPE_LABEL).map(([v, t]) => el("option", { value: v, text: t }))]);
-  const input = el("input", { type: "text", placeholder: "Eintrag suchen oder anlegen …", "aria-label": "Registereintrag", autocomplete: "off" });
-  const list = el("ul", { class: "ac-list", role: "listbox", hidden: "" });
+  const input = el("input", {
+    type: "text", role: "combobox", "aria-autocomplete": "list", "aria-expanded": "false", "aria-controls": "ac-list",
+    placeholder: "Eintrag suchen oder anlegen …", "aria-label": "Registereintrag", autocomplete: "off",
+  });
+  const list = el("ul", { class: "ac-list", id: "ac-list", role: "listbox", "aria-label": "Registertreffer", hidden: "" });
   sec.append(el("div", { class: "combo" }, [typeSel, input]), list);
   const entries = registerEntries();
+  let active = -1;
+  const options = () => [...list.children];
+  const setActive = (i) => {
+    const opts = options();
+    active = opts.length ? (i + opts.length) % opts.length : -1;
+    opts.forEach((o, j) => { o.classList.toggle("is-active", j === active); o.setAttribute("aria-selected", String(j === active)); });
+    if (active < 0) { input.removeAttribute("aria-activedescendant"); return; }
+    input.setAttribute("aria-activedescendant", opts[active].id);
+    opts[active].scrollIntoView({ block: "nearest" });
+  };
+  list.closeList = () => { list.hidden = true; active = -1; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); };
+  list.anchor = input;
+  // Linking and creating entries belong to the real build; the choice is shown, not written.
+  const choose = (value) => { if (value !== null) input.value = value; list.closeList(); input.focus(); notify(STUB, true); };
+  const option = (i, onPick, children) => el("li", { class: "ac-item", id: `ac-opt-${i}`, role: "option", "aria-selected": "false", onclick: onPick }, children);
   const update = () => {
     const q = input.value.trim().toLowerCase();
     const type = typeSel.value;
     list.replaceChildren();
-    if (!q) { list.hidden = true; return; }
+    if (!q) { list.closeList(); return; }
     const hits = entries.filter((e) => (!type || e.type === type) && e.id.toLowerCase().includes(q)).slice(0, 8);
-    for (const h of hits) list.append(el("li", { class: "ac-item", role: "option", onclick: () => { input.value = h.id; list.hidden = true; markUnsaved(); } }, [el("span", { text: h.id }), el("span", { class: "type", text: TYPE_LABEL[h.type] })]));
-    if (!hits.some((h) => h.id.toLowerCase() === q)) list.append(el("li", { class: "ac-item is-new", role: "option", onclick: () => { list.hidden = true; markUnsaved(); } }, [el("span", { text: `„${input.value.trim()}“ als ${type ? TYPE_LABEL[type] : "Eintrag"} anlegen …` })]));
+    hits.forEach((h, i) => list.append(option(i, () => choose(h.id), [el("span", { text: h.id }), el("span", { class: "type", text: TYPE_LABEL[h.type] })])));
+    if (!hits.some((h) => h.id.toLowerCase() === q)) {
+      const create = option(hits.length, () => choose(null), [el("span", { text: "+ neu anlegen" }), el("span", { class: "type", text: `„${input.value.trim()}“` })]);
+      create.classList.add("is-new");
+      list.append(create);
+    }
+    active = -1;
     list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    input.removeAttribute("aria-activedescendant");
+    placeList(list);
   };
   input.addEventListener("input", update);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (list.hidden) update();
+      if (list.hidden) return;
+      setActive(active < 0 && e.key === "ArrowUp" ? -1 : active + (e.key === "ArrowDown" ? 1 : -1));
+    } else if (e.key === "Enter" && !list.hidden && active >= 0) {
+      e.preventDefault();
+      options()[active].click();
+    }
+  });
+  list.addEventListener("mousedown", (e) => e.preventDefault()); // keep focus in the field
   typeSel.addEventListener("change", update);
   return sec;
+}
+
+// The list is fixed to the viewport so the inspector's scroll edge cannot clip it.
+// It opens below the field and flips above when there is more room there.
+function placeList(list) {
+  const r = list.anchor.getBoundingClientRect();
+  const gap = 4;
+  const margin = 8;
+  const width = Math.min(Math.max(Math.min(r.width, 480), 320), innerWidth - 2 * margin);
+  const below = innerHeight - r.bottom - margin;
+  const above = r.top - margin;
+  const wanted = Math.min(list.scrollHeight, 224);
+  const up = below < wanted && above > below;
+  Object.assign(list.style, {
+    left: `${Math.min(Math.max(r.left, margin), innerWidth - width - margin)}px`,
+    width: `${width}px`,
+    top: up ? "auto" : `${r.bottom + gap}px`,
+    bottom: up ? `${innerHeight - r.top + gap}px` : "auto",
+    maxHeight: `${Math.max(Math.min(224, up ? above : below) - gap, 64)}px`,
+  });
 }
 
 function apparatusSection(apps) {
@@ -648,7 +811,7 @@ function apparatusSection(apps) {
     for (const [lang, text] of Object.entries(a.notes)) entry.append(el("p", {}, [el("span", { class: "lang", text: lang }), text]));
     list.append(entry);
   }
-  sec.append(list, el("button", { class: "link-btn", type: "button", text: "+ Kommentar zur Auswahl", onclick: markUnsaved }));
+  sec.append(list, el("button", { class: "link-btn", type: "button", text: "+ Kommentar zur Auswahl", onclick: () => notify(STUB, true) }));
   return sec;
 }
 
@@ -658,6 +821,7 @@ function selectMiniature(zoneId) {
   state.sel = null;
   highlightSelection();
   $("#inspector").hidden = false;
+  hideNote();
   $("#inspector-title").replaceChildren("Miniatur ", el("span", { class: "context", text: `${m.id}, fol. ${m.folio[1]} Z. ${m.folio[0]}` }));
   const body = $("#inspector-body");
   body.replaceChildren();
@@ -676,7 +840,7 @@ function selectMiniature(zoneId) {
   for (const [uri, de, en] of m.iconclass) {
     grid.append(el("code", { text: uri.replace("https://iconclass.org/", "") }), el("span", {}, [el("span", { class: "lang", text: "de " }), de, el("br"), el("span", { class: "lang", text: "en " }), en]));
   }
-  ic.append(grid, el("button", { class: "link-btn", type: "button", text: "ICONCLASS suchen …" }));
+  ic.append(grid, el("button", { class: "link-btn", type: "button", text: "ICONCLASS suchen …", onclick: () => notify(STUB, true) }));
   body.append(ic);
   body.append(el("div", {}, [el("div", { class: "group-title", text: "Textbezug" }), el("p", { text: m.statistic || "" }), el("button", { class: "link-btn", type: "button", text: "Im Text zeigen", onclick: showMiniatureText })]));
 }
@@ -712,20 +876,47 @@ function closeInspector() {
   if (insp.hidden) return;
   const hadFocus = insp.contains(document.activeElement);
   insp.hidden = true;
+  hideNote();
   state.quiet = true;
   if (hadFocus && state.view === "text" && !$("#flow").hidden) $("#flow").focus({ preventScroll: true });
 }
 
 function markUnsaved() { $("#status-unsaved").hidden = false; }
 
+// Short-lived messages: under the inspector head for controls inside the inspector,
+// otherwise in the notice bar, which then returns to its findings or disappears.
+let noteTimer = 0;
+let noticeTimer = 0;
+
+function inspectorNote(text) {
+  const note = $("#inspector-note");
+  note.textContent = text;
+  note.hidden = false;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(hideNote, 5000);
+}
+
+function hideNote() { clearTimeout(noteTimer); $("#inspector-note").hidden = true; }
+
+function notify(text, inInspector = false) {
+  if (inInspector && !$("#inspector").hidden) { inspectorNote(text); return; }
+  const bar = $("#notice");
+  bar.replaceChildren(el("span", { text }));
+  bar.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { if (state.findings && state.findings.length) renderFindingsBar(); else bar.hidden = true; }, 4000);
+}
+
 // Checks: no permanent status line. A notice appears only when there is something
 // to act on; a clean run is announced to assistive technology and leaves no bar.
 // Simulated: "Schematron review" reports the real words without @xml:id on this
-// page as findings; the rule itself is a stand-in for the project schema.
+// page as findings; the rule itself is a stand-in for the project schema, and the
+// interface says so. The other checks are stubs (menuAction).
+
+const SAMPLE = "Beispielbefund aus den Daten";
 
 function runCheck(label) {
-  if (label === "Befundliste") { if (state.findings) showFindings(); else announce("Noch keine Prüfung gelaufen."); return; }
-  if (label !== "Schematron review") { state.findings = null; $("#notice").hidden = true; announce(`${label}: keine Befunde.`); return; }
+  if (label === "Befundliste") { if (state.findings) showFindings(); else notify("Noch keine Prüfung gelaufen."); return; }
   state.findings = [];
   columns().forEach((col, ci) => {
     let n = 0;
@@ -735,12 +926,17 @@ function runCheck(label) {
       for (const tok of line.tokens) if (tok.type === "w" && !tok.id) state.findings.push({ ci, line, tok, where: `fol. ${state.data.folio} ${"ab"[ci]} ${header ? "Kopfzeile" : `Z. ${n}`}`, message: `Wort „${tok.text}“ ohne @xml:id` });
     }
   });
+  clearTimeout(noticeTimer);
+  if (!state.findings.length) { $("#notice").hidden = true; announce("Schematron review: keine Befunde."); return; }
+  renderFindingsBar();
+}
+
+function renderFindingsBar() {
   const f = state.findings;
   const bar = $("#notice");
-  if (!f.length) { bar.hidden = true; announce("Schematron review: keine Befunde."); return; }
   bar.replaceChildren(
     el("strong", { text: `Schematron review: ${f.length} ${f.length === 1 ? "Befund" : "Befunde"}` }),
-    el("span", { text: `${f[0].message}, ${f[0].where}` }),
+    el("span", { text: `${f[0].message}, ${f[0].where} (${SAMPLE})` }),
     el("button", { type: "button", class: "act-btn", text: "Befunde anzeigen", onclick: showFindings }),
   );
   bar.hidden = false;
@@ -748,8 +944,10 @@ function runCheck(label) {
 
 function showFindings() {
   $("#inspector").hidden = false;
+  hideNote();
   $("#inspector-title").replaceChildren("Befunde ", el("span", { class: "context", text: "Schematron review" }));
   const list = el("ul", { class: "findings" });
+  list.append(el("li", { class: "findings-sample", text: `${SAMPLE}: Die Regel steht stellvertretend für das Projektschema.` }));
   for (const f of state.findings) {
     list.append(el("li", {}, [
       el("span", { text: f.message }),

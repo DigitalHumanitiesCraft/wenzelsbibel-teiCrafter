@@ -37,21 +37,21 @@ This plan orders the work from the knowledge base to a published prototype that 
 | 1 Knowledge base | `knowledge/` documents, `data/` added to `.gitignore`, fork `CLAUDE.md` and `README.md` | Documents follow the Promptotyping convention; every link resolves | Operator review |
 | 2 Static wireframe | `wireframe/` at the repository root with real fol. 1r data | The agreed layout (menu bar, document bar, flowing text with facsimile, bottom inspector, notice bar) shows fol. 1r with its ONB image | None |
 | 3 Base refactor and merge | Refactor steps a to e in teiCrafter, merged into the fork | Base acceptance holds (teiCrafter `knowledge/plan.md`); the inherited checks workflow passes on the fork | None |
-| 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); `editorial/wenzelsbibel.sch` with the phases `editing` and `review`; one pass and one fail fixture per rule; `check_fixtures.py`; a dated findings snapshot of the public data; published copy under `docs/` with an equality check, referenced by the workspace default schema set | Fixture check green; the editing phase accepts the published codex and image annotations unchanged; the published copy equals the source | None |
-| 5 Interface rebuild | The flow view as a CodeMirror module hosted by the legacy app with a vendored bundle; new `editor.html` shell with menu bar, document bar, bottom inspector, register autocomplete, notice bar and findings list, inline register links (`rs[@type][@ref]` written, `ref[@target]` read); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; Biome clean; the flow view keeps untouched bytes identical on the full codex | Operator decision on typing in the flow (specification F18) before the word commands |
+| 4 Editorial layer | Divergence list in [editorial-guidelines](editorial-guidelines.md); the [editorial layer](../editorial/README.md) with Schematron, fixtures, fixture check and a dated findings snapshot of the public data; the [published copy](architecture.md#build-and-deployment) under `docs/`, referenced by the workspace default schema set | Fixture check green; the editing phase accepts the published codex and image annotations unchanged; the published copy equals the source | None |
+| 5 Interface rebuild | The flow view as a CodeMirror module hosted by the legacy app with a vendored bundle; new `editor.html` shell with menu bar, document bar, bottom inspector, register autocomplete, notice bar and findings list, inline register links ([specification](specification.md#key-decisions)); `wb-demo-*.spec.js` tests | One demo test per workflow green in Chromium and Firefox; Biome clean; the flow view keeps untouched bytes identical on the full codex | Operator decision on typing in the flow (specification F18) before the word commands |
 | 6 Verification with real files | Real-file run and demo protocol under `snapshots/` | All five workflows on the real codex, image annotations and registers; output passes the gate; untouched bytes identical | Edition files are on the operator's other machine |
 | 7 Publication | Pages from `main:/docs` | The published start page and editor load and open a user-supplied file | Operator action: enabling Pages |
-| 8 Edition repository preparation | One-time preparation after the meeting and before the team starts: split the codex into book files with a shared apparatus and register, format every file once with "XML formatieren", seed the register from the existing link values, set up the GitLab pipeline (TEI All and the `review` phase, findings report) | The split files together carry the content of the codex unchanged apart from formatting; the editing phase accepts every file; the pipeline reports on a test push | Edition team confirms the [working model](specification.md#working-model) and the file topology; access to the university's GitLab |
+| 8 Edition repository preparation | One-time preparation after the meeting and before the team starts: split the codex into book files with a shared apparatus and register, format every file once with "XML formatieren", seed the register from the existing link values, set up the GitLab pipeline (TEI All and the `review` phase, findings report) | The split files together carry the content of the codex unchanged apart from formatting; the editing phase accepts every file; the pipeline reports on a test push | Edition team confirms the [working model](integration.md#working-model) and the file topology; access to the university's GitLab |
 
 ### Phase 2 notes
 
-The wireframe sits at `wireframe/` outside `docs/`, so Pages does not publish it. Only its HTML, CSS and JavaScript are versioned. It reads the fol. 1r extraction from the ignored `data/wireframe/` folder, loads OpenSeadragon from `docs/vendor/` and the image from the ONB IIIF service at runtime, and is served by a local static server at the repository root. Its menu still lists the retired Ansicht entries Zeilenweise and Fließtext, which [design](design.md#menu-bar) no longer carries.
+The wireframe sits at `wireframe/` outside `docs/`, so Pages does not publish it. Only its HTML, CSS and JavaScript are versioned. It reads the fol. 1r extraction from the ignored `data/wireframe/` folder, loads OpenSeadragon from `docs/vendor/` and the image from the ONB IIIF service at runtime, and is served by a local static server at the repository root.
 
-Note of 2026-10-10: the wireframe shows the layout and the flow of the interface, not its complete behaviour. The usability review of 2026-10-10 found three deviations from the specification: the inspector shows no line state ([US1.2](specification.md#us12-select-a-line-and-edit-its-words), [design](design.md#inspector)), input is neither applied nor cancelled explicitly (Anwenden and Abbrechen, [design](design.md#inspector)), and the menu still offers the retired switch between Zeilenweise and Fließtext ([design](design.md#menu-bar)). A follow-up revision of the wireframe fixes them; phase 2 counts as completed for the layout.
+Note of 2026-10-10: the wireframe shows the layout and the flow of the interface, not its complete behaviour. The usability review of 2026-10-10 found three deviations from the specification: the inspector shows no line state ([US1.2](specification.md#us12-select-a-line-and-edit-its-words), [design](design.md#inspector)), input is neither applied nor cancelled explicitly (Anwenden and Abbrechen, [design](design.md#inspector)), and the menu still offers the retired switch between Zeilenweise and Fließtext ([design](design.md#menu-bar)). The revision of the same day fixed all three and the further findings that belong to the wireframe; the remaining findings and the parts that belong to the real build are listed in [the review snapshot](../snapshots/wireframe-review-2026-10-10.md).
 
 ### Phase 4 notes
 
-The rule table, the phase model and the bindings for teiCrafter and Oxygen are documented in `editorial/README.md`, the findings on the public data in `editorial/data-findings.md`. The remaining item is the published copy under `docs/` with its equality check, after which the default schema set in `docs/js/projects/wenzelsbibel/index.js` points to it instead of the base draft.
+The rules, phases and bindings live in the [editorial layer](../editorial/README.md), the findings on the public data in `editorial/data-findings.md`. The remaining item is the [published copy](architecture.md#build-and-deployment), after which the default schema set in `docs/js/projects/wenzelsbibel/index.js` points to it instead of the base draft.
 
 ### Phase 5 notes
 
@@ -84,12 +84,12 @@ Legend: completed, in progress, pending.
 
 | Decision | Needed before | Recommendation |
 | --- | --- | --- |
-| Written form of register links (`rs[@type][@ref]` proposed) and pointer syntax | Edition team meeting; the prototype writes the proposed form meanwhile | Proposed form |
+| Written form and pointer syntax of register links ([specification](specification.md#key-decisions)) | Edition team meeting; the prototype writes the proposed form meanwhile | Proposed form |
 | List element for peoples in the register file | Phase 8 (seeding the register) | Open |
 | Whether typing in the flow writes to the source | Phase 5, work package 4 (word commands) | Yes, limited to words without inner markup ([specification](specification.md#open-questions)) |
 | Visible confirmation of a clean check | Phase 5, notice bar | A brief confirmation that dismisses itself |
 | `xml:space` handling in "XML formatieren" | Phase 5, before phase 8 formats the files | Leave elements under `xml:space="preserve"` untouched |
-| Working model and file topology | Phase 8 | The operator's proposal in [specification](specification.md#working-model) |
+| Working model and file topology | Phase 8 | The operator's proposal in [integration](integration.md#working-model) |
 | Whether inspector and autocomplete become base components | Phase 5 (does not block it) | Generic components in the base |
 | Composition of the new shell through `editor-app.js` or a fork-specific module | Phase 5 | Fork-specific module reusing the generic controllers |
 
@@ -97,14 +97,7 @@ Phase 5 depends on the completed phase 3, because the new shell binds to the pro
 
 ## Out of scope for the prototype
 
-- Project ODD. TEI All plus `wenzelsbibel.sch` carries the rules.
-- Project package (ZIP) as a delivery format.
-- Bible-verse form and Bible-verse menu entries.
-- A findings surface beyond the notice bar and its bottom-area list.
-- A keyboard shortcut scheme beyond browser and editor defaults, Esc for the inspector and Ctrl+E for allowed elements.
-- PAGE import, witness management, entry workspace.
-- Language model features.
-- Git operations inside the tool. The working model leaves them to a Git desktop client.
+What the prototype leaves out is decided in [specification](specification.md#purpose-and-scope).
 
 ## Deviations
 

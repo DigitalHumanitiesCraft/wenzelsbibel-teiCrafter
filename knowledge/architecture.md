@@ -38,7 +38,7 @@ The fork changes three zones.
 
 | Zone | Content | Merge behaviour |
 | --- | --- | --- |
-| Shell: `docs/index.html`, `docs/editor.html` | The fork's start page and the editor page with the new interface. `editor.html` links the project stylesheet `js/projects/wenzelsbibel/wenzels-workspace.css` as merged from the base | Conflicts with base edits to these two files are resolved in favour of the fork, then base changes that matter (new script or stylesheet links) are carried over by hand |
+| Shell: `docs/index.html`, `docs/editor.html` (planned) | The fork's start page and the editor page with the new interface. Both files are still identical to the base; `editor.html` links the project stylesheet `js/projects/wenzelsbibel/wenzels-workspace.css` as merged from the base | Once the fork changes them, conflicts with base edits to these two files are resolved in favour of the fork, then base changes that matter (new script or stylesheet links) are carried over by hand |
 | Project folder: `docs/js/projects/wenzelsbibel/` | The Wenzelsbibel specialisation after the base refactor | The base owns the folder's existence; the fork changes its content, so conflicts are local to this folder |
 | Editorial layer: `editorial/` | Tool-neutral rules: `wenzelsbibel.sch`, `fixtures/` with `index.json`, `check_fixtures.py`, the dated snapshot `data-findings.md`, and `README.md` with the rule table and the Oxygen and teiCrafter bindings | Fork-only, no conflicts |
 
@@ -93,7 +93,7 @@ Project folder, `docs/js/projects/wenzelsbibel/`:
 | `wenzels-register-model.js` | Persons, places and peoples in the separate register file |
 | `wenzels-project-checks.js` | Cross-file checks that Schematron cannot perform (register targets, image-to-codex pointers) |
 | `wenzels-form.js`, `wenzels-workspace.js`, `wenzels-workspace.css` | Staged form ownership, the base workspace panel, project-specific style rules |
-| Schematron | Source of truth is `editorial/wenzelsbibel.sch`. The default schema set in `index.js` still points to the base draft under `docs/schemas/`, and switching it to a published copy of the editorial file under `docs/` is the open item of phase 4 |
+| Schematron | Source of truth is `editorial/wenzelsbibel.sch`. The default schema set in `index.js` still points to the base draft under `docs/schemas/` until the [published copy](#build-and-deployment) exists |
 
 New shell components of the fork:
 
@@ -158,9 +158,9 @@ The base's automated Axe floor and keyboard paths apply to inherited views. The 
 | --- | --- |
 | `knowledge/` | The fork's knowledge base |
 | `editorial/` | Tool-neutral project layer: `wenzelsbibel.sch`, `fixtures/`, `check_fixtures.py`, `data-findings.md`, `README.md` |
-| `docs/` | Published application; `index.html` start page, `editor.html` new interface, `js/editor/` generic editor, `js/projects/wenzelsbibel/` specialisation |
+| `docs/` | Published application; `index.html` and `editor.html` as inherited from the base until the fork's shell replaces them, `js/editor/` generic editor, `js/projects/wenzelsbibel/` specialisation |
 | `test/` | Inherited proofs and browser tests plus the fork's demo workflow tests |
-| `snapshots/` | Demo protocol and test runs with real files (planned) |
+| `snapshots/` | Dated reports such as the demo protocol and test runs with real files |
 | `wireframe/` | Static wireframe with fol. 1r, not published |
 | `data/` | Local edition files and extractions, ignored by git |
 | `prototypes/d-flow/` | Fork-only spike of the flow view (CodeMirror decorations over raw TEI on fol. 1r) with its Node and browser checks |
@@ -174,6 +174,6 @@ The fork removed the base's `reports/` folder and the prototypes `a-code`, `b-fo
 
 The fork publishes `docs/` directly on GitHub Pages from `main:/docs`, without a build step. The flow view keeps this by loading CodeMirror as a prebuilt bundle vendored under `docs/vendor/` (planned). The base additionally runs `vite build` from `docs/` into `dist/` (inputs `index.html`, `editor.html`, `about.html`; versioned files under `docs/data`, `docs/schemas` and `docs/vendor` are copied). The inherited Playwright configuration builds and serves that artifact for tests, so the tested form and the published form differ by bundling (see [testing](testing.md)). Repository creation, push and the Pages setting are operator actions.
 
-Runtime dependencies are the browser, the ONB IIIF service for images, the vendored TEI All RelaxNG (`docs/schemas/tei-p5-4.11.0/`), the vendored libxml2-wasm runtime and OpenSeadragon. The base Schematron runtime supports XPath 1.0 query binding, namespaces, phases, scalar `let`, `assert`, `report`, diagnostics and common child or attribute rule contexts. Includes, abstract patterns, advanced match patterns, node-set `let` and XPath 2.0 or later require precompiled XSLT and are otherwise reported as unavailable, which blocks output. The runtime executes the schema's `defaultPhase`; the base review action switches phases by rewriting that attribute. A Schematron cannot read a second file, so cross-file checks remain in project checks.
+Runtime dependencies are the browser, the ONB IIIF service for images, the vendored TEI All RelaxNG (`docs/schemas/tei-p5-4.11.0/`), the vendored libxml2-wasm runtime and OpenSeadragon. The base Schematron runtime supports XPath 1.0 query binding, namespaces, phases, scalar `let`, `assert`, `report`, diagnostics and common child or attribute rule contexts. Includes, abstract patterns, advanced match patterns, node-set `let` and XPath 2.0 or later require precompiled XSLT and are otherwise reported as unavailable, which blocks output. How the project Schematron selects its phase in this runtime is described in the [editorial layer](../editorial/README.md#binding-in-teicrafter). A Schematron cannot read a second file, so cross-file checks remain in project checks.
 
-Pages serves only `docs/`, so `editorial/wenzelsbibel.sch` is not reachable by the published editor. The planned resolution is a byte-identical copy under `docs/js/projects/wenzelsbibel/`, guarded by a check that fails when the two differ, because a build step would contradict the no-build publication. The copy is the remaining item of phase 4 ([plan](plan.md)). The project Schematron keeps to this runtime's subset; its expensive anchor rules and their upgrade path are described in [data](data.md#schema-set).
+Pages serves only `docs/`, so `editorial/wenzelsbibel.sch` is not reachable by the published editor. The planned resolution is a byte-identical copy under `docs/js/projects/wenzelsbibel/`, guarded by a check that fails when the two differ, because a build step would contradict the no-build publication. The copy is the remaining item of phase 4 ([plan](plan.md)). The project Schematron keeps to this runtime's subset; its expensive anchor rules and their upgrade path are described in the [editorial layer](../editorial/README.md#runtime-limits).

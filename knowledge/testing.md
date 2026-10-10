@@ -31,7 +31,7 @@ This document states what the Wenzelsbibel editor guarantees, what it does not, 
 | Schema and contract checks | Inherited proofs for manifest, schema set, schema files, worker and cache | A manifest or schema set that loads wrongly, stale validation reused as authorisation |
 | Browser checks | Inherited `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites (import, project, references, register protection, schema, workspace) | Interaction, recovery, working copy, package and output gate failures in Chromium and Firefox |
 | Demo workflow tests (fork) | `test/e2e/wb-demo-*.spec.js`, one per workflow | A meeting workflow that no longer runs end to end in the new interface |
-| Schematron fixtures (fork) | `editorial/fixtures/` with `editorial/check_fixtures.py` (Python, lxml), one pass and one fail document per rule; a required run | A rule that fires on valid encoding or misses the error it names, a rule without both fixtures, a fixture whose phase or severity disagrees with the schema |
+| Schematron fixtures (fork) | `editorial/fixtures/` with `editorial/check_fixtures.py` (Python, lxml), under the fixture rules of the [editorial layer](../editorial/README.md); a required run | A rule that fires on valid encoding or misses the error it names, a rule without both fixtures, a fixture whose phase or severity disagrees with the schema |
 | Review run (fork) | `editorial/check_fixtures.py --data` over local edition files; a report, never a gate, recorded as a dated snapshot in `editorial/data-findings.md` | Data that violate the handbook rules or the editorial guidelines, as input for editorial decisions |
 | Flow spike checks (fork) | `prototypes/d-flow/check.mjs` (Node) and `prototypes/d-flow/browser-check.mjs` (Chromium against the prototype dev server) on the fol. 1r excerpt | Lost bytes in a round trip or edit of the flow view, typing that touches a tag, wrong `@orig` sync, broken selection snapping, a wrap that inserts more than two tags or cuts an element |
 | Real-file run (fork) | `snapshots/`, recorded on the operator's machine | Behaviour on the full codex, the real image annotations and registers |
@@ -48,7 +48,7 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 | The flow view keeps untouched bytes identical and edits word text and `@orig` without touching tags | `prototypes/d-flow/check.mjs` | Passed on 2026-10-10 on the fol. 1r excerpt with LF and CRLF line endings; the full codex is open until phase 5 |
 | Each meeting workflow runs end to end in the new interface | `wb-demo-*.spec.js` | Open until phase 5 |
 | Each project Schematron rule accepts its positive and rejects its negative fixture | `python editorial/check_fixtures.py` | Passed on 2026-10-10 in lxml; not yet run in the browser runtime |
-| The `editing` phase accepts the published codex and image annotations unchanged | `check_fixtures.py --phase editing --data` over the public files | No finding on 2026-10-10 ([data](data.md#schema-set)) |
+| The `editing` phase accepts the published codex and image annotations unchanged | `check_fixtures.py --phase editing --data` over the public files | No finding on 2026-10-10 (`editorial/data-findings.md`) |
 | The real codex, image annotations and registers open, edit and save through the gate | Run recorded under `snapshots/` | Open until phase 6 |
 
 ## Acceptance
@@ -72,11 +72,11 @@ The fork-only test files carry the prefix `wb-demo-` so that they never collide 
 
 ## Known exceptions and limits
 
-The new interface replaces the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5. Engine proofs remain fully inherited.
+The new interface will replace the shell of `docs/editor.html`. Every inherited browser suite in `test/e2e/`, including the `wenzelsbibel-*.spec.js` suites, opens `/editor.html` and drives the base shell, so these suites run only in the base, where the refactor is accepted against them. The fork runs its own suites through `playwright.fork.config.js` (`npm run test:e2e:fork`), which reuses the base configuration with the allow-list `testMatch: /wb-demo-.*\.spec\.js/`. `playwright.config.js` and the inherited test files thus stay identical to the base and merge without conflicts. No `wb-demo-` suite exists yet, so the fork run finds no tests until phase 5. Engine proofs remain fully inherited.
 
-The fixture check runs the Schematron through lxml with the ISO skeleton for XSLT 1.0, while the editor runs raw Schematron on browser XPath. The XSLT path applies the first matching rule per pattern and the raw runtime evaluates every rule independently. The schema keeps the rules of one pattern on disjoint contexts so that both report the same findings, and a browser run of the fixtures against the teiCrafter runtime is still to be added.
+The fixture check runs the Schematron through lxml with the ISO skeleton for XSLT 1.0, while the editor runs raw Schematron on browser XPath; why both report the same findings is explained under [runtime limits](../editorial/README.md#runtime-limits), and a browser run of the fixtures against the teiCrafter runtime is still to be added.
 
-The review run is slow on the full codex, mostly in the anchor rules ([data](data.md#schema-set)), so it runs on request and in the planned GitLab pipeline of the [working model](specification.md#working-model), and never on each edit.
+The review run is slow on the full codex, mostly in the anchor rules ([runtime limits](../editorial/README.md#runtime-limits)), so it runs on request and in the planned GitLab pipeline of the [working model](integration.md#working-model), and never on each edit.
 
 Two workflows run on GitHub.
 

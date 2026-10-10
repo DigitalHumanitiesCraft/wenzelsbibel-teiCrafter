@@ -26,9 +26,8 @@
         <span class="unsaved" id="status-unsaved" title="Ungesicherte Änderungen" hidden><span aria-hidden="true">●</span><span class="visually-hidden">ungesichert</span></span>
       </span>
       <div class="pager" id="pager">
-        <button type="button" id="prev-folio" aria-label="Vorheriges Folio">◀</button>
+        <!-- The wireframe holds one folio, so the folio pager of F12 is left out. -->
         <span class="folio" id="folio-label">fol. 1r</span>
-        <button type="button" id="next-folio" aria-label="Nächstes Folio">▶</button>
         <div class="segmented" role="group" aria-label="Spalte" id="column-switch">
           <button type="button" class="seg-btn is-active" data-column="0">a</button>
           <button type="button" class="seg-btn" data-column="1">b</button>
@@ -71,8 +70,9 @@
     <div class="inspector-head">
       <h2 id="inspector-title">Wort</h2>
       <button type="button" class="link-btn" id="inspector-xml">XML-Stelle</button>
-      <button type="button" class="icon-btn" id="inspector-close" aria-label="Schließen">✕</button>
+      <button type="button" class="icon-btn" id="inspector-close" aria-label="Inspector schließen"><span aria-hidden="true">✕</span><span class="sheet-only" aria-hidden="true">Zum Text</span></button>
     </div>
+    <p class="inspector-note" id="inspector-note" role="status" hidden></p>
     <div class="inspector-body" id="inspector-body"></div>
   </section>
 

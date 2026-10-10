@@ -21,7 +21,7 @@ related: [project, architecture, editorial-guidelines, data, specification, test
 
 # Integration: base teiCrafter, edition team, Oxygen
 
-This repository exchanges code with the base teiCrafter, files and decisions with the Wenzelsbibel edition team at the Paris Lodron University Salzburg (PLUS), and a tool-neutral rule layer with Oxygen XML Editor. The first two exchanges are active. The Oxygen binding of the project Schematron is documented, and an Oxygen framework is planned and not implemented.
+This repository exchanges code with the base teiCrafter, files and decisions with the Wenzelsbibel edition team at the Paris Lodron University Salzburg (PLUS), and a tool-neutral rule layer with Oxygen XML Editor. The first two exchanges are active, and the [working model](#working-model) proposes how the edition team's own repository and the tool meet. The Oxygen binding of the project Schematron is documented, and an Oxygen framework is planned and not implemented.
 
 ## Data flow
 
@@ -51,18 +51,37 @@ editorial/ (TEI All now, project ODD later, wenzelsbibel.sch)
 | --- | --- |
 | Consumed | Generic editor under `docs/js/editor/`, the workspace registry, the manifest contract (`teicrafter.project.json` with `workspace`, `imageResolver`, `markup`, `indices`, `views` and the schema set), the vendored TEI All RelaxNG, the Schematron runtime, the design tokens in `docs/css/style.css` |
 | Not changed in the fork | Generic editor modules, the manifest validator, the token sheet, `src/`, the build and test configuration files. A needed change goes to the base first and arrives by merge |
-| Contributed back | The bottom inspector rendering forms from a field table, the autocomplete over register lists, phase selection for a Schematron entry in the schema set, and bug fixes found here, as pull requests to the base |
+| Contributed back | The bottom inspector rendering forms from a field table, the autocomplete over register lists, phase selection for a Schematron entry in the schema set, the contrast of two base tokens, and bug fixes found here, as pull requests to the base |
 
 Whether the base accepts inspector and autocomplete as generic components is the base's decision. Until then they live in the fork as new files ([architecture](architecture.md#components)).
+
+Two base tokens in `docs/css/style.css` fall below the text contrast minimum of [design](design.md#accessibility-minima) against white: `--color-review` (about 2.9:1, computed from the token value), which the base uses for the unsaved marker, and `--color-orgName` (about 4.3:1), which the wireframe uses for XML attribute names. The point for the base is to darken both or to add text variants. Until the base changes them, the fork uses `--color-problem` or `--color-link` for the unsaved dot and `--color-text-secondary` for XML attribute names.
 
 ### Edition team at PLUS
 
 | Direction | Content |
 | --- | --- |
 | Inputs | Edition files (`codex-2759.xml`, `Bildannotationen.xml`, the register file), Transkribus exports, the published transcription handbook (version February 2025), ratification decisions on encoding |
-| Outputs | Edited XML files, one per file, each passing the output gate. Under the [working model](specification.md#working-model) the team commits them to its own repository, and a pipeline there reports the review findings |
+| Outputs | Edited XML files, one per file, each passing the output gate. Under the [working model](#working-model) the team commits them to its own repository, and a pipeline there reports the review findings |
 
 The formats are described in [data](data.md); the encoding rules and the list of divergences between handbook and implementation in [editorial-guidelines](editorial-guidelines.md).
+
+### Working model
+
+This is the operator's proposal for how the edition team works with the tool. It is to be confirmed by the edition team and is not yet built. The requirements it places on the tool are listed in [specification](specification.md#working-model).
+
+- The edition data live in a Git repository on the GitLab instance of the university. This repository holds the tool, and the data stay in the edition repository.
+- The tool runs from its published address without installation and opens the local clone of the edition repository through the folder access of a Chromium browser. Firefox lacks that folder access and falls back to file input and download, so the working model assumes Chromium.
+- The codex is split into book files with a shared apparatus and a shared register. This is the open file-topology point of [editorial guidelines](editorial-guidelines.md#open-ratification-points), now with a reason, because one file for the whole codex makes Git conflicts likely whenever two people work in it, and every validation runs over the whole codex. A shared apparatus file moves anchor resolution across files, which a Schematron cannot see, so that check would probably move to the tool's project checks and the pipeline.
+- The files are formatted once with one element per line ("XML formatieren"), so that later diffs stay small and line-based merges work.
+- Each person has a responsibility range, such as a set of books, and simultaneous editing of the same file is not supported.
+- Before work each person pulls, after work commits and pushes, with a Git desktop client. The tool itself performs no Git operation.
+- A GitLab pipeline validates every push against TEI All and the `review` phase of the project Schematron and publishes a findings report.
+- On a save with edits the tool adds a `change` entry to `revisionDesc`.
+- The browser working copy and local recovery are machine-local and do not travel with the repository.
+- The images stay at the ONB and are loaded through IIIF.
+
+The one-time preparation (splitting the codex, formatting, seeding the register, setting up the pipeline) is ordered in [plan](plan.md#phases).
 
 ### Oxygen co-use (binding documented, framework planned)
 
@@ -71,10 +90,10 @@ Shared use is possible when the rule-bearing layer consists of files both tools 
 | Layer file | teiCrafter binding | Oxygen binding |
 | --- | --- | --- |
 | RelaxNG (TEI All now, project ODD later) | Manifest schema set | Framework validation scenario or `xml-model` processing instruction |
-| `editorial/wenzelsbibel.sch` with phases `editing` and `review`, XPath 1.0 | The same file, through a published copy in the workspace default schema set or a project manifest; `editing` gates saving, `review` runs on request | The same file, through an `xml-model` processing instruction with an optional `phase` pseudo-attribute, or a validation scenario that fixes the phase |
+| `editorial/wenzelsbibel.sch`, XPath 1.0 | The same file, through its [published copy](architecture.md#build-and-deployment) in the workspace default schema set or a project manifest | The same file, through an `xml-model` processing instruction with an optional `phase` pseudo-attribute, or a validation scenario that fixes the phase |
 | `xml-model` processing instructions (documented in `editorial/README.md`) | Inspected as schema evidence | Associates schemas on open; they change the edition files and belong in the team's working copies |
 
-The exact processing instructions and the open point whether the Oxygen version in use honours the `phase` pseudo-attribute are recorded in `editorial/README.md`. Without touching the edition files, Oxygen would bind the layer through a framework: an `.exf` extension script, Author mode CSS and actions defined without Java, distributed as an add-on URL. XPath 1.0 keeps the Schematron runnable in the browser without SaxonJS. The interface, the inspector forms, autocomplete and the cross-file checks (register targets, image-to-codex pointers) are implemented separately in each tool; this duplication is unavoidable.
+The rules and the two phases, `editing` as the save gate and `review` as a report, are owned by the [editorial layer](../editorial/README.md#phases), which also records the exact processing instructions and the open point whether the Oxygen version in use honours the `phase` pseudo-attribute. Without touching the edition files, Oxygen would bind the layer through a framework: an `.exf` extension script, Author mode CSS and actions defined without Java, distributed as an add-on URL. XPath 1.0 keeps the Schematron runnable in the browser without SaxonJS. The interface, the inspector forms, autocomplete and the cross-file checks (register targets, image-to-codex pointers) are implemented separately in each tool; this duplication is unavoidable.
 
 ## Responsibilities
 
@@ -86,15 +105,15 @@ The exact processing instructions and the open point whether the Oxygen version 
 
 ## Acceptance criteria
 
-- An output file passes TEI All and the `editing` phase of the project Schematron for its exact bytes. The `review` phase is reported and gates nothing.
+- An output file passes TEI All and the `editing` phase of the project Schematron for its exact bytes.
 - Every byte outside a deliberate edit is identical to the input.
 - A fork merge from upstream leaves the inherited engine proofs green ([testing](testing.md)).
 - Technical checks do not ratify. An encoding rule counts as agreed only after the edition team's decision is recorded in [editorial-guidelines](editorial-guidelines.md).
 
 ## Open points and input gaps
 
-- Register encoding: decided by the operator as inline links on the words, written as `rs[@type][@ref]` and read in the handbook form `ref[@type][@target]` ([specification](specification.md#key-decisions)). The written form and the pointer syntax await the edition team's ratification.
-- Working model: the edition repository on the university's GitLab, the split of the codex into book files and the pipeline are the operator's proposal and need the edition team's confirmation ([specification](specification.md#working-model)).
+- Register encoding: the written form and the pointer syntax of the decision in [specification](specification.md#key-decisions) await the edition team's ratification.
+- Working model: the [proposal](#working-model) needs the edition team's confirmation.
 - Which list element in the register file carries peoples. The handbook says only "Register".
 - Licence of the edition data for project storage. The public TEI header declares CC BY 4.0; the operator's vault records the question as unresolved, so the data are treated as local material.
 - The original project Schematron `Bilderfassung.sch` referenced in `Bildannotationen.xml` is not available.
@@ -107,7 +126,6 @@ The exact processing instructions and the open point whether the Oxygen version 
 | Technical access to the ONB IIIF service permits storing images | Access implies no permission to store, redistribute or publish images or edition data |
 | A valid file is a correct edition | Validity covers the formal rules only; readings and identifications need the edition team |
 | `docs/schemas/wenzelsbibel-editorial.sch` is the project's Schematron | It is a teiCrafter-authored draft for image annotations, still referenced by the workspace default schema set; the fork's rule layer is `editorial/wenzelsbibel.sch` |
-| Review findings block saving | Only the `editing` phase gates saving; the `review` phase is a report on request and in the planned pipeline |
 | The project used ediarum | The handbook describes a Transkribus-only workflow; there is no evidence of ediarum use |
 
 ## Authoritative documents

@@ -37,8 +37,10 @@ The meeting prototype covers the five workflows in [Epics and user stories](#epi
 - PAGE XML import
 - witness management
 - entry workspace
+- language model features
+- Git operations inside the tool
 
-Edition data (`codex-2759.xml`, `Bildannotationen.xml`, the register file, Transkribus exports) stay outside this repository. The edition team's own repository and the way the tool works on it are described in [Working model](#working-model). Technical access to the ONB IIIF image service implies no permission to store, redistribute or publish images or edition data. Data handling is defined in [Data](data.md), the external services in [Architecture](architecture.md), and the exchange with the base, the edition team and Oxygen in [Integration](integration.md).
+Edition data (`codex-2759.xml`, `Bildannotationen.xml`, the register file, Transkribus exports) stay outside this repository. Technical access to the ONB IIIF image service implies no permission to store, redistribute or publish images or edition data. Data handling is defined in [Data](data.md), the external services in [Architecture](architecture.md), and the exchange with the base, the edition team and Oxygen, including the proposed [working model](integration.md#working-model), in [Integration](integration.md).
 
 ## Inherited invariants
 
@@ -174,7 +176,7 @@ As the project lead, I want to run well-formedness, TEI All and the project Sche
 4. "Befunde anzeigen" opens the findings list in the bottom area, and choosing a finding selects its location in the text or XML view.
 5. An edit after a run makes its result outdated, and the findings list says so.
 
-The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron with the phases `editing` and `review` ([Data](data.md#schema-set)).
+The story reads the schema set of the manifest, TEI All RelaxNG from the vendored TEI P5 release and the project Schematron with the phases `editing` and `review` ([editorial layer](../editorial/README.md#phases)).
 
 #### US5.2 Save as file
 
@@ -280,7 +282,7 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 - N1 The tool runs in current Chromium and Firefox without a backend. ICONCLASS and the ONB image service are the only network services it calls.
 - N2 Interface labels are German, while code, identifiers and documentation are English.
 - N3 Accessibility minima are acceptance criteria and are defined in [Design](design.md#accessibility-minima).
-- N4 The tool uploads nothing. Edition data and images stay on the user's machine and in the browser, and edition data enter version control only through the edition team's own repository ([Working model](#working-model)), never through this one.
+- N4 The tool uploads nothing. Edition data and images stay on the user's machine and in the browser, and edition data enter version control only through the edition team's own repository ([working model](integration.md#working-model)), never through this one.
 - N5 Opening and editing the full codex stays responsive, and schema validation never blocks typing.
 
 ## Key decisions
@@ -296,7 +298,7 @@ Labels in quotation marks are the German interface strings. Visual form and layo
 | Inspector position | 2026-10-10 | A bottom inspector instead of a third column. | Text and facsimile need the width, and the inspector serves both views as one component. |
 | Check feedback | 2026-10-10 | No permanent status line. The unsaved marker is a dot next to the file name, and a notice bar above the inspector appears only when well-formedness is broken or an explicit check returned findings, with "Befunde anzeigen" opening the findings list. No check line per field. | A permanent status line and per-field lines add standing noise, while a notice that appears only when something needs action keeps the attention on the text. |
 | Text view | 2026-10-10 | One continuous editable flow per column with a real caret, built in the product as a CodeMirror 6 view with replace decorations over the raw XML. Line numbers replace the switch between line-by-line and running text. | The spike in `prototypes/d-flow` showed on fol. 1r that such a view keeps untouched bytes identical and edits word text without touching tags, and one rendering keeps line reference and reading flow together. |
-| Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. | The team must be able to save the existing data, while the review findings on the data ([Data](data.md#schema-set)) need editorial decisions first. |
+| Project Schematron phases | 2026-10-10 | The `editing` phase accepts the published codex and image annotations unchanged and is the save gate. The `review` phase is a report on request and never gates saving. Rules and phase assignment are listed in the [editorial layer](../editorial/README.md#phases). | The team must be able to save the existing data, while the review findings on the data (`editorial/data-findings.md`) need editorial decisions first. |
 
 ## Open questions
 
@@ -316,24 +318,15 @@ Questions for the edition team:
 3. Which roles use the tool and with which permissions (project lead, student assistants, others).
 4. Whether the comment sigle stays as trailing text such as `(MK)` or moves to `@resp`.
 5. Whether linking needs unlinking and relinking in the prototype, since the agreed scope names linking and entry creation only.
-6. Whether the team adopts the [Working model](#working-model), including the split of the codex into book files.
+6. Whether the team adopts the [working model](integration.md#working-model), including the split of the codex into book files.
 
 ## Working model
 
-This section records the operator's proposal for how the edition team works with the tool. It is to be confirmed with the edition team and is not yet built.
+The operator's proposal for how the edition team works with the tool, with the edition data in a repository of the team and the tool opening its local clone, is the exchange contract in [Integration](integration.md#working-model). It is to be confirmed by the edition team, and the following requirements apply once it is confirmed.
 
-- The edition data live in a Git repository on the GitLab instance of the university. This repository holds the tool, and the data stay in the edition repository.
-- The tool runs from its published address without installation and opens the local clone of the edition repository through the folder access of a Chromium browser. Firefox lacks that folder access and falls back to file input and download, so the working model assumes Chromium.
-- The codex is split into book files with a shared apparatus and a shared register. This is the open file-topology point of [Editorial guidelines](editorial-guidelines.md#open-ratification-points), now with a reason, because one file for the whole codex makes Git conflicts likely whenever two people work in it, and every validation runs over the whole codex. A shared apparatus file moves anchor resolution across files, which a Schematron cannot see, so that check would probably move to the tool's project checks and the pipeline ([Data](data.md#schema-set)).
-- The files are formatted once with one element per line (F56), so that later diffs stay small and line-based merges work.
-- Each person has a responsibility range, such as a set of books, and simultaneous editing of the same file is not supported.
-- Before work each person pulls, after work commits and pushes, with a Git desktop client. The tool itself performs no Git operation.
-- A GitLab pipeline validates every push against TEI All and the `review` phase of the project Schematron and publishes a findings report.
-- On a save with edits the tool adds a `change` entry to `revisionDesc` (planned, not yet a requirement).
-- The browser working copy and local recovery are machine-local and do not travel with the repository.
-- The images stay at the ONB and are loaded through IIIF.
-
-The one-time preparation (splitting the codex, formatting, seeding the register, setting up the pipeline) is ordered in [Plan](plan.md#phases).
+- W1 On a save with edits the tool adds a `change` entry to `revisionDesc` (planned, not yet built).
+- W2 "XML formatieren" (F56) formats each file once before the team starts, so that later diffs stay small and line-based merges work.
+- W3 The tool performs no Git operation, and the browser working copy and local recovery stay machine-local.
 
 ## Acceptance scenarios
 
@@ -349,4 +342,4 @@ Each scenario is one narrative for the meeting demo on fol. 1r, run with the loc
 
 ## Related
 
-[Project](project.md) states purpose, partners and responsibilities. [Editorial guidelines](editorial-guidelines.md) distil the handbook vocabularies that the markup actions and Schematron use. [Data](data.md) defines the files, their encodings and their local handling. [Design](design.md) defines the interface that carries these requirements, [Architecture](architecture.md) the fork's modules and the base refactor, [Testing](testing.md) the browser tests for the acceptance criteria, [Integration](integration.md) the exchange with ONB, ICONCLASS and Oxygen, and [Plan](plan.md) the order of work toward the meeting.
+[Project](project.md) states purpose, partners and responsibilities. [Editorial guidelines](editorial-guidelines.md) distil the handbook vocabularies that the markup actions and Schematron use. [Data](data.md) defines the files, their encodings and their local handling. [Design](design.md) defines the interface that carries these requirements, [Architecture](architecture.md) the fork's modules, the base refactor and the external services ONB IIIF and ICONCLASS, [Testing](testing.md) the browser tests for the acceptance criteria, [Integration](integration.md) the exchange with the base, the edition team and Oxygen, and [Plan](plan.md) the order of work toward the meeting.
