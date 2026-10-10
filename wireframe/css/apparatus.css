@@ -1,0 +1,8 @@
+/* Apparatus entries, owned by the apparatus feature. */
+@layer components {
+  .app-list { display: grid; gap: var(--space-sm); }
+  .app-entry { border-inline-start: 3px solid var(--color-blue); padding-inline-start: var(--space-sm); }
+  .app-entry .type { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-family: var(--font-mono); }
+  .app-entry p { margin: 0 0 var(--space-xs); }
+  .app-entry .lang { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-inline-end: var(--space-xs); }
+}

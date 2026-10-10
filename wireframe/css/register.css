@@ -1,0 +1,21 @@
+/* Register linking and autocomplete, owned by the register feature. */
+@layer components {
+  .register { position: relative; }
+  .register .combo { display: flex; gap: var(--space-sm); align-items: center; }
+  .register .combo select { max-inline-size: 7rem; }
+  .register .combo input {
+    flex: 1; min-inline-size: 0; font-size: 1rem; min-block-size: 32px; padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-panel);
+  }
+  /* Fixed to the viewport and placed by placeList(), so no scroll container clips it. */
+  .ac-list {
+    position: fixed; z-index: 30; margin: 0;
+    background: var(--color-panel); border: 1px solid var(--color-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-pop);
+    max-block-size: 14rem; overflow: auto;
+  }
+  .ac-item { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-xs) var(--space-md); cursor: pointer; }
+  .ac-item:hover, .ac-item.is-active { background: var(--color-secondary); }
+  .ac-item .type { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+  .ac-item.is-new { color: var(--color-link); border-block-start: 1px solid var(--color-border); }
+  .linked { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
+}

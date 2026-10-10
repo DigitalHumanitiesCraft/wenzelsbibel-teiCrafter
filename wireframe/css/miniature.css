@@ -1,0 +1,9 @@
+/* Miniature form and miniature list, owned by the miniature feature. */
+@layer components {
+  .minis { display: grid; gap: var(--space-sm); justify-items: start; }
+  .minis-title { font-size: var(--font-size-base); }
+  .tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+  .tag { border: 1px solid var(--color-border); border-radius: 999px; padding: 0 var(--space-sm); font-size: var(--font-size-sm); background: var(--color-surface-sunken); }
+  .iconclass { display: grid; grid-template-columns: auto 1fr; gap: var(--space-xs) var(--space-md); align-items: baseline; }
+  .iconclass code { font-family: var(--font-mono); font-size: var(--font-size-sm); }
+}

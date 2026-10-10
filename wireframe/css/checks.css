@@ -1,0 +1,6 @@
+/* Findings list, owned by the checks feature. */
+@layer components {
+  .findings { display: grid; gap: var(--space-xs); }
+  .findings .findings-sample { font-size: var(--font-size-sm); color: var(--color-text-secondary); font-style: italic; }
+  .findings li { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: baseline; }
+}
