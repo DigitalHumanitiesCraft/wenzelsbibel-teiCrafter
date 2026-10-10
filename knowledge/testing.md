@@ -100,6 +100,9 @@ node prototypes/d-flow/check.mjs                                     # required:
 npm run typecheck:src                                                # required: typecheck of src/ and the spike
 python editorial/check_fixtures.py --data <codex> <images>           # review run, report only
 node prototypes/d-flow/browser-check.mjs                             # flow spike, needs npm run dev:prototypes
+node wireframe/checks/<name>.mjs                                     # wireframe walkthroughs, need python -m http.server 8765 at the root
 ```
+
+The wireframe walkthroughs under `wireframe/checks/` drive the wireframe in headless Chromium at desktop and phone widths and assert the acceptance criteria of the user stories on the fol. 1r extraction, feature by feature (`core`, `apparatus`, `register`, `miniature`, `checks-markup`) and for the review fixes of 2026-10-10. They write screenshots to `test-results/wireframe/`. They are plain scripts rather than Playwright specs because the wireframe is a design instrument that the real build replaces; the `wb-demo-*` specs of phase 5 are their successors.
 
 `npm run test:e2e` uses the inherited `playwright.config.js`: it runs `npm run build`, serves `dist/` with `vite preview` at `http://127.0.0.1:4173` and opens `index.html`. The published form is `docs/` served directly; the base's [`reports/source-browser-check.config.mjs`](https://github.com/DigitalHumanitiesCraft/teiCrafter/blob/main/reports/source-browser-check.config.mjs) runs the same tests in Chromium against a server on port 4199 that serves `docs/` and must be started separately. The fork's real-file run uses the base variables `WB_CODEX`, `WB_IMAGES` and `WB_PAGE_ROOT` with `npm run evaluate:editorial -- --real`, plus the fork's demo tests against the same files; its record goes to `snapshots/`.

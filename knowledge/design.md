@@ -102,7 +102,7 @@ The inspector is a bottom bar that opens on a selection and is the same componen
 | Wort | Click on a word or the caret in a word | Diplomatisch, Normalisiert, markup actions (Hervorhebung, Ergänzung, Tilgung, Fremdsprache, Zahl), Register field, Apparat with existing comments and "+ Kommentar zur Auswahl" |
 | Wortfolge | Drag or Shift+Arrow, snapped to whole words | Markup actions, Register field, Apparat |
 | Zeile | Click on the line number or a line zone | The line's words as rows with Diplomatisch and Normalisiert |
-| Miniatur | Click on a miniature zone or choice in Bildannotationen | The image-annotation form (see [Miniature form](#miniature-form)) |
+| Miniatur | Click on a miniature zone or choice in Bildannotationen | The image-annotation form (see [Miniature form](#miniature-form)); the same state carries the title Randbild for items of the margins list |
 | Element | Cursor in the XML view | Element name and attributes, or the matching form for `w`, register links (`rs`, `ref`), `app` and image-annotation `item` |
 
 The findings list opens in the same bottom area through "Befunde anzeigen" in the notice bar or through Prüfen, Befundliste.

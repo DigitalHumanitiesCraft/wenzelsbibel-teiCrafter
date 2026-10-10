@@ -99,25 +99,15 @@ function refreshMarks() { for (const w of state.words) markWord(w.tok, w.node); 
 const typeName = (a) => (a.type ? TYPE_NAME[a.type] || a.type : "ohne Typ");
 
 // Why the selection cannot take anchors, or null. Anchors go before the first and
-// after the last selected word, outside the words.
+// after the last selected word, outside the w elements, so the inner markup of a
+// boundary word (ligature hi, lb, choice, as in NB with end_43591 after it) is never
+// split, and ranges of other comments may overlap, since anchors are empty milestones.
+// A whole-word selection therefore always takes anchors; AC4 of US2.1 has no case in
+// this model. Deliberate shortcut: an anchor inside a word, as the codex sets around
+// "got", cannot be placed here and goes through the XML view; the real tool decides
+// where an anchor may stand on the source XML.
 function refusal(words) {
   if (!words.length) return "Für einen Apparatkommentar zuerst ein Wort oder eine Wortfolge im Text auswählen.";
-  // Deliberate wireframe shortcut: the token model does not show where inner markup
-  // ends, so a boundary word with a ligature or an lb inside goes to the XML view.
-  // The product decides this on the source XML.
-  for (const [w, side] of [[words[0], "beginnt"], [words[words.length - 1], "endet"]]) {
-    const tok = w.tok;
-    if ((tok.rend || []).includes("ligature") || /\n/.test(tok.text || "")) {
-      return `Die Auswahl ${side} mit „${w.node.textContent}“, das Binnen-Markup trägt (Ligatur oder Zeilenumbruch im Wort). Den Anker an dieser Grenze in der XML-Ansicht setzen.`;
-    }
-  }
-  const a = wordOrder.get(words[0].tok);
-  const b = wordOrder.get(words[words.length - 1].tok);
-  for (const [app, r] of ranges) {
-    if ((r.first < a && a <= r.last && r.last < b) || (a < r.first && r.first <= b && b < r.last)) {
-      return `Die Auswahl überschneidet den Kommentar ${app.from ?? "?"} bis ${app.to} (${typeName(app)}) nur teilweise, die Anker würden sich verschränken. Die Auswahl ganz innerhalb oder ganz um diesen Bereich legen.`;
-    }
-  }
   return null;
 }
 
@@ -234,10 +224,16 @@ function commentForm(words) {
     fields[lang] = ta;
     f.append(el("label", { class: "field" }, [el("span", { text: `Anmerkung ${label}` }), ta]));
   }
-  const sigle = el("input", { type: "text", value: form.sigle, placeholder: "MK", autocomplete: "off", "aria-describedby": "app-sigle-hint" });
+  // No placeholder, which reads as a filled value; the example stands beside the field
+  // and the sigle of the last comment in this session is prefilled as a real value.
+  const sigle = el("input", { type: "text", value: form.sigle, autocomplete: "off", "aria-describedby": "app-sigle-hint" });
   sigle.addEventListener("input", () => { form.sigle = sigle.value; });
   fields.sigle = sigle;
-  f.append(el("label", { class: "field app-sigle" }, [el("span", { text: "Sigle" }), sigle, el("span", { class: "mixed", id: "app-sigle-hint", text: "Wird beiden Anmerkungen in Klammern angehängt." })]));
+  f.append(el("label", { class: "field app-sigle" }, [
+    el("span", { text: "Sigle" }),
+    el("span", { class: "sigle-row" }, [sigle, el("span", { class: "sigle-example", text: "z. B. MK" })]),
+    el("span", { class: "mixed", id: "app-sigle-hint", text: "Wird beiden Anmerkungen in Klammern angehängt." }),
+  ]));
   f.append(el("div", { class: "field-actions" }, [
     el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { hideNote(); closeForm(); } }),
     el("button", { type: "submit", class: "act-btn is-primary", text: "Anwenden" }),

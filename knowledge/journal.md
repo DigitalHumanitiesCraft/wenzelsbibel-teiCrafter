@@ -23,6 +23,12 @@ This journal is the curated backward-looking provenance index of the project. Cu
 
 ## Entries
 
+### 2026-10-10 integrated Wireframe extended to every workflow before the operator test
+
+- Source: the operator's decision to test the interface personally before the real build; two parallel agents (module split with undo and extension points, tracked data extraction `scripts/extract_wireframe_data.py`), four parallel feature agents (apparatus, register, image annotations, checks and word editing), a click-through review of all five epics with 21 findings, and two fix packages; every step verified with headless Chromium walkthroughs, now tracked under `wireframe/checks/`.
+- Target: `wireframe/`, `scripts/`, [plan.md](plan.md), [testing.md](testing.md), [design.md](design.md), [editorial-guidelines.md](editorial-guidelines.md), [INDEX.md](INDEX.md), the README and `snapshots/wireframe-review-2026-10-10-2.md`.
+- Result: Every acceptance criterion of the five epics that the in-memory model can carry is met on fol. 1r, with undo and redo per document, keyboard operation of menu bar, autocomplete and forms, and the narrow layout keeping the bars reachable. The extraction found four image-annotation items on fol. 1r instead of one, a dangling apparatus pointer, two misspelled apparatus types, conflicting ICONCLASS labels and a mojibake place target, all recorded in the guidelines. Decisions taken in the wireframe and open for the real build: register links and apparatus anchors may overlap because anchors are milestones and one `rs` around them stays well-formed (F38), a markup action that replaces a value names the replacement, the comment form sits at the end of the apparatus section, and the Verweise panel stays open while the user walks its entries. The XML view, the well-formedness check and the download still refer to the loaded excerpt, which the interface says in words.
+
 ### 2026-10-10 integrated Cleanup after the audits of the derived repository
 
 - Source: two read-only audits of base and derived repository against the real files, the usability review of the wireframe, and the cleanup packages of the same day (inherited material, knowledge condensation, wireframe revision).

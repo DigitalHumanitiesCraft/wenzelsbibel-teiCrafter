@@ -49,6 +49,8 @@ The wireframe sits at `wireframe/` outside `docs/`, so Pages does not publish it
 
 Note of 2026-10-10: the wireframe shows the layout and the flow of the interface, not its complete behaviour. The usability review of 2026-10-10 found three deviations from the specification: the inspector shows no line state ([US1.2](specification.md#us12-select-a-line-and-edit-its-words), [design](design.md#inspector)), input is neither applied nor cancelled explicitly (Anwenden and Abbrechen, [design](design.md#inspector)), and the menu still offers the retired switch between Zeilenweise and Fließtext ([design](design.md#menu-bar)). The revision of the same day fixed all three and the further findings that belong to the wireframe; the remaining findings and the parts that belong to the real build are listed in [the review snapshot](../snapshots/wireframe-review-2026-10-10.md).
 
+Second note of 2026-10-10: before the operator's own test, the wireframe was extended so that every workflow of the five epics runs in memory on the fol. 1r extraction with undo per document. Apparatus comments, register links and entries, the image-annotation form with a local ICONCLASS catalogue, the markup actions, the checks with findings list and the save flow all change the in-memory model; the XML view keeps showing the loaded excerpt, and nothing is written to disk. The second click-through review and its fixes are recorded in [the second review snapshot](../snapshots/wireframe-review-2026-10-10-2.md); what it leaves to the real build is the live source (US1.2.3 in the XML view, US5.1.1), a demonstrable schema failure on save (US5.2.3) and the ICONCLASS service (US4.2.3). The miniature choice lives in the text area until the real document bar carries it (F12).
+
 ### Phase 4 notes
 
 The rules, phases and bindings live in the [editorial layer](../editorial/README.md), the findings on the public data in `editorial/data-findings.md`. The remaining item is the [published copy](architecture.md#build-and-deployment), after which the default schema set in `docs/js/projects/wenzelsbibel/index.js` points to it instead of the base draft.
@@ -70,7 +72,7 @@ The inherited browser suites that drive the base shell are excluded in the fork 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | 1 Knowledge base | in progress | `data/` is ignored; operator review pending |
-| 2 Static wireframe | completed | Layout: flowing text with caret, OpenSeadragon facsimile with SVG zones, notice bar, "XML formatieren"; three specification deviations from the review of 2026-10-10 open ([phase 2 notes](#phase-2-notes)) |
+| 2 Static wireframe | completed | Layout and all five workflows in memory with undo, browser walkthroughs under `wireframe/checks/`; operator test pending ([phase 2 notes](#phase-2-notes)) |
 | 3 Base refactor and merge | completed | Steps a to e completed in the base; merged with the base knowledge deletions kept ([architecture](architecture.md#derivation-model)); the inherited checks workflow passed on the fork on 2026-10-10 |
 | 4 Editorial layer | in progress | Schematron, fixtures, fixture check and findings snapshot done; published copy under `docs/` outstanding |
 | 5 Interface rebuild | pending | Flow spike done in `prototypes/d-flow` |

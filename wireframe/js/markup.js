@@ -139,28 +139,53 @@ function refusal(element, from, to) {
   return null;
 }
 
+// The values of `group` the selected words carry now, as "element/@attr=value" keys for
+// the menu and as display strings for the note.
+function currentValues(words, group) {
+  const [element] = group.split("/@");
+  if (element === "hi") return [...new Set(words.flatMap((w) => (w.tok.rend || []).filter((r) => HI_VALUES.includes(r))))];
+  return [...new Set(words.map((w) => w.tok.markup).filter((mk) => mk && `${mk.element}/@${mk.attr}` === group).map((mk) => mk.value))];
+}
+
+// Values of the same action that a new value replaces, named in the note, so a
+// replacement is never silent (rubrication on Rotlebín replaced by gold).
+const replacedNote = (old, value) => {
+  const gone = old.filter((v) => v !== value);
+  return gone.length ? ` ${gone.join(", ")} durch ${value} ersetzt.` : "";
+};
+
 export function applyMarkup(group, value) {
   const words = selectedWords();
   if (!words.length || !state.sel) { notify("Erst Wörter im Text auswählen.", true); return; }
   const [element, attr] = group.split("/@");
   const { from, to } = state.sel;
+  const scope = words.length === 1 ? "das Wort" : `${words.length} Wörter`;
   if (element === "hi") {
+    const old = currentValues(words, group);
+    if (old.length === 1 && old[0] === value && words.every((w) => (w.tok.rend || []).includes(value))) { notify(`hi/@rend="${value}" ist bereits gesetzt.`, true); return; }
     // rend is per word in the model, so a hi never spans words and cannot be split.
     // A second Hervorhebung replaces the handbook value and keeps data values (ligature).
     const ok = commit(`Hervorhebung ${value}`, () => {
       for (const w of words) w.tok.rend = [...(w.tok.rend || []).filter((r) => !HI_VALUES.includes(r)), value];
     });
-    if (ok) { rerenderWords('.act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" auf ${words.length === 1 ? "das Wort" : `${words.length} Wörter`} angewendet.`, true); }
+    if (ok) { rerenderWords('.act[data-action="Hervorhebung"] > button'); notify(`hi/@rend="${value}" auf ${scope} angewendet.${replacedNote(old, value)}`, true); }
     return;
   }
   const reason = refusal(element, from, to);
   if (reason) { notify(reason, true); return; }
+  // An element of the same action that the new one replaces (supplied, or surplus by del).
+  const before = [...new Set(words.map((w) => w.tok.markup).filter(Boolean))];
+  if (before.length === 1 && before[0].element === element && before[0].value === value && words.every((w) => w.tok.markup === before[0])) {
+    notify(`<${element} ${attr}="${value}"> ist bereits gesetzt.`, true);
+    return;
+  }
+  const old = before.map((mk) => (mk.element === element ? mk.value : `<${mk.element} ${mk.attr}="${mk.value}">`));
   // One object for the run, so its identity marks the element's extent (structuredClone
   // in history.js keeps shared references, so the run survives undo).
   const mk = { element, attr, value };
   commit(`${element} ${value}`, () => { for (const w of words) w.tok.markup = mk; });
   rerenderWords(`.act[data-action="${actionOf(element).label}"] > button`);
-  notify(`<${element} ${attr}="${value}"> um ${words.length === 1 ? "das Wort" : `${words.length} Wörter`} gelegt.`, true);
+  notify(`<${element} ${attr}="${value}"> um ${scope} gelegt.${replacedNote(old, value)}`, true);
 }
 
 function menuKeys(list) {
@@ -173,13 +198,21 @@ function menuKeys(list) {
   });
 }
 
-export function markupAction(m) {
+// The value the selection carries now is a checked radio item with a visible "aktuell",
+// so the user sees what a choice would replace.
+export function markupAction(m, words = []) {
   const wrap = el("div", { class: "act", "data-action": m.label });
   const btn = el("button", { type: "button", "aria-haspopup": "true", "aria-expanded": "false", text: `${m.label} ▾` });
   const list = el("ul", { class: "menu-list", role: "menu", hidden: "" });
   for (const [group, values] of m.groups) {
+    const current = currentValues(words, group);
     list.append(el("li", { class: "menu-caption", role: "presentation", text: group }));
-    for (const v of values) list.append(el("li", { role: "none" }, [el("button", { class: "menu-item", type: "button", role: "menuitem", text: v, onclick: () => { closeMenus(); applyMarkup(group, v); } })]));
+    for (const v of values) {
+      const on = current.includes(v);
+      const item = el("button", { class: "menu-item", type: "button", role: "menuitemradio", "aria-checked": String(on), onclick: () => { closeMenus(); applyMarkup(group, v); } }, [v]);
+      if (on) item.append(el("span", { class: "menu-current", text: "aktuell" }));
+      list.append(el("li", { role: "none" }, [item]));
+    }
   }
   menuKeys(list);
   btn.addEventListener("click", () => { const open = btn.getAttribute("aria-expanded") === "true"; closeMenus(); if (!open) { btn.setAttribute("aria-expanded", "true"); list.hidden = false; } });
@@ -200,7 +233,7 @@ export function markupSection(words) {
   if (present.length) {
     row.append(el("p", { class: "markup-present" }, present.map((mk) => el("code", { text: `<${mk.element} ${mk.attr}="${mk.value}">` }))));
   }
-  for (const m of MARKUP) row.append(markupAction(m));
+  for (const m of MARKUP) row.append(markupAction(m, words));
   return row;
 }
 

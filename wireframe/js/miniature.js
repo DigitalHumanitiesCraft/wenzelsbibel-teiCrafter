@@ -3,11 +3,11 @@
 // text relation in the codex (US4.3). The form edits a draft of item.fields; Anwenden
 // writes only the fields whose draft differs, as one history step.
 import { $, el, state } from "./state.js";
-import { commit, onChange } from "./history.js";
+import { commit, documentChanged, onChange } from "./history.js";
 import { flowEvents, placeCaret, renderFlow, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
 import { zoneActions } from "./facsimile.js";
-import { closeInspector, inspectorNote, openPanel, refreshInspector, sections } from "./inspector.js";
+import { closeInspector, holdForPendingInput, inspectorNote, openPanel, refreshInspector, sections } from "./inspector.js";
 import { notify } from "./notice.js";
 
 const FIELD_LABEL = {
@@ -16,15 +16,19 @@ const FIELD_LABEL = {
   iconclass: "ICONCLASS", textRelation: "Textbezug",
 };
 const ADDRESS_PREFIX = "#bild";
+const CODEX_PREFIX = "#codex";
 const narrow = matchMedia("(width < 48rem)");
 
 let current = null;     // id of the item shown in the form
 let draft = null;       // working copy of the current item's fields
 let markedFor = null;   // id of the item whose text range is marked in the flow
+let shownHash = location.hash; // the address the page last applied or set
 
 const items = () => state.data.miniatures || [];
 const itemById = (id) => items().find((m) => m.id === id);
-const docIsImages = () => $("#doc-select").value === "images";
+// The document shown, which the select already leaves while its change is being checked.
+let shownDoc = "codex";
+const docIsImages = () => shownDoc === "images";
 
 // Called by app.js once the data is loaded: zone handlers for every image subtype in the
 // data, the address of F12, and the range marks that renderFlow would otherwise drop.
@@ -33,7 +37,7 @@ export function initMiniatures() {
   for (const s of subtypes) zoneActions.set(s, openByZone);
   addEventListener("popstate", applyAddress);
   addEventListener("hashchange", applyAddress);
-  flowEvents.addEventListener("column", markRange);
+  flowEvents.addEventListener("column", () => { markRange(); if (!docIsImages()) setAddress(codexHash()); });
   // app.js re-renders the flow after this listener runs, so mark on the next frame.
   onChange(() => requestAnimationFrame(markRange));
   $("#toggle-facs").addEventListener("click", outlineZone);
@@ -42,28 +46,44 @@ export function initMiniatures() {
       $(`#minis [data-item="${CSS.escape(current || "")}"]`)?.focus();
     }
   }).observe($("#inspector"), { attributes: true, attributeFilter: ["hidden"] });
-  applyAddress();
+  applyAddress(true);
+  if (!location.hash) history.replaceState(null, "", codexHash());
+  shownHash = location.hash;
 }
 
 // F25: the record whose item/@corresp points to the zone.
 function openByZone(zoneId) {
   const m = items().find((x) => x.item.corresp === `#${zoneId}`) || items().find((x) => x.zone === zoneId);
   if (!m) { notify(`Zur Zone ${zoneId} gibt es keine Bildannotation.`); return; }
-  if (!docIsImages()) { $("#doc-select").value = "images"; switchDocument("images", false); }
+  if (!docIsImages() && !switchDocument("images", false)) return;
   selectMiniature(m.id);
 }
 
-// Page address (F12): "#bild" for the document, "#bild/<item id>" with a chosen item.
+// Page address (F12): "#codex/<folio>/<a|b>" for the codex column, "#bild" for the
+// image annotations, "#bild/<item id>" with a chosen item. No hash is the codex, column a.
+const codexHash = () => `${CODEX_PREFIX}/${state.data.folio}/${"ab"[state.column]}`;
+
 function setAddress(hash) {
+  shownHash = hash;
   if (location.hash === hash) return;
   history.pushState(null, "", hash || location.pathname + location.search);
 }
 
-function applyAddress() {
+// Back and Forward fire popstate and then hashchange; the second finds the address
+// already applied. `initial` is true for the call on load.
+function applyAddress(initial) {
+  if (initial !== true && location.hash === shownHash) return;
   const h = decodeURIComponent(location.hash);
-  if (h === ADDRESS_PREFIX || h.startsWith(`${ADDRESS_PREFIX}/`)) {
+  const toImages = h === ADDRESS_PREFIX || h.startsWith(`${ADDRESS_PREFIX}/`);
+  // Unapplied input keeps the document (F36), and the address returns to what is shown.
+  if (toImages !== docIsImages() && holdForPendingInput()) {
+    history.pushState(null, "", shownHash || location.pathname + location.search);
+    return;
+  }
+  shownHash = location.hash;
+  if (toImages) {
     const id = h.slice(ADDRESS_PREFIX.length + 1);
-    if (!docIsImages()) { $("#doc-select").value = "images"; switchDocument("images", false); }
+    if (!docIsImages()) switchDocument("images", false);
     if (!id && current) {
       current = null;
       closeInspector();
@@ -73,33 +93,45 @@ function applyAddress() {
       if (itemById(id)) selectMiniature(id, false);
       else notify(`Die Bildannotation ${id} gibt es auf fol. ${state.data.folio} nicht.`);
     }
-  } else if (docIsImages()) {
-    $("#doc-select").value = "codex";
-    switchDocument("codex", false);
+    return;
   }
+  const [, folio, col] = /^#codex\/([^/]+)\/([ab])$/.exec(h) || [];
+  if (h && !folio) notify(`Die Adresse ${h} bezeichnet keine Stelle dieses Entwurfs.`);
+  else if (folio && folio !== state.data.folio) notify(`Fol. ${folio} liegt nicht im Entwurf, er enthält nur fol. ${state.data.folio}.`);
+  if (docIsImages()) switchDocument("codex", false);
+  const i = folio === state.data.folio ? "ab".indexOf(col) : 0;
+  if (state.column !== i) setColumn(i);
 }
 
 // The second document of the document bar holds the image annotations of the folio.
+// Every switch, from the select, an address, a zone or a jump, routes through here.
+// Returns false and keeps the current document while the inspector holds input that is
+// neither applied nor cancelled (F36).
 export function switchDocument(which, address = true) {
   const isImages = which === "images";
+  if (docIsImages() !== isImages && holdForPendingInput()) {
+    $("#doc-select").value = shownDoc;
+    return false;
+  }
+  $("#doc-select").value = which;
+  shownDoc = which;
   $("#status-file").textContent = isImages ? "Bildannotationen.xml" : "codex-2759.xml";
   $("#pager").hidden = isImages;
   closeInspector();
   current = null;
   outlineZone();
   if (isImages) {
-    setView("text");
-    $("#flow").hidden = true;
     renderList();
-    $("#minis").hidden = false;
+    setView("text");
     if (address) setAddress(ADDRESS_PREFIX);
   } else {
-    $("#minis").hidden = true;
-    $("#flow").hidden = false;
     renderFlow();
+    setView(state.view);
     markRange();
-    if (address) setAddress("");
+    if (address) setAddress(codexHash());
   }
+  documentChanged();
+  return true;
 }
 
 const itemTitle = (m) => m.fields.title?.text || "";
@@ -164,7 +196,7 @@ function outlineZone() {
 export function selectMiniature(id, address = true) {
   const m = itemById(id);
   if (!m) return;
-  if (!docIsImages()) { $("#doc-select").value = "images"; switchDocument("images", false); }
+  if (!docIsImages() && !switchDocument("images", false)) return;
   current = id;
   draft = structuredClone(m.fields);
   syncList();
@@ -448,7 +480,11 @@ function searchPanel(onPick) {
     opts.forEach((o, j) => { o.classList.toggle("is-active", j === active); o.setAttribute("aria-selected", String(j === active)); });
     if (active >= 0) { input.setAttribute("aria-activedescendant", opts[active].id); opts[active].scrollIntoView({ block: "nearest" }); }
   };
-  list.closeList = () => { list.hidden = true; active = -1; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); input.focus(); };
+  // refocus false: another layer (an opening menu) takes over and keeps the focus.
+  list.closeList = (refocus = true) => {
+    list.hidden = true; active = -1; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant");
+    if (refocus) input.focus();
+  };
   const pick = (hit) => { list.closeList(); input.value = ""; status.textContent = ""; panel.hidden = true; panel.previousElementSibling.setAttribute("aria-expanded", "false"); onPick(hit); };
   const update = () => {
     hits = searchIconclass(input.value);
@@ -545,7 +581,7 @@ export function showMiniatureText(id) {
   const m = itemById(id);
   const range = m && parseRange(m.fields.statistic);
   if (!range) return;
-  if (docIsImages()) { $("#doc-select").value = "codex"; switchDocument("codex"); }
+  if (docIsImages() && !switchDocument("codex")) return;
   if (state.view !== "text") setView("text");
   const col = pageWords().find((w) => w.id === range.first)?.column ?? 0;
   if (state.column !== col) setColumn(col);
@@ -606,7 +642,7 @@ function apply() {
   commit(`Bildannotation ${m.id}: ${labels}`, (data) => {
     const target = data.miniatures.find((x) => x.id === current);
     for (const k of changed) target.fields[k] = clean[k];
-  });
+  }, "images");
   refreshInspector();
   syncTitleInList();
   inspectorNote(`Übernommen: ${labels}.`);

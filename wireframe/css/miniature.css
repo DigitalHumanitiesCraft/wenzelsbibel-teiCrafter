@@ -66,7 +66,7 @@
   .ic-hit { display: flex; gap: var(--space-md); align-items: baseline; padding: var(--space-xs) var(--space-md); cursor: pointer; }
   .ic-hit:hover, .ic-hit.is-active { background: var(--color-secondary); }
   .ic-hit code { font-family: var(--font-mono); min-inline-size: 7rem; }
-  .ic-hit .lang, .ic-entry .lang { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+  .ic-hit .lang, .ic-entry .lang { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .ic-variant-flag { font-size: var(--font-size-xs); color: var(--color-problem); }
 
   .range { display: grid; gap: var(--space-xs); justify-items: start; margin-block-start: var(--space-sm); }

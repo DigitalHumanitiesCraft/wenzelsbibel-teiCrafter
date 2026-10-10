@@ -51,19 +51,25 @@ export function formatXml() {
   commit("XML formatieren", (data) => { data.xmlExcerpt = formatted(data.xmlExcerpt); });
   renderXml();
   highlightSelection();
-  $("#xml-note").hidden = false;
+  $("#xml-format-note").hidden = false;
   if (state.view !== "xml") setView("xml");
 }
 
+// Both documents share the view switch. The codex shows its flow or the excerpt; the
+// image annotations show their item list, and in XML only a note, because their source
+// file is not part of the wireframe's extraction.
 export function setView(view) {
   const keep = state.sel;
+  const images = $("#doc-select").value === "images";
   state.view = view;
   for (const b of document.querySelectorAll("[data-view]")) b.classList.toggle("is-active", b.dataset.view === view);
-  $("#flow").hidden = view !== "text";
+  $("#flow").hidden = view !== "text" || images;
+  $("#minis").hidden = view !== "text" || !images;
   $("#xml-view").hidden = view !== "xml";
+  for (const n of document.querySelectorAll("#xml-view [data-doc]")) n.hidden = n.dataset.doc !== (images ? "images" : "codex");
   $("#column-switch").hidden = view === "xml"; // the excerpt is the whole page
   $("#inspector-xml").textContent = view === "xml" ? "Im Text zeigen" : "XML-Stelle";
   state.sel = keep;
   highlightSelection();
-  if (view === "text" && keep) setWordRange(keep.from, keep.to);
+  if (view === "text" && keep && !images) setWordRange(keep.from, keep.to);
 }

@@ -27,6 +27,7 @@ export function openInspector() {
   panel = null;
   const wasHidden = $("#inspector").hidden;
   $("#inspector").hidden = false;
+  syncSheet();
   if (wasHidden && state.view === "text") words[0].node.scrollIntoView({ block: "nearest" }); // the pane just got shorter
   refreshTitle();
   const body = $("#inspector-body");
@@ -55,6 +56,7 @@ export function openInspector() {
 export function openPanel(titleNodes, bodyNodes, reopen = null) {
   panel = { reopen };
   $("#inspector").hidden = false;
+  syncSheet();
   hideNote();
   state.diplo = null;
   $("#inspector-title").replaceChildren(...titleNodes);
@@ -137,7 +139,12 @@ export function lineSection(words) {
     const norm = w.tok.norm;
     list.append(el("li", {}, [el("button", {
       type: "button", class: "word-chip", "aria-label": `${w.node.textContent}, normalisiert ${norm ?? "ohne @norm"}`,
-      onclick: () => { $("#flow").focus({ preventScroll: true }); setWordRange(k, k); },
+      onclick: () => {
+        // On a narrow screen the sheet covers the flow, which is inert until it closes.
+        if ($("#work").inert) { closeInspector(); state.quiet = false; }
+        $("#flow").focus({ preventScroll: true });
+        setWordRange(k, k);
+      },
     }, [el("span", { class: "dip", text: w.node.textContent }), el("span", { class: norm === undefined ? "norm is-missing" : "norm", text: norm ?? "ohne @norm" })])]));
   }
   sec.append(list);
@@ -149,10 +156,47 @@ export function closeInspector() {
   if (insp.hidden) return;
   const hadFocus = insp.contains(document.activeElement);
   insp.hidden = true;
+  syncSheet(); // before the focus move below, which inert would refuse
   panel = null;
   hideNote();
   state.quiet = true;
   if (hadFocus && state.view === "text" && !$("#flow").hidden) $("#flow").focus({ preventScroll: true });
+}
+
+// On narrow screens the inspector is a sheet over the work area (wireframe.css). The
+// covered text, facsimile and XML become inert while it is open, so neither pointer
+// nor Tab reaches what the sheet hides; menu bar and document bar stay operable.
+const narrow = matchMedia("(width < 48rem)");
+
+export function syncSheet() {
+  const work = $("#work");
+  const cover = narrow.matches && !$("#inspector").hidden;
+  if (cover === work.inert) return;
+  const hadFocus = work.contains(document.activeElement);
+  work.inert = cover;
+  // Focus inside what the sheet now covers would be lost; it moves into the sheet.
+  if (cover && hadFocus) $("#inspector-close").focus();
+}
+narrow.addEventListener("change", syncSheet);
+// Every other path that shows or hides the inspector is caught here as well.
+new MutationObserver(syncSheet).observe($("#inspector"), { attributes: true, attributeFilter: ["hidden"] });
+
+// F36: typing in an inspector field that is neither applied nor cancelled. Search
+// fields (ICONCLASS, register lookup) hold a query, not a value of the document.
+export function pendingInput() {
+  if ($("#inspector").hidden) return null;
+  return [...$("#inspector-body").querySelectorAll("input, textarea")].find((x) =>
+    x.type !== "search" && x.getAttribute("role") !== "combobox" && x.value !== x.defaultValue) || null;
+}
+
+// Refuses to leave the document while such input exists: the field gets focus back and
+// the note says what to do. Returns true when the caller must stay.
+export function holdForPendingInput() {
+  const input = pendingInput();
+  if (!input) return false;
+  input.focus();
+  inspectorNote("Die Eingabe ist weder angewendet noch abgebrochen. Erst Anwenden oder Abbrechen, dann das Dokument wechseln.");
+  return true;
 }
 
 // Short-lived message under the inspector head, for controls inside the inspector.

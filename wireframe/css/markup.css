@@ -9,6 +9,8 @@
   }
   .act > button[aria-expanded="true"] { background: var(--color-secondary); }
   .act .menu-list { min-inline-size: 12rem; }
+  .menu-current { margin-inline-start: auto; padding-inline-start: var(--space-md); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+  .act .menu-item[aria-checked="true"] { font-weight: 600; }
   .menu-caption { padding: var(--space-xs) var(--space-md) 0; font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 }
 /* Element marks in the flow: dotted underline and a short label, not colour alone. */

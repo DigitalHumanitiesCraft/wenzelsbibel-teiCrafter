@@ -28,5 +28,7 @@
   .app-types { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   .app-types summary { cursor: pointer; }
   .app-types p { margin: var(--space-xs) 0 0; overflow-wrap: anywhere; }
+  .sigle-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; }
   .app-sigle input { max-inline-size: 10rem; }
+  .sigle-example { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 }

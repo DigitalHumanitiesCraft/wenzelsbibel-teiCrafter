@@ -53,11 +53,13 @@
       <div class="flow" id="flow" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="false" aria-label="Text"></div>
       <div class="minis" id="minis" hidden></div>
       <div id="xml-view" hidden>
-        <div class="xml-head">
+        <div class="xml-head" data-doc="codex">
           <button type="button" class="act-btn" id="xml-format">XML formatieren</button>
-          <p class="xml-note" id="xml-note" role="status" hidden>Formatierung ist eine Änderung am ganzen Dokument und wird erst beim Speichern wirksam.</p>
+          <p class="xml-note" id="xml-note">Der Entwurf zeigt den geladenen Auszug von fol. 1r. Änderungen aus Text und Inspector erscheinen im Werkzeug in dieser Quelle, hier nicht.</p>
+          <p class="xml-note" id="xml-format-note" role="status" hidden>Formatierung ist eine Änderung am ganzen Dokument und wird erst beim Speichern wirksam.</p>
         </div>
-        <pre class="xml" id="xml"></pre>
+        <pre class="xml" id="xml" data-doc="codex"></pre>
+        <p class="empty-note" data-doc="images" hidden>Die Quelle von Bildannotationen.xml ist nicht Teil des Auszugs, den der Entwurf geladen hat. Das Werkzeug zeigt hier ihr XML.</p>
       </div>
     </section>
     <aside class="facs-pane" id="facs-pane" aria-label="Faksimile fol. 1r, Österreichische Nationalbibliothek, Cod. 2759" hidden>

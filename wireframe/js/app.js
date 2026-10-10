@@ -57,7 +57,7 @@ function wireControls() {
 // objects. The selection survives where its words still exist, and a caret in the
 // flow returns to the same word and offset.
 function rerender(kind) {
-  if (kind === "commit" || kind === "saved") return;
+  if (kind === "commit" || kind === "saved" || kind === "document") return;
   const sel = state.sel;
   const s = getSelection();
   const flowFocused = document.activeElement === $("#flow");

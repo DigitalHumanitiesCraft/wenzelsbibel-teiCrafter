@@ -11,7 +11,8 @@ import { $, columns, el, refKey, state } from "./state.js";
 import { markSaved, onChange } from "./history.js";
 import { placeCaret, setColumn } from "./flow.js";
 import { setView } from "./xml.js";
-import { openPanel } from "./inspector.js";
+import { closeInspector, openPanel } from "./inspector.js";
+import { switchDocument } from "./miniature.js";
 import { actions } from "./menu.js";
 import { announce, notify, setStanding } from "./notice.js";
 
@@ -24,6 +25,10 @@ const CONFIRM_CLEAN = true;
 const TEI_ALL_MS = 2000;
 
 const CHECKS = ["Wohlgeformtheit", "TEI All", "Schematron editing", "Schematron review"];
+// Wohlgeformtheit parses the excerpt as loaded (or formatted), not the model edits, and
+// only on request; its label says so wherever a result is shown.
+const RESULT_LABEL = { Wohlgeformtheit: "Wohlgeformtheit (geladener Auszug)" };
+const resultLabel = (check) => RESULT_LABEL[check] || check;
 const SAVE_SET = ["Wohlgeformtheit", "TEI All", "Schematron editing"];
 
 // check => { findings, stale }. Findings hold positions and ids, never token objects,
@@ -48,7 +53,7 @@ function walk() {
       if (!header) n++;
       line.tokens.forEach((tok, ti) => {
         if (tok.type !== "w" && tok.type !== "pc") return;
-        words.push({ tok, at: { ci, li, ti, id: tok.id || null, text: tok.text, lineNo: header ? "Kopfzeile" : `Z. ${n}` }, prevId });
+        words.push({ tok, at: { ci, li, ti, id: tok.id || null, type: tok.type, text: tok.text, lineNo: header ? "Kopfzeile" : `Z. ${n}` }, prevId });
         if (tok.type === "w" && tok.id) prevId = tok.id;
       });
     });
@@ -225,7 +230,7 @@ export async function runCheck(check) {
   if (findings.length) { renderBar(); return; }
   barState = null;
   renderBar();
-  const msg = `${check}: ${check === "Wohlgeformtheit" ? "wohlgeformt" : "keine Befunde"}.`;
+  const msg = `${resultLabel(check)}: ${check === "Wohlgeformtheit" ? "wohlgeformt" : "keine Befunde"}.`;
   if (CONFIRM_CLEAN) notify(msg); else announce(msg);
 }
 
@@ -242,7 +247,7 @@ export async function save() {
   }
   const failed = SAVE_SET.filter((c) => errors(results.get(c).findings).length);
   if (failed.length) { barState = { kind: "save-failed", checks: failed }; renderBar(); return; }
-  markSaved();
+  markSaved("codex");
   barState = { kind: "save-ok", checks: SAVE_SET };
   renderBar();
 }
@@ -289,7 +294,7 @@ function barContent() {
   const fs = results.get(check).findings;
   const first = errors(fs)[0] || fs[0];
   const counts = errors(fs).length === fs.length ? plural(fs.length) : `${plural(fs.length)} (${errors(fs).length} Fehler, ${fs.length - errors(fs).length} Warnungen)`;
-  return [...nodes, el("strong", { text: `${check}: ${counts}` }), el("span", { text: `${first.message} ${first.where}` }), show];
+  return [...nodes, el("strong", { text: `${resultLabel(check)}: ${counts}` }), el("span", { text: `${first.message} ${first.where}` }), show];
 }
 
 // Findings list (F47): grouped per check, each finding with document, location, rule,
@@ -303,7 +308,7 @@ export function showFindings() {
     const r = results.get(check);
     if (!r) continue;
     const fs = r.findings;
-    const head = el("h3", { class: "findings-check" }, [check, el("span", { class: "context", text: fs.length ? `${plural(fs.length)}, ${errors(fs).length} Fehler${r.stale ? ", veraltet" : ""}` : `keine Befunde${r.stale ? ", veraltet" : ""}` })]);
+    const head = el("h3", { class: "findings-check" }, [resultLabel(check), el("span", { class: "context", text: fs.length ? `${plural(fs.length)}, ${errors(fs).length} Fehler${r.stale ? ", veraltet" : ""}` : `keine Befunde${r.stale ? ", veraltet" : ""}` })]);
     const group = el("section", { class: "findings-group" }, [head]);
     const phase = check.startsWith("Schematron") ? check.split(" ")[1] : null;
     if (phase) group.append(el("p", { class: "findings-scope", text: NOT_EVALUATED[phase] }));
@@ -326,22 +331,40 @@ export function showFindings() {
   $("#inspector-body").querySelector("button")?.focus();
 }
 
-// Selects the finding's word by id, or by column, line and token position.
+// Selects the finding's word. A word with an xml:id is found by it wherever it moved; a
+// token without one by column, line and token position, and only while that position
+// still holds a token of the same kind and text. Punctuation has no node of its own in
+// the flow (an island), so its finding selects the word it follows in its line, or the
+// next one when it opens the line.
 export function jumpToFinding(f) {
+  if (shownDocIsImages() && !switchDocument("codex")) return;
   if (state.view !== "text") setView("text");
   if (f.at.ci !== state.column) setColumn(f.at.ci);
-  const line = columns()[f.at.ci]?.lines[f.at.li];
-  const tok = line?.tokens[f.at.ti];
-  let k = f.at.id ? state.words.findIndex((w) => w.tok.id === f.at.id) : -1;
-  if (k < 0) k = state.words.findIndex((w) => w.tok === tok);
-  // A punctuation finding selects the next word of its line.
-  if (k < 0 && line) k = state.words.findIndex((w) => w.line === line && line.tokens.indexOf(w.tok) > f.at.ti);
-  if (k >= 0) placeCaret(k); else notify("Die Stelle des Befunds besteht nicht mehr.");
+  const outdated = (what) => notify(`Ergebnis veraltet: ${what}. Prüfung erneut ausführen.`);
+  let k = -1;
+  if (f.at.id) {
+    k = state.words.findIndex((w) => w.tok.id === f.at.id);
+    if (k < 0) { outdated(`das Wort ${f.at.id} besteht nicht mehr`); return; }
+  } else {
+    const line = columns()[f.at.ci]?.lines[f.at.li];
+    const tok = line?.tokens[f.at.ti];
+    if (!tok || tok.type !== f.at.type || tok.text !== f.at.text) { outdated(`an der Stelle stand „${f.at.text}“, jetzt steht dort ${tok?.text ? `„${tok.text}“` : "nichts"}`); return; }
+    const inLine = state.words.filter((w) => w.line === line);
+    const pos = (w) => line.tokens.indexOf(w.tok);
+    const word = tok.type === "w" ? inLine.find((w) => w.tok === tok)
+      : inLine.findLast((w) => pos(w) < f.at.ti) || inLine.find((w) => pos(w) > f.at.ti);
+    k = word ? state.words.indexOf(word) : -1;
+    if (k < 0) { notify(`Die Zeile ${f.at.lineNo} enthält kein Wort, an dem der Befund gezeigt werden kann.`); return; }
+  }
+  closeInspector(); // on narrow screens the findings sheet covers the text it jumps to
+  placeCaret(k);
 }
+
+const shownDocIsImages = () => $("#doc-select").value === "images";
 
 // Any edit after a run makes every result outdated (F47, US5.1 criterion 5).
 onChange((kind) => {
-  if (kind === "saved" || !results.size) return;
+  if (kind === "saved" || kind === "document" || !results.size) return;
   let changed = false;
   for (const r of results.values()) if (!r.stale) { r.stale = true; changed = true; }
   if (barState && barState.kind === "save-ok") barState = null;

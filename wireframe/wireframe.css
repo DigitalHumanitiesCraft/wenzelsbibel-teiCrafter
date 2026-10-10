@@ -66,8 +66,15 @@
   @media (width < 48rem) {
     .work.has-facs { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 1fr; }
     .facs-pane { border-inline-start: 0; border-block-start: 1px solid var(--color-border); }
-    /* Narrow screens: the inspector is a full-height sheet over the text (design.md). */
-    .inspector { position: fixed; inset: 0; z-index: 20; block-size: auto; resize: none; border-block-start: 0; }
+    /* Narrow screens: the inspector is a full-height sheet over the work area (design.md).
+       It shares the work row, so menu bar and document bar stay visible and operable;
+       inspector.js makes the covered area inert. Every row is placed explicitly, because
+       auto-placement would push the work area out of the row the sheet occupies. */
+    .menubar { grid-row: 1; }
+    .docbar { grid-row: 2; }
+    .work { grid-row: 3; grid-column: 1; }
+    .notice-bar { grid-row: 4; }
+    .inspector { grid-row: 3; grid-column: 1; z-index: 20; block-size: auto; resize: none; border-block-start: 0; }
   }
 }
 
@@ -140,13 +147,16 @@
   .ref-group.type-place { background: var(--color-placeName-bg); }
   .ref-group.type-folk { background: var(--color-orgName-bg); }
   .chip {
-    display: inline-block; font-family: var(--font-ui); font-size: var(--font-size-xs); line-height: 1.4;
+    display: inline-block; font-family: var(--font-ui); font-size: var(--font-size-xs); line-height: 22px; /* 24px target with the border */
     border-radius: var(--radius-pill); padding: 0 var(--space-sm); margin-inline-start: var(--space-xs); vertical-align: middle;
     border: 1px solid currentColor; user-select: none;
   }
   .chip.type-person { color: var(--color-text); border-color: var(--color-persName); background: var(--color-persName-bg); }
-  .chip.type-place { color: var(--color-text); border-color: var(--color-placeName); background: var(--color-placeName-bg); }
+  /* --color-placeName reaches only 2.96:1 against its tint; the outline takes the teal
+     --color-confident (3.7:1) until the base darkens placeName. */
+  .chip.type-place { color: var(--color-text); border-color: var(--color-confident); background: var(--color-placeName-bg); }
   .chip.type-folk { color: var(--color-text); border-color: var(--color-orgName); background: var(--color-orgName-bg); }
+  summary { min-block-size: 24px; padding-block: 2px; cursor: pointer; }
   .empty-note { color: var(--color-text-secondary); font-family: var(--font-ui); font-size: var(--font-size-sm); }
 
   /* XML view */

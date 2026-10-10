@@ -37,4 +37,7 @@
     background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text);
   }
   .reg-jump:hover { background: var(--color-secondary); }
+  /* The entry last jumped to; the thicker edge and weight carry it, not colour alone. */
+  .reg-jump[aria-current="true"] { border-inline-start: 4px solid var(--color-link); font-weight: 600; }
+  .combo + .field-error { margin: 0; }
 }

@@ -2,7 +2,7 @@
 // Everything lives in state.data, so history.commit covers links and created entries alike.
 import { $, chipFor, columns, el, refKey, state, TYPE_LABEL } from "./state.js";
 import { commit } from "./history.js";
-import { highlightSelection, renderFlow, selectedWords, setColumn, setWordRange } from "./flow.js";
+import { flowEvents, highlightSelection, renderFlow, selectedWords, setColumn, setWordRange } from "./flow.js";
 import { inspectorNote, openInspector, openPanel, sections } from "./inspector.js";
 import { actions } from "./menu.js";
 import { notify } from "./notice.js";
@@ -78,27 +78,44 @@ function selectedRun(words) {
 }
 
 // F55: the reason a wrap around the selected words would split an element, or null.
-// The wireframe checks the two elements its token model can see, an existing register
-// element and an apparatus anchor pair between words; hi, supplied and marginal seg are
-// word properties here and cannot be split by a whole-word selection.
+// F38 allows anchors, milestones, line breaks and punctuation between the words: they
+// are empty or whole nodes, so one rs around them stays well-formed. What a wrap can
+// cut is an enclosing element the selection covers only in part. The token model shows
+// three of them: an existing register element, a markup run from markup.js and the
+// marginal seg (rend "marginalia"). Inner markup of a word (ligature hi, lb, choice) is
+// never cut, because the wrapper goes around whole w elements. Deliberate shortcut: a
+// hi, supplied or seg of the source that spans words without a token property here is
+// not seen; the real tool decides on the source XML.
 function wrapRefusal(toks) {
   const set = new Set(toks);
-  for (const run of runs()) {
+  const words = pageWords();
+  const span = words.filter((w) => set.has(w.tok));
+  const marginal = (w) => (w.tok.rend || []).includes("marginalia");
+  if (span.some(marginal) && !span.every(marginal)) {
+    return "Nicht verknüpft: Die Auswahl würde das Element seg der Marginalie teilen. Die Auswahl ganz innerhalb oder ganz außerhalb der Marginalie legen.";
+  }
+  // A markup run is the sequence of words sharing one markup object; a selection inside
+  // it or around it is well-formed, one across its edge is not.
+  const first = words.indexOf(span[0]);
+  const last = words.indexOf(span[span.length - 1]);
+  for (let k = first; k <= last; k++) {
+    const mk = words[k].tok.markup;
+    if (!mk) continue;
+    let a = k;
+    let b = k;
+    while (a > 0 && words[a - 1].tok.markup === mk) a--;
+    while (b < words.length - 1 && words[b + 1].tok.markup === mk) b++;
+    if ((a < first || b > last) && (first < a || last > b)) {
+      return `Nicht verknüpft: Die Auswahl würde das Element ${mk.element} (${mk.attr}="${mk.value}") teilen. Das ganze Element oder nur Wörter darin wählen.`;
+    }
+  }
+  for (const run of runs(words)) {
     const inside = run.words.filter((w) => set.has(w.tok)).length;
     if (!inside) continue;
     const name = `${elementOf(run.ref)} des Verweises ${TYPE_LABEL[run.ref.type]}: ${run.ref.target} („${runText(run)}“)`;
     if (inside < run.words.length) return `Nicht verknüpft: Die Auswahl würde das Element ${name} teilen. Den ganzen Verweis oder kein Wort daraus wählen.`;
     // A contained whole run would need a nested wrapper, which the token model cannot hold.
     return `Nicht verknüpft: Die Auswahl enthält bereits das Element ${name}. Zuerst die Verknüpfung lösen.`;
-  }
-  const words = pageWords();
-  for (const app of state.data.apparatus) {
-    const inWord = [app.anchors?.from?.inWord, app.anchors?.to?.inWord];
-    const range = words.filter((w) => (state.appsByWord.get(w.tok) || []).includes(app) || (w.tok.id && inWord.includes(w.tok.id)));
-    const inside = range.filter((w) => set.has(w.tok)).length;
-    if (inside && inside < range.length && inside < set.size) {
-      return `Nicht verknüpft: Die Auswahl würde das Ankerpaar ${app.from} … ${app.to} des Apparatkommentars von seinen Wörtern trennen. Die Auswahl ganz innerhalb oder ganz um den Kommentarbereich legen.`;
-    }
   }
   return null;
 }
@@ -117,12 +134,13 @@ function redraw(from, to) {
 // US3.1: one wrapper around the selected whole words in one commit. The wireframe has no
 // element tree, so setting the same ref on every selected word token stands in for one
 // rs[@type][@ref] start and end tag around them; `run` keeps two adjacent links to the
-// same entry apart, as two rs elements would be.
-function link(entry, extra = null) {
+// same entry apart, as two rs elements would be. `refuse` shows a refusal at the field
+// that triggered the link (design.md, interaction rules).
+function link(entry, refuse, extra = null) {
   const words = selectedWords();
-  if (!words.length) { inspectorNote("Zum Verknüpfen zuerst Wörter im Text auswählen."); return false; }
+  if (!words.length) { refuse("Zum Verknüpfen zuerst Wörter im Text auswählen."); return false; }
   const reason = wrapRefusal(words.map((w) => w.tok));
-  if (reason) { inspectorNote(reason); return false; }
+  if (reason) { refuse(reason); return false; }
   const { from, to } = state.sel;
   const run = `s${++runSeq}`;
   commit(extra ? "Eintrag anlegen" : "Verknüpfen", (data) => {
@@ -170,20 +188,32 @@ export function registerSection(words) {
   const body = el("div", { class: "register-body" });
   sec.append(body);
   const text = words.map((w) => w.node.textContent).join(" ");
-  const showCombo = () => body.replaceChildren(...combo(text, showForm));
-  const showForm = (prefill) => body.replaceChildren(createForm(prefill, showCombo));
-  if (pendingCreate) { pendingCreate = false; showForm({ type: "person", id: text, name: text }); } else showCombo();
+  const showCombo = () => body.replaceChildren(...combo(showForm));
+  // US3.2: ID and preferred name come from the selected text; the search text that led
+  // to "+ neu anlegen" is shown as a hint only.
+  const showForm = (type, searched = "") => body.replaceChildren(createForm({ type, id: text, name: text, searched }, showCombo));
+  if (pendingCreate) { pendingCreate = false; showForm("person"); } else showCombo();
   return sec;
 }
 
 // The autocomplete (F37): codex persons, places and peoples together, type filter, Enter links.
-function combo(selText, showForm) {
+function combo(showForm) {
   const typeSel = el("select", { "aria-label": "Registertyp" }, [el("option", { value: "", text: "Alle" }), ...TYPES.map((v) => el("option", { value: v, text: TYPE_LABEL[v] }))]);
   const input = el("input", {
     type: "text", role: "combobox", "aria-autocomplete": "list", "aria-expanded": "false", "aria-controls": "ac-list",
     placeholder: "Eintrag suchen oder anlegen …", "aria-label": "Registereintrag", autocomplete: "off",
   });
   const list = el("ul", { class: "ac-list", id: "ac-list", role: "listbox", "aria-label": "Registertreffer", hidden: "" });
+  // A refused link stands here until the next input in the field.
+  const error = el("p", { class: "field-error", id: "reg-link-error", role: "alert", hidden: "" });
+  const refuse = (msg) => {
+    error.textContent = msg;
+    error.hidden = false;
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", error.id);
+    input.focus();
+  };
+  const clearError = () => { error.hidden = true; input.removeAttribute("aria-invalid"); input.removeAttribute("aria-describedby"); };
   let active = -1;
   const options = () => [...list.children];
   const setActive = (i) => {
@@ -206,13 +236,13 @@ function combo(selText, showForm) {
     if (!q) { list.closeList(); return; }
     const hits = registerEntries().filter((e) => (!type || e.type === type) && fold(e.id).includes(q));
     hits.sort((a, b) => Number(!fold(a.id).startsWith(q)) - Number(!fold(b.id).startsWith(q)));
-    hits.slice(0, 8).forEach((h, i) => list.append(option(i, () => { list.closeList(); link(h); }, [
+    hits.slice(0, 8).forEach((h, i) => list.append(option(i, () => { list.closeList(); link(h, refuse); }, [
       el("span", { class: "id", text: h.id }),
       el("span", { class: "type", text: `${TYPE_LABEL[h.type]} · ${countText(h.count)}` }),
     ])));
     if (!hits.some((h) => h.id === raw)) {
-      const create = option(list.children.length, () => { list.closeList(); showForm({ type: type || "person", id: raw, name: selText }); }, [
-        el("span", { text: "+ neu anlegen" }), el("span", { class: "type", text: `„${raw}“` }),
+      const create = option(list.children.length, () => { list.closeList(); showForm(type || "person", raw); }, [
+        el("span", { text: "+ neu anlegen" }), el("span", { class: "type", text: "aus der Auswahl" }),
       ]);
       create.classList.add("is-new");
       list.append(create);
@@ -223,7 +253,7 @@ function combo(selText, showForm) {
     input.removeAttribute("aria-activedescendant");
     placeList(list);
   };
-  input.addEventListener("input", update);
+  input.addEventListener("input", () => { clearError(); update(); });
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
@@ -237,7 +267,7 @@ function combo(selText, showForm) {
   });
   list.addEventListener("mousedown", (e) => e.preventDefault()); // keep focus in the field
   typeSel.addEventListener("change", update);
-  return [el("div", { class: "combo" }, [typeSel, input]), list, noteDisclosure()].filter(Boolean);
+  return [el("div", { class: "combo" }, [typeSel, input]), error, list, noteDisclosure()].filter(Boolean);
 }
 
 // US3.2 / F39: type, ID and preferred name; Anwenden creates the entry and links the
@@ -251,7 +281,13 @@ function createForm(prefill, back) {
   const nameInput = el("input", { type: "text", value: prefill.name, autocomplete: "off" });
   const error = el("span", { class: "field-error", id: "reg-id-error", role: "alert", hidden: "" });
   // The reason stands at the ID field only; a second copy in the inspector note would repeat it.
-  const fail = (msg) => { error.textContent = msg; error.hidden = false; idInput.setAttribute("aria-invalid", "true"); idInput.focus(); };
+  // A wrap refusal concerns the selection, not the ID, so it leaves aria-invalid off.
+  const fail = (msg, invalid = true) => {
+    error.textContent = msg;
+    error.hidden = false;
+    if (invalid) idInput.setAttribute("aria-invalid", "true");
+    idInput.focus();
+  };
   const apply = () => {
     const id = idInput.value.trim();
     const name = nameInput.value.trim() || id;
@@ -262,7 +298,7 @@ function createForm(prefill, back) {
     error.hidden = true;
     idInput.removeAttribute("aria-invalid");
     // count starts at 0; link() adds the one reference it writes.
-    link({ type, id }, (data) => { data.registers.codex[type].push({ type, id, count: 0, name, created: true }); });
+    link({ type, id }, (msg) => fail(msg, false), (data) => { data.registers.codex[type].push({ type, id, count: 0, name, created: true }); });
   };
   const onEnter = (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } };
   idInput.addEventListener("keydown", onEnter);
@@ -271,7 +307,8 @@ function createForm(prefill, back) {
   form.append(
     el("div", { class: "group-title", text: "Neuer Eintrag" }),
     el("label", { class: "field" }, [el("span", { text: "Typ" }), typeSel]),
-    el("label", { class: "field" }, [el("span", { text: "ID" }), idInput, error]),
+    el("label", { class: "field" }, [el("span", { text: "ID" }), idInput, error,
+      ...(prefill.searched && prefill.searched !== prefill.id ? [el("span", { class: "mixed", text: `Gesucht war „${prefill.searched}“.` })] : [])]),
     el("label", { class: "field" }, [el("span", { text: "Vorzugsname" }), nameInput]),
     el("div", { class: "field-actions" }, [
       el("button", { type: "button", class: "act-btn", text: "Abbrechen", onclick: () => { back(); $("#inspector-body .register input")?.focus(); } }),
@@ -303,15 +340,23 @@ function placeList(list) {
 }
 
 // Jump: select the words in the flow; the inspector then follows the selection.
-function jump(ws) {
+// With `after`, the panel that jumped is rebuilt once the selection has arrived, so the
+// user can walk its list; the inspector's own select handler runs first and would
+// otherwise replace the panel with the word state.
+function jump(ws, after = null) {
   if (state.view !== "text") setView("text");
   if (ws[0].c !== state.column) setColumn(ws[0].c);
   const ks = ws.map((w) => state.words.findIndex((x) => x.tok === w.tok)).filter((k) => k >= 0);
   if (!ks.length) return;
+  const from = ks[0];
+  const to = ks[ks.length - 1];
+  state.words[from].node.scrollIntoView({ block: "center" });
+  // An unchanged selection fires no select event, so the panel is rebuilt directly.
+  if (after && state.sel && state.sel.from === from && state.sel.to === to && !state.sel.line) { after(); return; }
+  if (after) flowEvents.addEventListener("select", after, { once: true });
   state.quiet = false;
   $("#flow").focus({ preventScroll: true });
-  setWordRange(ks[0], ks[ks.length - 1]);
-  state.words[ks[0]].node.scrollIntoView({ block: "center" });
+  setWordRange(from, to);
 }
 
 // Arrow keys move between the buttons of a list; Tab enters it once.
@@ -336,7 +381,7 @@ function roving(ul) {
 // F40: every reference on fol. 1r to one entry, in either form. The list is computed from
 // the tokens, which hold data.registerUse as loaded plus the links of this session and
 // lose the ones unlinked; the codex-wide count comes from the entry.
-function refsPanel(type, id) {
+function refsPanel(type, id, current = -1) {
   const entry = findEntry(state.data, type, id);
   if (!entry) { searchPanel(`Der Eintrag ${TYPE_LABEL[type]}: ${id} besteht nicht mehr.`); return; }
   const mine = runs().filter((r) => r.ref.type === type && r.ref.target === id);
@@ -347,19 +392,22 @@ function refsPanel(type, id) {
   ];
   if (mine.length) {
     const ul = el("ul", { class: "reg-refs", "aria-label": `Verweise auf ${label(entry)}` });
-    for (const r of mine) {
-      ul.append(el("li", {}, [el("button", { type: "button", class: "reg-jump", onclick: () => jump(r.words) }, [
+    mine.forEach((r, i) => {
+      const attrs = { type: "button", class: "reg-jump", onclick: () => jump(r.words, () => refsPanel(type, id, i)) };
+      if (i === current) attrs["aria-current"] = "true";
+      ul.append(el("li", {}, [el("button", attrs, [
         el("span", { text: where(r.words) }), el("q", { text: runText(r) }), el("span", { class: "type", text: elementOf(r.ref) === "rs" ? "rs/@ref" : "ref/@target" }),
       ])]));
-    }
+    });
     roving(ul);
+    if (current >= 0 && ul.children[current]) [...ul.querySelectorAll("button")].forEach((b, i) => { b.tabIndex = i === current ? 0 : -1; });
     body.push(ul);
   } else {
     body.push(el("p", { class: "empty-note", text: `Kein Verweis auf fol. ${state.data.folio}.` }));
   }
   body.push(el("button", { type: "button", class: "link-btn", text: "Anderen Eintrag suchen", onclick: () => searchPanel() }));
   openPanel(["Verweise auf ", el("q", { text: label(entry) })], body, () => refsPanel(type, id));
-  $("#inspector-body .reg-jump, #inspector-body .link-btn")?.focus();
+  ($('#inspector-body .reg-jump[aria-current="true"]') || $("#inspector-body .reg-jump, #inspector-body .link-btn"))?.focus();
 }
 
 // Search panel (Verweise without a linked selection) and the lists Personen, Orte, Völker.
