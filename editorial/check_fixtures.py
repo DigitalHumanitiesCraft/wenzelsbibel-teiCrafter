@@ -16,10 +16,16 @@ schema. Any mismatch makes the exit code 1.
 
 Data mode (--data FILE ...) runs one phase (default review) over real edition
 files and prints the number of findings per rule with one example each, the
-input for the dated snapshot data-findings.md. It never writes files.
+input for a dated snapshot under snapshots/ such as
+schematron-findings-2026-10-10.md. It never writes files.
+
+List mode (--list) runs the same manifest check and prints the rule table as
+Markdown (id, phase, severity, message), so editorial/README.md does not keep a
+hand-maintained copy of what the schema already says.
 
 Usage:
   python editorial/check_fixtures.py
+  python editorial/check_fixtures.py --list
   python editorial/check_fixtures.py --data codex.xml bild.xml [--phase review]
 
 Design notes: rule ids are taken from the SVRL @id that the skeleton copies from
@@ -53,6 +59,7 @@ class Rule:
     rule_id: str
     phase: str
     severity: str
+    message: str
 
 
 @dataclass(frozen=True)
@@ -81,8 +88,18 @@ def _rule_inventory(schema: etree._ElementTree) -> dict[str, Rule]:
                 )
             if rule_id in rules:
                 raise SystemExit(f"FEHLER: duplicate rule id {rule_id}")
-            rules[rule_id] = Rule(rule_id, phase, role)
+            rules[rule_id] = Rule(rule_id, phase, role, _message(test))
     return rules
+
+
+def _message(test: etree._Element) -> str:
+    """Flatten an assert/report message, with each sch:value-of shown as its select."""
+    parts = [test.text or ""]
+    for child in test:
+        if etree.QName(child).localname == "value-of":
+            parts.append(f"{{{child.get('select')}}}")
+        parts.append(child.tail or "")
+    return " ".join("".join(parts).split())
 
 
 def _validator(schema: etree._ElementTree, phase: str) -> isoschematron.Schematron:
@@ -175,6 +192,23 @@ def run_fixtures() -> int:
     return 1 if failures else 0
 
 
+def run_list() -> int:
+    schema = etree.parse(str(SCHEMA_PATH))
+    rules = _rule_inventory(schema)
+    manifest = json.loads((FIXTURE_DIR / "index.json").read_text(encoding="utf-8"))
+    problems = _check_manifest(manifest, rules)
+    for problem in problems:
+        print(f"FEHLER manifest: {problem}", file=sys.stderr)
+    if problems:
+        return 1
+    print("| Rule | Phase | Severity | Message |")
+    print("|---|---|---|---|")
+    for rule in rules.values():
+        message = rule.message.replace("|", r"\|")
+        print(f"| `{rule.rule_id}` | {rule.phase} | {rule.severity} | {message} |")
+    return 0
+
+
 def _name(node: etree._Element) -> str:
     return f"{etree.QName(node).localname}[@xml:id='{node.get(XML_ID)}']"
 
@@ -248,7 +282,16 @@ def main() -> int:
         choices=["editing", "review"],
         help="phase for --data (default review)",
     )
+    parser.add_argument(
+        "--list",
+        action="store_true",
+        help="print the rule table as Markdown instead of running the fixtures",
+    )
     args = parser.parse_args()
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if args.list:
+        return run_list()
     if args.data:
         return run_data(args.data, args.phase)
     return run_fixtures()

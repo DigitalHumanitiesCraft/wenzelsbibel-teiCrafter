@@ -29,15 +29,7 @@ jobs:
           python-version: "3.12"
       - name: Install pinned Node dependencies
         run: npm ci
-      - name: Flow spike check
-        run: node prototypes/d-flow/check.mjs
-      - name: Typecheck src and prototypes
-        run: npm run typecheck:src
-      - name: Typecheck docs/js
-        run: npx tsc --noEmit -p jsconfig.json
       - name: Install Python tools
         run: python -m pip install lxml ruff
-      - name: Schematron fixture check
-        run: python editorial/check_fixtures.py
-      - name: Ruff over editorial
-        run: python -m ruff check editorial scripts
+      - name: Fork checks
+        run: npm run check:fork

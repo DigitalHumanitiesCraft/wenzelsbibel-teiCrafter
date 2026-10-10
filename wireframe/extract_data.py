@@ -12,7 +12,7 @@ Edition data stay local: the output folder is ignored by Git
 (knowledge/data.md, Storage and rights).
 
 Usage:
-    python scripts/extract_wireframe_data.py CODEX.xml BILDANNOTATIONEN.xml [-o OUT.json]
+    python wireframe/extract_data.py CODEX.xml BILDANNOTATIONEN.xml [-o OUT.json]
 
 Design decisions:
 - The text of the page is tokenised from the raw source slice between the
@@ -611,7 +611,7 @@ def build(codex_path: Path, bild_path: Path) -> tuple[dict, dict]:
         "zones": zones,
         "xmlExcerpt": seg,
         "generated": {
-            "script": "scripts/extract_wireframe_data.py",
+            "script": "wireframe/extract_data.py",
             "sources": {"codex": codex_path.name, "images": bild_path.name},
             "pid": header["pid"],
             "licence": header["licence"],

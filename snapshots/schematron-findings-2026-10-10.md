@@ -1,6 +1,6 @@
 # Schematron findings in the edition data, 2026-10-10
 
-This snapshot records a run of `wenzelsbibel.sch` over the public TEI of the codex (`o:wen.codex-2759`) and of the image annotations (`o:wen.bildannotationen--codex-2759`), both downloaded from edition.onb.ac.at on 2026-10-10. The run used `check_fixtures.py --data` with lxml 5.3.0 (ISO Schematron skeleton for XSLT 1.0) on Python 3.11. The review phase took just under three minutes for both files, most of it in the anchor lookups of the apparatus rules. The figures describe this state of the data and this version of the schema and will change with either.
+This snapshot records a run of `editorial/wenzelsbibel.sch` over the public TEI of the codex (`o:wen.codex-2759`) and of the image annotations (`o:wen.bildannotationen--codex-2759`), both downloaded from edition.onb.ac.at on 2026-10-10. The run used `editorial/check_fixtures.py --data` with lxml 5.3.0 (ISO Schematron skeleton for XSLT 1.0) on Python 3.11. The review phase took just under three minutes for both files, most of it in the anchor lookups of the apparatus rules. The figures describe this state of the data and this version of the schema and will change with either.
 
 ## Result per phase
 

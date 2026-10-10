@@ -1,6 +1,6 @@
 // Static wireframe of the Wenzelsbibel editor on real fol. 1r data. Edits live in
 // memory with undo and are never persisted. Data: ../data/wireframe/fol-1r.json
-// (ignored by Git, extracted from the public ONB TEI).
+// (ignored by Git, extracted from the public ONB TEI by wireframe/extract_data.py).
 import { $, el, state } from "./state.js";
 import { onChange } from "./history.js";
 import { highlightSelection, placeCaret, renderFlow, setColumn, setWordRange, wireFlow } from "./flow.js";
